@@ -16,7 +16,7 @@ load_dotenv()
 
 class AutoEatventure:
     def __init__(self):
-        self.device = adb.device()
+        self.device = adb.device(serial="HIDI5LI7OFFIY5FM")
         self.package_name = "com.hwqgrhhjfd.idlefastfood"
         self.notification_message = 'Allow Eatventure to send you notifications?'
         self.captured_sc_path = './captured_screenshots_on_the_fly/screenshot.png'
@@ -100,6 +100,7 @@ class AutoEatventure:
         # pilimg = self.device.screenshot()
         adb_command = f'adb -s {self.device.serial} shell screencap -p'
         output = subprocess.check_output(adb_command.split())
+        output = output.replace(b'\r\n', b'\n')  # fix Windows line ending corruption
 
         # Convert the output to a PIL Image object
         pilimg = Image.open(io.BytesIO(output))
@@ -685,20 +686,18 @@ class AutoEatventure:
                 with Timer("Redeem investor"):
                     self.redeem_investor()
 
-            # check for ads
-            if count == 1 or count % 100 == 0:  # every 100th iteration
-                with Timer("Running full boost ads"):
-                    print('Checking for boost')
-                    if self.is_having_no_boost_indicator(): # this is for users didn't buy 2x permanent boost
-                        print('running ads')
-                        self.run_full_boost_ads()
-                        time.sleep(2)
-                    
-                    # a quick fix for boost but will run multiple times in many scenarios
-                    if self.is_having_no_boost_indicator_2x():
-                        print('running ads for 2x users')
-                        self.run_full_boost_ads()
-                        time.sleep(2)
+            # check for ads (disabled)
+            # if count == 1 or count % 100 == 0:  # every 100th iteration
+            #     with Timer("Running full boost ads"):
+            #         print('Checking for boost')
+            #         if self.is_having_no_boost_indicator():
+            #             print('running ads')
+            #             self.run_full_boost_ads()
+            #             time.sleep(2)
+            #         if self.is_having_no_boost_indicator_2x():
+            #             print('running ads for 2x users')
+            #             self.run_full_boost_ads()
+            #             time.sleep(2)
 
 
             # maind upgrades

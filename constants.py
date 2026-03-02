@@ -1,155 +1,155 @@
 
 close_nofication_coords = {
-    'x': 710,
-    'y': 1894
+    'x': 602,
+    'y': 1646
 }
 
 first_lemonade_stand_open_coords = {
-    'x': 713,
-    'y': 1845
+    'x': 604,
+    'y': 1604
 }
 
 settings_coords = {
-    'x': 1339,
-    'y': 185
+    'x': 1134,
+    'y': 161
 }
 
 cloud_save_coords = {
-    'x': 654,
-    'y': 1632
+    'x': 554,
+    'y': 1419
 }
 
 email_input_coords = {
-    'x': 700,
-    'y': 1320
+    'x': 593,
+    'y': 1147
 }
 
 password_input_coords = {
-    'x': 700,
-    'y': 1600,
+    'x': 593,
+    'y': 1391,
 }
 
 text_ok_button_coords = {
-    'x': 1374,
-    'y': 1845,
+    'x': 1164,
+    'y': 1604,
 }
 
 login_button_coords = {
-    'x': 700,
-    'y': 1940
+    'x': 593,
+    'y': 1686
 }
 
 use_cloud_save_button_coords = {
-    'x': 990,
-    'y': 2100
+    'x': 839,
+    'y': 1825
 }
 
 close_game_for_restart_button_coords = {
-    'x': 734,
-    'y': 1821
+    'x': 622,
+    'y': 1583
 }
 
 close_offline_earnings_coords = {
-    'x': 1150,
-    'y': 1164
+    'x': 974,
+    'y': 1012
 }
 
 upgrade_button_coords = {
-    'x': 1290,
-    'y': 2904
+    'x': 1093,
+    'y': 2524
 }
 
 single_upgrade_button_coords = {
-    'x': 1143,
-    'y': 1283
+    'x': 968,
+    'y': 1115
 }
 
 close_upgrade_button_coords = {
-    'x': 1222,
-    'y': 1045
+    'x': 1035,
+    'y': 908
 }
 
 next_level_button_coords = {
-    'x': 150,
-    'y': 2900
+    'x': 127,
+    'y': 2521
 }
 
 renovate_button_coords = {
-    'x': 700,
-    'y': 2200
+    'x': 593,
+    'y': 1912
 }
 
 ads_button_coords = {
-    'x': 720,
-    'y': 2950
+    'x': 610,
+    'y': 2564
 }
 
 fly_next_city_button_coords = {
-    'x': 700,
-    'y': 2050
+    'x': 593,
+    'y': 1782
 }
 
 welcome_city_ok_button_coords = {
-    'x': 730,
-    'y': 1950
+    'x': 618,
+    'y': 1695
 }
 
 null_click_coords = {
-    'x': 810,
-    'y': 320
+    'x': 686,
+    'y': 278
 }
 
 chest_coords = {
-    'x': 130,
-    'y': 845
+    'x': 110,
+    'y': 734
 }
 
 close_chest_button_coords = {
-    'x': 1330,
-    'y': 230
+    'x': 1127,
+    'y': 200
 }
 
 
 swipe_layout_down_coords = {
     'start': {
-        'x': 900,
-        'y': 2500
+        'x': 646,
+        'y': 1889
     },
     'end': {
-        'x': 900,
-        'y': 800
+        'x': 646,
+        'y': 604
     }
 }
 
 swipe_layout_up_coords = {
     'end': {
-        'x': 900,
-        'y': 2500
+        'x': 646,
+        'y': 1889
     },
     'start': {
-        'x': 900,
-        'y': 800
+        'x': 646,
+        'y': 604
     }
 }
 
 swipe_layout_little_up_coords = {
     'end': {
-        'x': 900,
-        'y': 1500
+        'x': 646,
+        'y': 1133
     },
     'start': {
-        'x': 900,
-        'y': 800
+        'x': 646,
+        'y': 604
     }
 }
 
 swipe_layout_little_down_coords = {
     'start': {
-        'x': 900,
-        'y': 1500
+        'x': 646,
+        'y': 1133
     },
     'end': {
-        'x': 900,
-        'y': 800
+        'x': 646,
+        'y': 604
     }
 }
