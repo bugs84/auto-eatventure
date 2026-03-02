@@ -360,7 +360,7 @@ class AutoEatventure:
         # hsv_template = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)
         # matched_coordinates = self.find_all_templates(hsv_sc, hsv_template)
         matched_coordinates = self.find_all_templates(
-            screenshot, template, end=False)
+            screenshot, template, end=False, threshold=0.7)
         if len(matched_coordinates) != 0:
             return matched_coordinates
 
@@ -368,7 +368,7 @@ class AutoEatventure:
         template = self.apply_box_mask(
             self.matching_templates_cv2['box2']['simple'])
         matched_coordinates = self.find_all_templates(
-            screenshot, template, end=False)
+            screenshot, template, end=False, threshold=0.7)
 
         return matched_coordinates
 
@@ -703,7 +703,7 @@ class AutoEatventure:
             # maind upgrades
             # upgrade click
             with Timer("Upgrading items"):
-                if count % 5 == 0 and self.is_having_upgrade():
+                if count % 5 == 0 and self.is_having_upgrade(): # asi isHavingupgrade nefunguje
                     print('Upgrading items')
                     if new_level_started:
                         self.do_upgrades(upgrade_count=50)
