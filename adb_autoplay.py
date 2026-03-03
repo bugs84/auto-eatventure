@@ -527,6 +527,7 @@ class AutoEatventure:
         elif self.is_having_fly_next_city_icon():
             self.click(loc.next_level_button_coords)
             time.sleep(2)
+            print('Flying to next city')
             self.click(loc.fly_next_city_button_coords)
             time.sleep(15)
             self.click(loc.welcome_city_ok_button_coords)
@@ -549,7 +550,7 @@ class AutoEatventure:
             # hack for better food button
             y_neg_offset = 130
             x_pos_offset = 20
-            self.click_and_hold(c[0] + x_pos_offset, c[1] - y_neg_offset, 1200)
+            self.click_and_hold(c[0] + x_pos_offset, c[1] - y_neg_offset, 3000)
             time.sleep(0.4)
             if c[1] < 1240:  # to avoid null zone overlapping with tooltip
                 self.click([c[0] - 110, c[1] + 30])

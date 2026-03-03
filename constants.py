@@ -62,6 +62,8 @@ upgrade_button_coords = {
 single_upgrade_button_coords = {
     'x': 968,
     'y': 1115
+    # 'x': 892,
+    # 'y': 1125
 }
 
 close_upgrade_button_coords = {
