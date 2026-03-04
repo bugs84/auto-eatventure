@@ -88,7 +88,7 @@ ads_button_coords = {
 
 fly_next_city_button_coords = {
     'x': 593,
-    'y': 1782
+    'y': 1892
 }
 
 welcome_city_ok_button_coords = {
@@ -144,6 +144,8 @@ swipe_layout_little_up_coords = {
         'y': 604
     }
 }
+
+danger_y_max = 2430
 
 swipe_layout_little_down_coords = {
     'start': {

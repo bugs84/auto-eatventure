@@ -303,7 +303,7 @@ class AutoEatventure:
         return self.is_image_template_matching(self.matching_templates_cv2['offline_earnings'])
 
     def is_having_upgrade(self):
-        return self.is_image_template_matching(self.matching_templates_cv2['upgrade_button'])
+        return self.is_image_template_matching(self.matching_templates_cv2['upgrade_button'], threshold=0.97)
 
     def is_having_single_upgrade(self):
         return self.is_image_template_matching(self.matching_templates_cv2['single_upgrade'])
@@ -318,7 +318,7 @@ class AutoEatventure:
         return self.is_image_template_matching(self.matching_templates_cv2['buy_better_food_button'])
 
     def is_having_next_level_icon(self):
-        return self.is_image_template_matching(self.matching_templates_cv2['go_next_level'])
+        return self.is_image_template_matching(self.matching_templates_cv2['go_next_level'], threshold=0.95)
 
     def is_having_ad_cross(self):
         return self.is_image_template_matching(self.matching_templates_cv2['ads_crosses']['cross1'])
@@ -337,7 +337,7 @@ class AutoEatventure:
         return self.is_image_template_matching(self.matching_templates_cv2['no_boost_indicator_2x'], 0.92)
 
     def is_having_fly_next_city_icon(self):
-        return self.is_image_template_matching(self.matching_templates_cv2['fly_next_city_icon'])
+        return self.is_image_template_matching(self.matching_templates_cv2['fly_next_city_icon'], threshold=0.95)
 
     def is_having_small_investor_icon(self):
         return self.is_bnw_image_template_matching(self.matching_templates_cv2['small_investor_icon'])
@@ -382,7 +382,7 @@ class AutoEatventure:
             screenshot, template, end=False, threshold=0.8)
 
         safe_matched_coordinates = []
-        danger_y_max = 2690
+        danger_y_max = loc.danger_y_max
         for c in matched_coordinates:
             if c[1] <= danger_y_max:
                 safe_matched_coordinates.append(c)
@@ -396,7 +396,7 @@ class AutoEatventure:
         return matched_coordinates
 
     def redeem_investor(self):
-        redeem_button_coords = {
+        redeem_button_coords = { # TODO this coords are probably not for this resolution
             'x': 720,
             'y': 2020
         }
@@ -544,7 +544,8 @@ class AutoEatventure:
 
     def upgrade_food_items(self, coords):
         for c in coords[:3]:  # as mostly after 3 no food icon is visible
-            self.click([c[0], c[1] + 30])
+            y_upgrade_food_offset = -10 # Original value was 30
+            self.click([c[0], c[1] + y_upgrade_food_offset])
             time.sleep(0.2)
 
             # hack for better food button
@@ -553,7 +554,7 @@ class AutoEatventure:
             self.click_and_hold(c[0] + x_pos_offset, c[1] - y_neg_offset, 3000)
             time.sleep(0.4)
             if c[1] < 1240:  # to avoid null zone overlapping with tooltip
-                self.click([c[0] - 110, c[1] + 30])
+                self.click([c[0] - 110, c[1] + y_upgrade_food_offset])
             else:
                 self.click(loc.null_click_coords)
             time.sleep(0.2)
@@ -682,10 +683,12 @@ class AutoEatventure:
             with Timer("Capturing screenshot"):
                 self.capture_screenshot()
 
-            # check for investor
-            if count % 3 == 0:
-                with Timer("Redeem investor"):
-                    self.redeem_investor()
+
+            # check for investor (disabled)
+            # if count % 3 == 0:
+            #     with Timer("Redeem investor"):
+            #         self.redeem_investor()
+
 
             # check for ads (disabled)
             # if count == 1 or count % 100 == 0:  # every 100th iteration
