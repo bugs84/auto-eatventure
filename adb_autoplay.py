@@ -544,7 +544,7 @@ class AutoEatventure:
 
     def upgrade_food_items(self, coords):
         for c in coords[:3]:  # as mostly after 3 no food icon is visible
-            y_upgrade_food_offset = -10 # Original value was 30
+            y_upgrade_food_offset = 22 # Original value was 30
             self.click([c[0], c[1] + y_upgrade_food_offset])
             time.sleep(0.2)
 

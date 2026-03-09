@@ -145,7 +145,9 @@ swipe_layout_little_up_coords = {
     }
 }
 
-danger_y_max = 2430
+#danger_y_max = 2430 # Consider change it to 2200, because of club Icon (if there will be issues with club icon
+# or introduce excluding just square around the dish icon
+danger_y_max = 2200
 
 swipe_layout_little_down_coords = {
     'start': {
