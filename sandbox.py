@@ -25,6 +25,7 @@ import cv2
 from PIL import Image
 from adbutils import adb
 from dotenv import load_dotenv
+import coords
 
 load_dotenv()
 
@@ -96,7 +97,7 @@ def find_all_templates(image: np.ndarray, template: np.ndarray, threshold=0.8):
 def annotate_and_save(bgr: np.ndarray, coords: list, path: str, template_shape=None):
     annotated = bgr.copy()
     for x, y in coords:
-        cv2.circle(annotated, (x, y), radius=14, color=(0, 0, 255), thickness=3)
+        cv2.circle(annotated, (x, y), radius=coords.annotation_radius, color=(0, 0, 255), thickness=3)
         if template_shape:
             h, w = template_shape[:2]
             cv2.rectangle(annotated, (x - w // 2, y - h // 2), (x + w // 2, y + h // 2), (0, 255, 0), 2)

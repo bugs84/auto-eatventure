@@ -1,4 +1,5 @@
 import constants as loc
+import coords
 import cv2
 from adbutils import adb
 import time
@@ -151,17 +152,17 @@ class AutoEatventure:
 
         # cluster the points together
         # Use DBSCAN clustering to group close points
-        coords = np.array(coordinates)
-        if len(coords) == 0:
+        coord_array = np.array(coordinates)
+        if len(coord_array) == 0:
             return []
-        dbscan = DBSCAN(eps=10, min_samples=5)
-        dbscan.fit(coords)
+        dbscan = DBSCAN(eps=coords.dbscan_eps, min_samples=5)
+        dbscan.fit(coord_array)
 
         # Find the cluster centroids
         centroids = []
         for cluster_label in set(dbscan.labels_):
             if cluster_label != -1:  # Ignore the noise points (label -1)
-                cluster_coords = coords[dbscan.labels_ == cluster_label]
+                cluster_coords = coord_array[dbscan.labels_ == cluster_label]
                 centroid = np.mean(cluster_coords, axis=0)
                 centroids.append(centroid)
 
@@ -324,10 +325,8 @@ class AutoEatventure:
         return self.is_image_template_matching(self.matching_templates_cv2['ads_crosses']['cross1'])
 
     def is_having_no_boost_indicator(self):
-        x1, y1 = 408, 274
-        x2, y2 = 466, 274
-        start = {'x': x1, 'y': y1}
-        end = {'x': x2, 'y': y2}
+        start = {'x': coords.boost_check_pixel1_x, 'y': coords.boost_check_pixel1_y}
+        end = {'x': coords.boost_check_pixel2_x, 'y': coords.boost_check_pixel2_y}
         color_to_check = [42, 192, 255]
         # here we checking if yellow color is present in pixels where boost x2 is written
         # if yellow color not present it means is having no boost indicator
@@ -396,9 +395,9 @@ class AutoEatventure:
         return matched_coordinates
 
     def redeem_investor(self):
-        redeem_button_coords = { # TODO this coords are probably not for this resolution
-            'x': 720,
-            'y': 2020
+        redeem_button_coords = {
+            'x': coords.redeem_investor_reward_x,
+            'y': coords.redeem_investor_reward_y
         }
         print('Finding investor')
         mc = None
@@ -408,14 +407,14 @@ class AutoEatventure:
         template = self.matching_templates_cv2['small_investor_icon']['grayscale']
         mc = self.find_template(sc, template)
         if mc:
-            self.click([mc[0]+10, mc[1]+10])
+            self.click([mc[0] + coords.small_investor_click_offset_x, mc[1] + coords.small_investor_click_offset_y])
         else:
             sc = self.apply_investor_mask(self.current_cv2_sc)
             template = self.apply_investor_mask(
                 self.matching_templates_cv2['investor']['simple'])
             mc = self.find_template(sc, template, 0.65)
             if mc:
-                self.click([mc[0]+55, mc[1]+100])
+                self.click([mc[0] + coords.large_investor_click_offset_x, mc[1] + coords.large_investor_click_offset_y])
 
         if mc:
             print('Found investor')
@@ -460,8 +459,8 @@ class AutoEatventure:
 
     def run_full_boost_ads(self):
         btn_coords = {
-            'x': 720,
-            'y': 2950
+            'x': coords.ad_button_x,
+            'y': coords.ad_button_y
         }
         time.sleep(1)
         with Timer("Running full boost ads"):
@@ -477,8 +476,8 @@ class AutoEatventure:
 
     def run_ad(self):
         btn_coords = {
-            'x': 720,
-            'y': 2950
+            'x': coords.ad_button_x,
+            'y': coords.ad_button_y
         }
         time.sleep(5)
         print('click ad button')
@@ -542,27 +541,24 @@ class AutoEatventure:
 
         return gone_to_next_level
 
-    def upgrade_food_items(self, coords):
-        for c in coords[:3]:  # as mostly after 3 no food icon is visible
-            y_upgrade_food_offset = 22 # Original value was 30
-            self.click([c[0], c[1] + y_upgrade_food_offset])
+    def upgrade_food_items(self, food_coords):
+        for c in food_coords[:3]:  # as mostly after 3 no food icon is visible
+            self.click([c[0], c[1] + coords.upgrade_food_y_offset])
             time.sleep(0.2)
 
             # hack for better food button
-            y_neg_offset = 130
-            x_pos_offset = 20
-            self.click_and_hold(c[0] + x_pos_offset, c[1] - y_neg_offset, 3000)
+            self.click_and_hold(c[0] + coords.better_food_x_pos_offset, c[1] - coords.better_food_y_neg_offset, 3000)
             time.sleep(0.4)
-            if c[1] < 1240:  # to avoid null zone overlapping with tooltip
-                self.click([c[0] - 110, c[1] + y_upgrade_food_offset])
+            if c[1] < coords.food_icon_tooltip_boundary_y:  # to avoid null zone overlapping with tooltip
+                self.click([c[0] - coords.better_food_x_neg_offset, c[1] + coords.upgrade_food_y_offset])
             else:
                 self.click(loc.null_click_coords)
             time.sleep(0.2)
         return
 
     def open_boxes(self):
-        coords = self.get_all_boxes_locations()
-        for c in coords:
+        box_locations = self.get_all_boxes_locations()
+        for c in box_locations:
             self.click(c)
             time.sleep(0.2)
         return
@@ -725,18 +721,18 @@ class AutoEatventure:
             with Timer("Finding food icons"):
                 # self.capture_screenshot()
                 print('finding food icons')
-                coords = self.get_all_better_food_icon_locations()
+                food_icon_locations = self.get_all_better_food_icon_locations()
 
-            if len(coords) > 0 and not new_level_first_food_icon_swipe:
-                y_coords = [c[1] for c in coords]
-                swipe_x_coords = coords[y_coords.index(min(y_coords))][0]
+            if len(food_icon_locations) > 0 and not new_level_first_food_icon_swipe:
+                y_coords = [c[1] for c in food_icon_locations]
+                swipe_x_coords = food_icon_locations[y_coords.index(min(y_coords))][0]
                 self.swipe(
                     start={
                         'y': min(y_coords), 
                         'x': swipe_x_coords}, 
                     end={
                         'x': swipe_x_coords, 
-                        'y': 1300}
+                        'y': coords.food_icon_tooltip_boundary_y}
                 )
                 new_level_first_food_icon_swipe = True
                 time.sleep(3)
@@ -748,12 +744,12 @@ class AutoEatventure:
                 continue
 
             # this if is for fetching the danger food items and adjust layout to avoid them.
-            if len(coords) > 0:
+            if len(food_icon_locations) > 0:
                 nothing_to_update_count = 0
                 is_danger_food_item = False
-                for c in coords:
+                for c in food_icon_locations:
                     y = c[1]
-                    if y <= 1100:
+                    if y <= coords.food_icon_top_boundary_y:
                         is_danger_food_item = True
                         self.swipe(**loc.swipe_layout_little_up_coords)
                         time.sleep(3)
@@ -766,16 +762,16 @@ class AutoEatventure:
                     self.capture_screenshot()
                     continue
 
-            if len(coords) == 0:
+            if len(food_icon_locations) == 0:
                 nothing_to_update_count += 1
             else:
                 nothing_to_update_count = 0
 
-            if len(coords) != 0:
-                # c = random.choice(coords)
+            if len(food_icon_locations) != 0:
+                # c = random.choice(food_icon_locations)
                 with Timer("Clicking food icons"):
-                    random.shuffle(coords)
-                    self.upgrade_food_items(coords)
+                    random.shuffle(food_icon_locations)
+                    self.upgrade_food_items(food_icon_locations)
             else:
                 if count % 10 == 0:
                     # next level check
