@@ -25,7 +25,7 @@ import cv2
 from PIL import Image
 from adbutils import adb
 from dotenv import load_dotenv
-import coords
+from scaled_coords import ScaledCoords, detect_resolution
 
 load_dotenv()
 
@@ -94,10 +94,10 @@ def find_all_templates(image: np.ndarray, template: np.ndarray, threshold=0.8):
     return coords
 
 
-def annotate_and_save(bgr: np.ndarray, coords: list, path: str, template_shape=None):
+def annotate_and_save(bgr: np.ndarray, point_list: list, path: str, sc: ScaledCoords, template_shape=None):
     annotated = bgr.copy()
-    for x, y in coords:
-        cv2.circle(annotated, (x, y), radius=coords.annotation_radius, color=(0, 0, 255), thickness=3)
+    for x, y in point_list:
+        cv2.circle(annotated, (x, y), radius=sc.annotation_radius, color=(0, 0, 255), thickness=3)
         if template_shape:
             h, w = template_shape[:2]
             cv2.rectangle(annotated, (x - w // 2, y - h // 2), (x + w // 2, y + h // 2), (0, 255, 0), 2)
@@ -121,6 +121,8 @@ def main():
     print("Type 'help' for available commands.\n")
 
     device = get_device()
+    actual_w, actual_h = detect_resolution(device)
+    sc = ScaledCoords(actual_w, actual_h)
     templates = load_templates(TEMPLATES_DIR)
     last_bgr: np.ndarray | None = None
     last_match_coords: list = []
@@ -206,7 +208,7 @@ def main():
                         print(f"  MATCH at top-left={loc}  center=({cx},{cy})  score={val:.4f}")
                         last_match_coords = [(cx, cy)]
                         last_match_template_name = name
-                        annotate_and_save(last_bgr, last_match_coords, ANNOTATED_PATH, hsv_tmpl.shape)
+                        annotate_and_save(last_bgr, last_match_coords, ANNOTATED_PATH, sc, hsv_tmpl.shape)
                     else:
                         print(f"  No match (best score={val:.4f})")
 
@@ -231,7 +233,7 @@ def main():
                         print(f"  MATCH at top-left={loc}  center=({cx},{cy})  score={val:.4f}")
                         last_match_coords = [(cx, cy)]
                         last_match_template_name = name
-                        annotate_and_save(last_bgr, last_match_coords, ANNOTATED_PATH, gray_tmpl.shape)
+                        annotate_and_save(last_bgr, last_match_coords, ANNOTATED_PATH, sc, gray_tmpl.shape)
                     else:
                         print(f"  No match (best score={val:.4f})")
 
@@ -254,7 +256,7 @@ def main():
                     last_match_coords = coords
                     last_match_template_name = name
                     if coords:
-                        annotate_and_save(last_bgr, coords, ANNOTATED_PATH, hsv_tmpl.shape)
+                        annotate_and_save(last_bgr, coords, ANNOTATED_PATH, sc, hsv_tmpl.shape)
 
         # ── show last screenshot ──────────────────────────────────────────────
         elif cmd == "show":

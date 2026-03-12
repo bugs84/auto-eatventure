@@ -1,5 +1,5 @@
-import constants as loc
-import coords
+from constants import Constants
+from scaled_coords import ScaledCoords, detect_resolution
 import cv2
 from adbutils import adb
 import time
@@ -17,7 +17,18 @@ load_dotenv()
 
 class AutoEatventure:
     def __init__(self):
-        self.device = adb.device(serial="HIDI5LI7OFFIY5FM")
+        serial = os.getenv("device_serial", "").strip()
+        if serial:
+            self.device = adb.device(serial=serial)
+        else:
+            devices = adb.device_list()
+            if not devices:
+                raise RuntimeError("No ADB devices connected. Connect your phone and enable USB Debugging.")
+            self.device = devices[0]
+            print(f"[AutoEatventure] No device_serial in .env — using first connected device: {self.device.serial}")
+        actual_w, actual_h = detect_resolution(self.device)
+        self.sc = ScaledCoords(actual_w, actual_h)
+        self.loc = Constants(self.sc)
         self.package_name = "com.hwqgrhhjfd.idlefastfood"
         self.notification_message = 'Allow Eatventure to send you notifications?'
         self.captured_sc_path = './captured_screenshots_on_the_fly/screenshot.png'
@@ -155,7 +166,7 @@ class AutoEatventure:
         coord_array = np.array(coordinates)
         if len(coord_array) == 0:
             return []
-        dbscan = DBSCAN(eps=coords.dbscan_eps, min_samples=5)
+        dbscan = DBSCAN(eps=self.sc.dbscan_eps, min_samples=5)
         dbscan.fit(coord_array)
 
         # Find the cluster centroids
@@ -325,8 +336,8 @@ class AutoEatventure:
         return self.is_image_template_matching(self.matching_templates_cv2['ads_crosses']['cross1'])
 
     def is_having_no_boost_indicator(self):
-        start = {'x': coords.boost_check_pixel1_x, 'y': coords.boost_check_pixel1_y}
-        end = {'x': coords.boost_check_pixel2_x, 'y': coords.boost_check_pixel2_y}
+        start = {'x': self.sc.boost_check_pixel1_x, 'y': self.sc.boost_check_pixel1_y}
+        end = {'x': self.sc.boost_check_pixel2_x, 'y': self.sc.boost_check_pixel2_y}
         color_to_check = [42, 192, 255]
         # here we checking if yellow color is present in pixels where boost x2 is written
         # if yellow color not present it means is having no boost indicator
@@ -381,7 +392,7 @@ class AutoEatventure:
             screenshot, template, end=False, threshold=0.8)
 
         safe_matched_coordinates = []
-        danger_y_max = loc.danger_y_max
+        danger_y_max = self.loc.danger_y_max
         for c in matched_coordinates:
             if c[1] <= danger_y_max:
                 safe_matched_coordinates.append(c)
@@ -396,8 +407,8 @@ class AutoEatventure:
 
     def redeem_investor(self):
         redeem_button_coords = {
-            'x': coords.redeem_investor_reward_x,
-            'y': coords.redeem_investor_reward_y
+            'x': self.sc.redeem_investor_reward_x,
+            'y': self.sc.redeem_investor_reward_y
         }
         print('Finding investor')
         mc = None
@@ -407,14 +418,14 @@ class AutoEatventure:
         template = self.matching_templates_cv2['small_investor_icon']['grayscale']
         mc = self.find_template(sc, template)
         if mc:
-            self.click([mc[0] + coords.small_investor_click_offset_x, mc[1] + coords.small_investor_click_offset_y])
+            self.click([mc[0] + self.sc.small_investor_click_offset_x, mc[1] + self.sc.small_investor_click_offset_y])
         else:
             sc = self.apply_investor_mask(self.current_cv2_sc)
             template = self.apply_investor_mask(
                 self.matching_templates_cv2['investor']['simple'])
             mc = self.find_template(sc, template, 0.65)
             if mc:
-                self.click([mc[0] + coords.large_investor_click_offset_x, mc[1] + coords.large_investor_click_offset_y])
+                self.click([mc[0] + self.sc.large_investor_click_offset_x, mc[1] + self.sc.large_investor_click_offset_y])
 
         if mc:
             print('Found investor')
@@ -459,8 +470,8 @@ class AutoEatventure:
 
     def run_full_boost_ads(self):
         btn_coords = {
-            'x': coords.ad_button_x,
-            'y': coords.ad_button_y
+            'x': self.sc.ad_button_x,
+            'y': self.sc.ad_button_y
         }
         time.sleep(1)
         with Timer("Running full boost ads"):
@@ -476,8 +487,8 @@ class AutoEatventure:
 
     def run_ad(self):
         btn_coords = {
-            'x': coords.ad_button_x,
-            'y': coords.ad_button_y
+            'x': self.sc.ad_button_x,
+            'y': self.sc.ad_button_y
         }
         time.sleep(5)
         print('click ad button')
@@ -498,18 +509,18 @@ class AutoEatventure:
         if self.is_having_chest_icon():
             print('Chest found now opening.')
             # actually icon is clicked to open chest
-            self.click(loc.chest_coords)
+            self.click(self.loc.chest_coords)
             time.sleep(2)
             # just opening chest item
-            self.click(loc.chest_coords)
+            self.click(self.loc.chest_coords)
             time.sleep(1)
             # just opening chest item
-            self.click(loc.chest_coords)
+            self.click(self.loc.chest_coords)
             time.sleep(1)
             # last extra click
-            self.click(loc.chest_coords)
+            self.click(self.loc.chest_coords)
             time.sleep(1)
-            self.click(loc.close_chest_button_coords)
+            self.click(self.loc.close_chest_button_coords)
             time.sleep(1)
             self.open_chests()
         return
@@ -517,21 +528,21 @@ class AutoEatventure:
     def check_to_go_next_level(self):
         gone_to_next_level = False
         if self.is_having_next_level_icon():
-            self.click(loc.next_level_button_coords)
+            self.click(self.loc.next_level_button_coords)
             time.sleep(2)
-            self.click(loc.renovate_button_coords)
+            self.click(self.loc.renovate_button_coords)
             time.sleep(10)
-            self.click(loc.first_lemonade_stand_open_coords)
+            self.click(self.loc.first_lemonade_stand_open_coords)
             gone_to_next_level = True
         elif self.is_having_fly_next_city_icon():
-            self.click(loc.next_level_button_coords)
+            self.click(self.loc.next_level_button_coords)
             time.sleep(2)
             print('Flying to next city')
-            self.click(loc.fly_next_city_button_coords)
+            self.click(self.loc.fly_next_city_button_coords)
             time.sleep(15)
-            self.click(loc.welcome_city_ok_button_coords)
+            self.click(self.loc.welcome_city_ok_button_coords)
             time.sleep(5)
-            self.click(loc.first_lemonade_stand_open_coords)
+            self.click(self.loc.first_lemonade_stand_open_coords)
             time.sleep(5)
             gone_to_next_level = True
 
@@ -543,16 +554,16 @@ class AutoEatventure:
 
     def upgrade_food_items(self, food_coords):
         for c in food_coords[:3]:  # as mostly after 3 no food icon is visible
-            self.click([c[0], c[1] + coords.upgrade_food_y_offset])
+            self.click([c[0], c[1] + self.sc.upgrade_food_y_offset])
             time.sleep(0.2)
 
             # hack for better food button
-            self.click_and_hold(c[0] + coords.better_food_x_pos_offset, c[1] - coords.better_food_y_neg_offset, 3000)
+            self.click_and_hold(c[0] + self.sc.better_food_x_pos_offset, c[1] - self.sc.better_food_y_neg_offset, 3000)
             time.sleep(0.4)
-            if c[1] < coords.food_icon_tooltip_boundary_y:  # to avoid null zone overlapping with tooltip
-                self.click([c[0] - coords.better_food_x_neg_offset, c[1] + coords.upgrade_food_y_offset])
+            if c[1] < self.sc.food_icon_tooltip_boundary_y:  # to avoid null zone overlapping with tooltip
+                self.click([c[0] - self.sc.better_food_x_neg_offset, c[1] + self.sc.upgrade_food_y_offset])
             else:
-                self.click(loc.null_click_coords)
+                self.click(self.loc.null_click_coords)
             time.sleep(0.2)
         return
 
@@ -564,38 +575,38 @@ class AutoEatventure:
         return
 
     def do_upgrades(self, upgrade_count=10):
-        self.click(loc.upgrade_button_coords)
+        self.click(self.loc.upgrade_button_coords)
         time.sleep(0.3)
         for i in range(upgrade_count):
-            self.click(loc.single_upgrade_button_coords)
+            self.click(self.loc.single_upgrade_button_coords)
             time.sleep(0.2)
-        self.click(loc.close_upgrade_button_coords)
+        self.click(self.loc.close_upgrade_button_coords)
         return
 
     def login_with_cloud(self):
         # first time login with cloud save
         time.sleep(1)
-        self.click(loc.settings_coords)
+        self.click(self.loc.settings_coords)
         time.sleep(1)
-        self.click(loc.cloud_save_coords)
+        self.click(self.loc.cloud_save_coords)
         time.sleep(1)
-        self.click(loc.email_input_coords)
+        self.click(self.loc.email_input_coords)
         time.sleep(3)
         self.input_text(os.getenv('EMAIL'))
         time.sleep(1)
-        self.click(loc.text_ok_button_coords)
+        self.click(self.loc.text_ok_button_coords)
         time.sleep(1)
-        self.click(loc.password_input_coords)
+        self.click(self.loc.password_input_coords)
         time.sleep(3)
         self.input_text(os.getenv('PASSWORD'))
         time.sleep(1)
-        self.click(loc.text_ok_button_coords)
+        self.click(self.loc.text_ok_button_coords)
         time.sleep(1)
-        self.click(loc.login_button_coords)
+        self.click(self.loc.login_button_coords)
         time.sleep(8)  # loading cloud save
-        self.click(loc.use_cloud_save_button_coords)
+        self.click(self.loc.use_cloud_save_button_coords)
         time.sleep(8)  # for loading game
-        self.click(loc.close_game_for_restart_button_coords)
+        self.click(self.loc.close_game_for_restart_button_coords)
         return
 
     def start_game_for_first_time(self):
@@ -607,18 +618,18 @@ class AutoEatventure:
             self.capture_screenshot()
             if not is_notification_closed and self.is_having_notification():
                 print('found notification')
-                self.click(loc.close_nofication_coords)
+                self.click(self.loc.close_nofication_coords)
                 is_notification_closed = True
                 continue
             elif not is_first_stand_closed and self.is_having_first_lemonade_stand_open():
                 print('found first stand')
-                self.click(loc.first_lemonade_stand_open_coords)
+                self.click(self.loc.first_lemonade_stand_open_coords)
                 is_notification_closed = True
                 is_first_stand_closed = True
                 continue
             elif self.is_having_settings():
                 print('found settings')
-                self.click(loc.settings_coords)
+                self.click(self.loc.settings_coords)
                 is_notification_closed = True
                 is_first_stand_closed = True
                 break
@@ -634,7 +645,7 @@ class AutoEatventure:
             if self.is_having_settings():
                 break
             if self.is_having_offline_earnings():
-                self.click(loc.close_offline_earnings_coords)
+                self.click(self.loc.close_offline_earnings_coords)
                 break
 
             time.sleep(5)
@@ -646,8 +657,8 @@ class AutoEatventure:
         new_level_first_food_icon_swipe = False
         new_level_started = True
         swipping_pattern = [
-            loc.swipe_layout_down_coords, loc.swipe_layout_down_coords, loc.swipe_layout_down_coords,
-            loc.swipe_layout_up_coords, loc.swipe_layout_up_coords, loc.swipe_layout_up_coords
+            self.loc.swipe_layout_down_coords, self.loc.swipe_layout_down_coords, self.loc.swipe_layout_down_coords,
+            self.loc.swipe_layout_up_coords, self.loc.swipe_layout_up_coords, self.loc.swipe_layout_up_coords
         ]
         swipe_count = 0
         nothing_to_update_count = 0
@@ -658,7 +669,7 @@ class AutoEatventure:
                 self.start_app()
                 print('starting app')
                 time.sleep(1)
-                self.click(loc.null_click_coords)
+                self.click(self.loc.null_click_coords)
                 time.sleep(1)
 
             # this logic is to move the layout up and down when not update icons shows
@@ -732,7 +743,7 @@ class AutoEatventure:
                         'x': swipe_x_coords}, 
                     end={
                         'x': swipe_x_coords, 
-                        'y': coords.food_icon_tooltip_boundary_y}
+                        'y': self.sc.food_icon_tooltip_boundary_y}
                 )
                 new_level_first_food_icon_swipe = True
                 time.sleep(3)
@@ -749,9 +760,9 @@ class AutoEatventure:
                 is_danger_food_item = False
                 for c in food_icon_locations:
                     y = c[1]
-                    if y <= coords.food_icon_top_boundary_y:
+                    if y <= self.sc.food_icon_top_boundary_y:
                         is_danger_food_item = True
-                        self.swipe(**loc.swipe_layout_little_up_coords)
+                        self.swipe(**self.loc.swipe_layout_little_up_coords)
                         time.sleep(3)
                         # to avoid any infinite scenario
                         self.start_app()

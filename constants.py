@@ -1,158 +1,163 @@
-import coords
+class Constants:
+    """Coordinate dicts built from a ScaledCoords instance.
 
-close_nofication_coords = {
-    'x': coords.close_notification_x,
-    'y': coords.close_notification_y
-}
+    All callers that previously used module-level `loc.xxx` now use
+    an instance: `self.loc = Constants(sc)` then `self.loc.xxx`.
+    """
 
-first_lemonade_stand_open_coords = {
-    'x': coords.first_lemonade_stand_open_x,
-    'y': coords.first_lemonade_stand_open_y
-}
+    def __init__(self, sc):
+        self.close_nofication_coords = {
+            'x': sc.close_notification_x,
+            'y': sc.close_notification_y
+        }
 
-settings_coords = {
-    'x': coords.settings_x,
-    'y': coords.settings_y
-}
+        self.first_lemonade_stand_open_coords = {
+            'x': sc.first_lemonade_stand_open_x,
+            'y': sc.first_lemonade_stand_open_y
+        }
 
-cloud_save_coords = {
-    'x': coords.cloud_save_x,
-    'y': coords.cloud_save_y
-}
+        self.settings_coords = {
+            'x': sc.settings_x,
+            'y': sc.settings_y
+        }
 
-email_input_coords = {
-    'x': coords.email_input_x,
-    'y': coords.email_input_y
-}
+        self.cloud_save_coords = {
+            'x': sc.cloud_save_x,
+            'y': sc.cloud_save_y
+        }
 
-password_input_coords = {
-    'x': coords.password_input_x,
-    'y': coords.password_input_y,
-}
+        self.email_input_coords = {
+            'x': sc.email_input_x,
+            'y': sc.email_input_y
+        }
 
-text_ok_button_coords = {
-    'x': coords.text_ok_button_x,
-    'y': coords.text_ok_button_y,
-}
+        self.password_input_coords = {
+            'x': sc.password_input_x,
+            'y': sc.password_input_y,
+        }
 
-login_button_coords = {
-    'x': coords.login_button_x,
-    'y': coords.login_button_y
-}
+        self.text_ok_button_coords = {
+            'x': sc.text_ok_button_x,
+            'y': sc.text_ok_button_y,
+        }
 
-use_cloud_save_button_coords = {
-    'x': coords.use_cloud_save_button_x,
-    'y': coords.use_cloud_save_button_y
-}
+        self.login_button_coords = {
+            'x': sc.login_button_x,
+            'y': sc.login_button_y
+        }
 
-close_game_for_restart_button_coords = {
-    'x': coords.close_game_for_restart_x,
-    'y': coords.close_game_for_restart_y
-}
+        self.use_cloud_save_button_coords = {
+            'x': sc.use_cloud_save_button_x,
+            'y': sc.use_cloud_save_button_y
+        }
 
-close_offline_earnings_coords = {
-    'x': coords.close_offline_earnings_x,
-    'y': coords.close_offline_earnings_y
-}
+        self.close_game_for_restart_button_coords = {
+            'x': sc.close_game_for_restart_x,
+            'y': sc.close_game_for_restart_y
+        }
 
-upgrade_button_coords = {
-    'x': coords.upgrade_button_x,
-    'y': coords.upgrade_button_y
-}
+        self.close_offline_earnings_coords = {
+            'x': sc.close_offline_earnings_x,
+            'y': sc.close_offline_earnings_y
+        }
 
-single_upgrade_button_coords = {
-    'x': coords.single_upgrade_button_x,
-    'y': coords.single_upgrade_button_y
-}
+        self.upgrade_button_coords = {
+            'x': sc.upgrade_button_x,
+            'y': sc.upgrade_button_y
+        }
 
-close_upgrade_button_coords = {
-    'x': coords.close_upgrade_button_x,
-    'y': coords.close_upgrade_button_y
-}
+        self.single_upgrade_button_coords = {
+            'x': sc.single_upgrade_button_x,
+            'y': sc.single_upgrade_button_y
+        }
 
-next_level_button_coords = {
-    'x': coords.next_level_button_x,
-    'y': coords.next_level_button_y
-}
+        self.close_upgrade_button_coords = {
+            'x': sc.close_upgrade_button_x,
+            'y': sc.close_upgrade_button_y
+        }
 
-renovate_button_coords = {
-    'x': coords.renovate_button_x,
-    'y': coords.renovate_button_y
-}
+        self.next_level_button_coords = {
+            'x': sc.next_level_button_x,
+            'y': sc.next_level_button_y
+        }
 
-ads_button_coords = {
-    'x': coords.ads_button_x,
-    'y': coords.ads_button_y
-}
+        self.renovate_button_coords = {
+            'x': sc.renovate_button_x,
+            'y': sc.renovate_button_y
+        }
 
-fly_next_city_button_coords = {
-    'x': coords.fly_next_city_button_x,
-    'y': coords.fly_next_city_button_y
-}
+        self.ads_button_coords = {
+            'x': sc.ads_button_x,
+            'y': sc.ads_button_y
+        }
 
-welcome_city_ok_button_coords = {
-    'x': coords.welcome_city_ok_button_x,
-    'y': coords.welcome_city_ok_button_y
-}
+        self.fly_next_city_button_coords = {
+            'x': sc.fly_next_city_button_x,
+            'y': sc.fly_next_city_button_y
+        }
 
-null_click_coords = {
-    'x': coords.null_click_x,
-    'y': coords.null_click_y
-}
+        self.welcome_city_ok_button_coords = {
+            'x': sc.welcome_city_ok_button_x,
+            'y': sc.welcome_city_ok_button_y
+        }
 
-chest_coords = {
-    'x': coords.chest_x,
-    'y': coords.chest_y
-}
+        self.null_click_coords = {
+            'x': sc.null_click_x,
+            'y': sc.null_click_y
+        }
 
-close_chest_button_coords = {
-    'x': coords.close_chest_button_x,
-    'y': coords.close_chest_button_y
-}
+        self.chest_coords = {
+            'x': sc.chest_x,
+            'y': sc.chest_y
+        }
 
+        self.close_chest_button_coords = {
+            'x': sc.close_chest_button_x,
+            'y': sc.close_chest_button_y
+        }
 
-swipe_layout_down_coords = {
-    'start': {
-        'x': coords.swipe_layout_down_start_x,
-        'y': coords.swipe_layout_down_start_y
-    },
-    'end': {
-        'x': coords.swipe_layout_down_end_x,
-        'y': coords.swipe_layout_down_end_y
-    }
-}
+        self.swipe_layout_down_coords = {
+            'start': {
+                'x': sc.swipe_layout_down_start_x,
+                'y': sc.swipe_layout_down_start_y
+            },
+            'end': {
+                'x': sc.swipe_layout_down_end_x,
+                'y': sc.swipe_layout_down_end_y
+            }
+        }
 
-swipe_layout_up_coords = {
-    'start': {
-        'x': coords.swipe_layout_up_start_x,
-        'y': coords.swipe_layout_up_start_y
-    },
-    'end': {
-        'x': coords.swipe_layout_up_end_x,
-        'y': coords.swipe_layout_up_end_y
-    }
-}
+        self.swipe_layout_up_coords = {
+            'start': {
+                'x': sc.swipe_layout_up_start_x,
+                'y': sc.swipe_layout_up_start_y
+            },
+            'end': {
+                'x': sc.swipe_layout_up_end_x,
+                'y': sc.swipe_layout_up_end_y
+            }
+        }
 
-swipe_layout_little_up_coords = {
-    'start': {
-        'x': coords.swipe_layout_little_up_start_x,
-        'y': coords.swipe_layout_little_up_start_y
-    },
-    'end': {
-        'x': coords.swipe_layout_little_up_end_x,
-        'y': coords.swipe_layout_little_up_end_y
-    }
-}
+        self.swipe_layout_little_up_coords = {
+            'start': {
+                'x': sc.swipe_layout_little_up_start_x,
+                'y': sc.swipe_layout_little_up_start_y
+            },
+            'end': {
+                'x': sc.swipe_layout_little_up_end_x,
+                'y': sc.swipe_layout_little_up_end_y
+            }
+        }
 
-danger_y_max = coords.danger_y_max
+        self.danger_y_max = sc.danger_y_max
 
-swipe_layout_little_down_coords = {
-    'start': {
-        'x': coords.swipe_layout_little_down_start_x,
-        'y': coords.swipe_layout_little_down_start_y
-    },
-    'end': {
-        'x': coords.swipe_layout_little_down_end_x,
-        'y': coords.swipe_layout_little_down_end_y
-    }
-}
+        self.swipe_layout_little_down_coords = {
+            'start': {
+                'x': sc.swipe_layout_little_down_start_x,
+                'y': sc.swipe_layout_little_down_start_y
+            },
+            'end': {
+                'x': sc.swipe_layout_little_down_end_x,
+                'y': sc.swipe_layout_little_down_end_y
+            }
+        }

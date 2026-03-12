@@ -1,4 +1,34 @@
-# How to Run auto-eatventure on Windows
+## Phone Setup (Real Device)
+
+> **Note:** Running on a real phone is required. Eatventure uses Google Play Games and blocks emulators.
+
+### On the Android phone:
+1. Go to **Settings → About phone**, tap **Build number** 7 times to unlock Developer Options.
+2. Go to **Settings → Developer options**, enable **USB Debugging**.
+3. Connect the phone to your PC via USB cable.
+4. On the phone, tap **Allow** on the "Allow USB debugging?" popup.
+5. Enable **Do Not Disturb** mode to prevent notification popups from interrupting the script.
+6. Open Eatventure and reach the playable game screen.
+
+### Find your device serial:
+```
+adb devices
+```
+You'll see output like:
+```
+List of devices attached
+ABC123XYZ      device
+```
+`ABC123XYZ` is your serial.
+
+### Set the serial in `.env`:
+Open the `.env` file and add your serial:
+```
+device_serial=ABC123XYZ
+```
+If `device_serial` is left empty, the script automatically uses the first connected ADB device.
+
+---
 
 ## What Has Been Done
 
@@ -13,9 +43,9 @@
 
 ## What You Still Need to Do
 
-### 1. Fill in your Eatventure credentials
+### 1. Fill in your Eatventure credentials and device serial
 
-Open `.env` in the project root and enter your account email and password:
+Open `.env` in the project root and fill in your account details and device serial:
 
 ```
 notepad .env
@@ -24,7 +54,11 @@ notepad .env
 ```
 email="your-email@example.com"
 password="your-password"
+device_serial=ABC123XYZ
 ```
+
+To find your device serial, run `adb devices` with your phone connected. If you leave `device_serial` empty, the script auto-detects the first connected device.
+
 
 ### 2. Install the Eatventure APK on the emulator
 
