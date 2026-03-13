@@ -25,8 +25,10 @@ ABC123XYZ      device
 Open the `.env` file and add your serial:
 ```
 device_serial=ABC123XYZ
+DEBUG_TEMPLATE_MATCHING="0"
 ```
 If `device_serial` is left empty, the script automatically uses the first connected ADB device.
+Set `DEBUG_TEMPLATE_MATCHING="1"` only when troubleshooting template detection. It prints raw `cv2.matchTemplate` min/max values for each check, which is useful for tuning but very noisy during normal runs.
 
 ---
 
@@ -55,6 +57,7 @@ notepad .env
 email="your-email@example.com"
 password="your-password"
 device_serial=ABC123XYZ
+DEBUG_TEMPLATE_MATCHING="0"
 ```
 
 To find your device serial, run `adb devices` with your phone connected. If you leave `device_serial` empty, the script auto-detects the first connected device.

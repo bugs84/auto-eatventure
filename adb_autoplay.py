@@ -28,6 +28,8 @@ class AutoEatventure:
             print(f"[AutoEatventure] No device_serial in .env — using first connected device: {self.device.serial}")
         actual_w, actual_h = detect_resolution(self.device)
         self.sc = ScaledCoords(actual_w, actual_h)
+        self.template_x_scale = self.sc.x_scale
+        self.template_y_scale = self.sc.y_scale
         self.loc = Constants(self.sc)
         self.package_name = "com.hwqgrhhjfd.idlefastfood"
         self.notification_message = 'Allow Eatventure to send you notifications?'
@@ -57,7 +59,31 @@ class AutoEatventure:
             }
         }
         self.matching_templates_cv2 = {}
+        self.debug_template_matching = os.getenv("DEBUG_TEMPLATE_MATCHING", "0").strip() == "1"
         self.load_templates()
+
+    def _resize_template(self, template):
+        h, w = template.shape[:2]
+        target_w = max(1, round(w * self.template_x_scale))
+        target_h = max(1, round(h * self.template_y_scale))
+
+        if target_w == w and target_h == h:
+            return template
+
+        interpolation = cv2.INTER_AREA if target_w < w or target_h < h else cv2.INTER_LINEAR
+        return cv2.resize(template, (target_w, target_h), interpolation=interpolation)
+
+    def _load_template(self, path):
+        simple = cv2.imread(path)
+        if simple is None:
+            raise FileNotFoundError(f"Template not found or unreadable: {path}")
+
+        simple = self._resize_template(simple)
+        return {
+            'simple': simple,
+            'grayscale': cv2.cvtColor(simple, cv2.COLOR_BGR2GRAY),
+            'bgr2hsv': cv2.cvtColor(simple, cv2.COLOR_BGR2HSV),
+        }
 
     def load_templates(self):
         # {
@@ -71,19 +97,9 @@ class AutoEatventure:
             if key == 'ads_crosses':
                 self.matching_templates_cv2[key] = {}
                 for k, v in value.items():
-                    simple = cv2.imread(v)
-                    self.matching_templates_cv2[key][k] = {
-                        'simple': simple,
-                        'grayscale': cv2.imread(v, cv2.IMREAD_GRAYSCALE),
-                        'bgr2hsv': cv2.cvtColor(simple, cv2.COLOR_BGR2HSV)
-                    }
+                    self.matching_templates_cv2[key][k] = self._load_template(v)
             else:
-                simple = cv2.imread(value)
-                self.matching_templates_cv2[key] = {
-                    'simple': simple,
-                    'grayscale': cv2.imread(value, cv2.IMREAD_GRAYSCALE),
-                    'bgr2hsv': cv2.cvtColor(simple, cv2.COLOR_BGR2HSV)
-                }
+                self.matching_templates_cv2[key] = self._load_template(value)
 
     def start_app(self):
         self.device.shell(
@@ -133,7 +149,8 @@ class AutoEatventure:
     def find_template(self, image, template, threshold=0.8):
         result = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
         matches = cv2.minMaxLoc(result)
-        print(matches)
+        if self.debug_template_matching:
+            print(matches)
         _, max_val, _, max_loc = matches
 
         if max_val > threshold:
@@ -148,7 +165,8 @@ class AutoEatventure:
         result = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
         # looking at best position
         m = cv2.minMaxLoc(result)
-        print(m)
+        if self.debug_template_matching:
+            print(m)
         locations = np.where(result >= threshold)
 
         coordinates = []
