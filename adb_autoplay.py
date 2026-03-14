@@ -30,6 +30,20 @@ class AutoEatventure:
         self.sc = ScaledCoords(actual_w, actual_h)
         self.template_x_scale = self.sc.x_scale
         self.template_y_scale = self.sc.y_scale
+
+        scale_override = os.getenv("TEMPLATE_SCALE_OVERRIDE", "").strip()
+        if scale_override:
+            try:
+                override = float(scale_override)
+                self.template_x_scale = override
+                self.template_y_scale = override
+                print(f"[AutoEatventure] TEMPLATE_SCALE_OVERRIDE={override:.4f} — overriding auto-scale "
+                      f"(was x={self.sc.x_scale:.4f}, y={self.sc.y_scale:.4f})")
+            except ValueError:
+                print(f"[AutoEatventure] Invalid TEMPLATE_SCALE_OVERRIDE={scale_override!r} — ignored, "
+                      f"using resolution-based scale x={self.sc.x_scale:.4f}, y={self.sc.y_scale:.4f}")
+        else:
+            print(f"[AutoEatventure] Template scale: x={self.template_x_scale:.4f}, y={self.template_y_scale:.4f}")
         self.loc = Constants(self.sc)
         self.package_name = "com.hwqgrhhjfd.idlefastfood"
         self.notification_message = 'Allow Eatventure to send you notifications?'
