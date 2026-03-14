@@ -25,14 +25,7 @@ cd auto-eatventure
 "git checkout correct branch"
 ```
 
-### 4. Create Python virtual environment and install dependencies
-```powershell
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### 5. Create the `.env` file
+### 4. Create the `.env` file
 ```powershell
 copy .env-sample .env
 notepad .env
@@ -73,6 +66,14 @@ Prevents notification popups from interrupting the script.
 
 ## Run
 
+### First time only — create virtual environment and install dependencies
+```powershell
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### Every time
 ```powershell
 .\.venv\Scripts\activate
 python adb_autoplay.py
