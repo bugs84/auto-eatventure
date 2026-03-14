@@ -66,6 +66,11 @@ Prevents notification popups from interrupting the script.
 
 ## Run
 
+### First time only — allow running scripts (PowerShell execution policy)
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
 ### First time only — create virtual environment and install dependencies
 ```powershell
 python -m venv .venv
