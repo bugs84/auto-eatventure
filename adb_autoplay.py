@@ -257,16 +257,14 @@ class AutoEatventure:
         masked_image = cv2.bitwise_and(image, image, mask=combined_mask)
         return masked_image
 
-    def apply_box_mask(self, image, tolerance=2):
+    def apply_box_mask(self, image, tolerance=8):
         # box = ['#FFE18B', '#AB7245', '#8C5E37', '#E8BB72', '#FED080']
-        # colors = [(22, 116, 255),
-        #           (13, 152, 171),
-        #           (14, 155, 140),
-        #           (19, 130, 232),
-        #           (19, 126, 254),
-        #           (18, 130, 239)]
-        colors = [(13, 152, 171),
-                  (14, 155, 140)]
+        colors = [(22, 116, 255),
+                  (13, 152, 171),
+                  (14, 155, 140),
+                  (19, 130, 232),
+                  (19, 126, 254),
+                  (18, 130, 239)]
         hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         combined_mask = np.zeros_like(hsv_image[:, :, 0])
 
@@ -391,24 +389,17 @@ class AutoEatventure:
         return self.is_image_template_matching(self.matching_templates_cv2['chest_icon'])
 
     def get_all_boxes_locations(self):
-        # screenshot = self.convert_to_binary(
-        #     self.current_cv2_sc_grayscale, threshold=150)
-        # template = self.convert_to_binary(
-        #     self.matching_templates_cv2['box']['grayscale'], threshold=150)
-        screenshot = self.apply_box_mask(self.current_cv2_sc)
-        template = self.apply_box_mask(
-            self.matching_templates_cv2['box']['simple'])
-        # hsv_sc = cv2.cvtColor(screenshot, cv2.COLOR_BGR2HSV)
-        # hsv_template = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)
-        # matched_coordinates = self.find_all_templates(hsv_sc, hsv_template)
+        # Use raw BGR matching — color masking was filtering out valid boxes
+        # on devices where box colors differ slightly from the reference device.
+        screenshot = self.current_cv2_sc
+        template = self.matching_templates_cv2['box']['simple']
         matched_coordinates = self.find_all_templates(
             screenshot, template, end=False, threshold=0.7)
         if len(matched_coordinates) != 0:
             return matched_coordinates
 
-        # this is for a little different box
-        template = self.apply_box_mask(
-            self.matching_templates_cv2['box2']['simple'])
+        # fallback: slightly different box appearance
+        template = self.matching_templates_cv2['box2']['simple']
         matched_coordinates = self.find_all_templates(
             screenshot, template, end=False, threshold=0.7)
 
@@ -424,9 +415,9 @@ class AutoEatventure:
             screenshot, template, end=False, threshold=0.8)
 
         safe_matched_coordinates = []
-        danger_y_max = self.loc.danger_y_max
+        danger_max_y = self.loc.danger_max_y
         for c in matched_coordinates:
-            if c[1] <= danger_y_max:
+            if c[1] <= danger_max_y:
                 safe_matched_coordinates.append(c)
 
         return safe_matched_coordinates
@@ -586,14 +577,14 @@ class AutoEatventure:
 
     def upgrade_food_items(self, food_coords):
         for c in food_coords[:3]:  # as mostly after 3 no food icon is visible
-            self.click([c[0], c[1] + self.sc.upgrade_food_y_offset])
+            self.click([c[0], c[1] + self.sc.upgrade_food_offset_y])
             time.sleep(0.2)
 
             # hack for better food button
-            self.click_and_hold(c[0] + self.sc.better_food_x_pos_offset, c[1] - self.sc.better_food_y_neg_offset, 3000)
+            self.click_and_hold(c[0] + self.sc.better_food_pos_offset_x, c[1] - self.sc.better_food_neg_offset_y, 3000)
             time.sleep(0.4)
             if c[1] < self.sc.food_icon_tooltip_boundary_y:  # to avoid null zone overlapping with tooltip
-                self.click([c[0] - self.sc.better_food_x_neg_offset, c[1] + self.sc.upgrade_food_y_offset])
+                self.click([c[0] - self.sc.better_food_neg_offset_x, c[1] + self.sc.upgrade_food_offset_y])
             else:
                 self.click(self.loc.null_click_coords)
             time.sleep(0.2)
@@ -601,6 +592,7 @@ class AutoEatventure:
 
     def open_boxes(self):
         box_locations = self.get_all_boxes_locations()
+        print('box_locationsSSSSS', box_locations)
         for c in box_locations:
             self.click(c)
             time.sleep(0.2)

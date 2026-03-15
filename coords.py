@@ -102,7 +102,7 @@ swipe_layout_little_down_end_y = 604
 # ── Y-Boundary Thresholds ─────────────────────────────────────────────────────
 
 # Items below this Y are excluded from food icon detection (avoids club icon area)
-danger_y_max = 2200
+danger_max_y = 2200
 
 # Food icons above this Y need special click offset to avoid tooltip overlap
 food_icon_tooltip_boundary_y = 1240
@@ -127,14 +127,14 @@ boost_check_pixel2_y = 274
 # ── Click Offsets ─────────────────────────────────────────────────────────────
 
 # Y offset when tapping a food icon to open its upgrade menu
-upgrade_food_y_offset = 22
+upgrade_food_offset_y = 22
 
 # Offsets for the click-and-hold gesture that opens the "buy better food" menu
-better_food_y_neg_offset = 130
-better_food_x_pos_offset = 20
+better_food_neg_offset_y = 130
+better_food_pos_offset_x = 20
 
 # X offset for clicking the "buy better food" button relative to the food icon
-better_food_x_neg_offset = 110
+better_food_neg_offset_x = 110
 
 # Offset applied when clicking a detected small investor icon
 small_investor_click_offset_x = 10

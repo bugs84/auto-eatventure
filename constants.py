@@ -149,7 +149,7 @@ class Constants:
             }
         }
 
-        self.danger_y_max = sc.danger_y_max
+        self.danger_max_y = sc.danger_max_y
 
         self.swipe_layout_little_down_coords = {
             'start': {
