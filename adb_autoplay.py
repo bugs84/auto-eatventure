@@ -592,7 +592,6 @@ class AutoEatventure:
 
     def open_boxes(self):
         box_locations = self.get_all_boxes_locations()
-        print('box_locationsSSSSS', box_locations)
         for c in box_locations:
             self.click(c)
             time.sleep(0.2)
