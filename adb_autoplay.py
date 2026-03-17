@@ -12,6 +12,7 @@ import subprocess
 from io import BytesIO
 from PIL import Image
 from dotenv import load_dotenv
+import sys
 load_dotenv()
 
 
@@ -140,9 +141,15 @@ class AutoEatventure:
         """In memory capture screenshot
         """
         # pilimg = self.device.screenshot()
-        adb_command = f'adb -s {self.device.serial} shell screencap -p'
-        output = subprocess.check_output(adb_command.split())
-        output = output.replace(b'\r\n', b'\n')  # fix Windows line ending corruption
+        if sys.platform == 'win32':
+            # On Windows, ADB shell corrupts binary data by converting \n to \r\n
+            adb_command = f'adb -s {self.device.serial} shell screencap -p'
+            output = subprocess.check_output(adb_command.split())
+            output = output.replace(b'\r\n', b'\n')
+        else:
+            # On Linux/macOS, use exec-out to get raw binary without line ending conversion
+            adb_command = f'adb -s {self.device.serial} exec-out screencap -p'
+            output = subprocess.check_output(adb_command.split())
 
         # Convert the output to a PIL Image object
         pilimg = Image.open(io.BytesIO(output))
