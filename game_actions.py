@@ -10,6 +10,11 @@ import time
 import random
 
 
+SWIPE_PATTERN_LENGTH = 6
+STALE_RESTART_THRESHOLD = 50
+STALE_SWIPE_THRESHOLD = 15
+
+
 class GameActions:
   """Game action methods that operate on a Device and
   TemplateMatcher."""
@@ -19,6 +24,14 @@ class GameActions:
     self.matcher = matcher
     self.loc = loc
     self.sc = device.sc
+    self._swipe_pattern = [
+      loc.swipe_layout_down_coords,
+      loc.swipe_layout_down_coords,
+      loc.swipe_layout_down_coords,
+      loc.swipe_layout_up_coords,
+      loc.swipe_layout_up_coords,
+      loc.swipe_layout_up_coords,
+    ]
 
   # ── Detection helpers ─────────────────────────────────────
 
@@ -102,6 +115,81 @@ class GameActions:
       self.device.capture_screenshot()
       return True
     return False
+
+  def handle_stale_state(self, nothing_to_update_count,
+                         swipe_count):
+    """Handle when no actionable items found for too long.
+
+    Returns updated swipe_count.
+    """
+    if nothing_to_update_count > STALE_RESTART_THRESHOLD:
+      print('Nothing to update — restarting app.')
+      self.device.start_app()
+      time.sleep(1)
+      self.device.click(self.loc.null_click_coords)
+      time.sleep(1)
+
+    if (nothing_to_update_count >= STALE_SWIPE_THRESHOLD
+        and nothing_to_update_count % 5 == 0):
+      coords = self._swipe_pattern[
+        swipe_count % len(self._swipe_pattern)]
+      self.device.swipe(**coords)
+      time.sleep(3)
+      swipe_count += 1
+
+    return swipe_count
+
+  def reposition_after_new_level(self, food_icon_locations):
+    """Swipe layout to position first food icon correctly.
+
+    Called once after a new level starts when food icons
+    are first detected.
+    """
+    y_coords = [c[1] for c in food_icon_locations]
+    min_y_idx = y_coords.index(min(y_coords))
+    swipe_x = food_icon_locations[min_y_idx][0]
+    self.device.swipe(
+      start={'y': min(y_coords), 'x': swipe_x},
+      end={
+        'x': swipe_x,
+        'y': self.sc.food_icon_tooltip_boundary_y})
+    time.sleep(3)
+    self.device.start_app()
+    time.sleep(3)
+    self.device.capture_screenshot()
+
+  def adjust_layout_if_icons_too_high(self,
+                                      food_icon_locations):
+    """Swipe up if any food icon is too close to the top.
+
+    Returns True if layout was adjusted (caller should
+    re-capture and continue).
+    """
+    for c in food_icon_locations:
+      if c[1] <= self.sc.food_icon_top_boundary_y:
+        self.device.swipe(
+          **self.loc.swipe_layout_little_up_coords)
+        time.sleep(3)
+        self.device.start_app()
+        time.sleep(1)
+        self.device.capture_screenshot()
+        return True
+    return False
+
+  def try_upgrade_items(self, count, new_level_started):
+    """Attempt upgrades every 5th iteration.
+
+    Returns updated new_level_started flag.
+    """
+    if count % 5 == 0 and self.is_having_upgrade():
+      print('Upgrading items')
+      if new_level_started:
+        self.do_upgrades(upgrade_count=50)
+        new_level_started = False
+      else:
+        self.do_upgrades()
+      self.device.capture_screenshot()
+    return new_level_started
 
   def open_boxes(self):
     """Find and click all visible boxes."""
