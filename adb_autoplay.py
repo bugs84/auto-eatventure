@@ -69,6 +69,7 @@ class AutoEatventure:
             'small_investor_icon': './matching_screenshots/small_investor_icon.png',
             'investor': './matching_screenshots/investor.png',
             'chest_icon': './matching_screenshots/chest_icon.png',
+            'popup_close_cross': './matching_screenshots/popup_close_cross.png',
             'ads_crosses': {
                 'cross1': './matching_screenshots/ads_crosses/cross1.png',
             }
@@ -395,6 +396,17 @@ class AutoEatventure:
     def is_having_chest_icon(self):
         return self.is_image_template_matching(self.matching_templates_cv2['chest_icon'])
 
+    def get_popup_close_cross(self):
+        """Find the red X close button on popup dialogs.
+
+        Returns the (x, y) coordinates of the match, or None if not found.
+        """
+        hsv_sc = self.current_cv2_sc_bgr2hsv
+        hsv_template = self.matching_templates_cv2['popup_close_cross']['bgr2hsv']
+        matched_coordinates = self.find_template(
+            hsv_sc, hsv_template, threshold=0.8)
+        return matched_coordinates
+
     def get_all_boxes_locations(self):
         # Use raw BGR matching — color masking was filtering out valid boxes
         # on devices where box colors differ slightly from the reference device.
@@ -720,6 +732,17 @@ class AutoEatventure:
             with Timer("Capturing screenshot"):
                 self.capture_screenshot()
 
+            # close accidental popups (~every 5 minutes)
+            if count % 150 == 0:
+                cross_loc = self.get_popup_close_cross()
+                if cross_loc:
+                    th, tw = self.matching_templates_cv2['popup_close_cross']['simple'].shape[:2]
+                    cx = cross_loc[0] + tw // 2
+                    cy = cross_loc[1] + th // 2
+                    print(f'Popup detected — closing at ({cx}, {cy})')
+                    self.click([cx, cy])
+                    time.sleep(1)
+                    self.capture_screenshot()
 
             # check for investor (disabled)
             # if count % 3 == 0:
