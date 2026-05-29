@@ -16,7 +16,10 @@ import numpy as np
 from adbutils import adb
 from PIL import Image
 
+from logger import get_logger
 from scaled_coords import ScaledCoords, detect_resolution
+
+log = get_logger(__name__)
 
 
 class Device:
@@ -33,8 +36,9 @@ class Device:
           "No ADB devices connected. "
           "Connect your phone and enable USB Debugging.")
       self.device = devices[0]
-      print(f"[Device] No device_serial in .env — "
-            f"using first connected device: {self.device.serial}")
+      log.warning("No device_serial in .env — "
+                  "using first connected device: %s",
+                  self.device.serial)
 
     actual_w, actual_h = detect_resolution(self.device)
     self.sc = ScaledCoords(actual_w, actual_h)

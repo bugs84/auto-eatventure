@@ -4,3 +4,4 @@
 *.AppImage
 .venv
 /.idea/
+logs/

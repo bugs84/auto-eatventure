@@ -9,6 +9,10 @@ handle their own screenshot refreshes when needed.
 import time
 import random
 
+from logger import get_logger
+
+log = get_logger(__name__)
+
 
 SWIPE_PATTERN_LENGTH = 6
 STALE_RESTART_THRESHOLD = 50
@@ -109,7 +113,8 @@ class GameActions:
       th, tw = tmpl['simple'].shape[:2]
       cx = cross_loc[0] + tw // 2
       cy = cross_loc[1] + th // 2
-      print(f'Popup detected — closing at ({cx}, {cy})')
+      log.info('Popup detected — closing at (%d, %d)',
+               cx, cy)
       self.device.click([cx, cy])
       time.sleep(1)
       self.device.capture_screenshot()
@@ -123,7 +128,7 @@ class GameActions:
     Returns updated swipe_count.
     """
     if nothing_to_update_count > STALE_RESTART_THRESHOLD:
-      print('Nothing to update — restarting app.')
+      log.warning('Nothing to update — restarting app.')
       self.device.start_app()
       time.sleep(1)
       self.device.click(self.loc.null_click_coords)
@@ -182,7 +187,7 @@ class GameActions:
     Returns updated new_level_started flag.
     """
     if count % 5 == 0 and self.is_having_upgrade():
-      print('Upgrading items')
+      log.debug('Upgrading items')
       if new_level_started:
         self.do_upgrades(upgrade_count=50)
         new_level_started = False
@@ -250,12 +255,12 @@ class GameActions:
 
   def open_chests(self):
     """Recursively open all available chests."""
-    print('Checking for chests')
+    log.debug('Checking for chests')
     time.sleep(1)
     self.device.capture_screenshot()
     time.sleep(1)
     if self.is_having_chest_icon():
-      print('Chest found — opening.')
+      log.info('Chest found — opening.')
       self.device.click(self.loc.chest_coords)
       time.sleep(2)
       self.device.click(self.loc.chest_coords)
@@ -287,7 +292,7 @@ class GameActions:
     elif self.is_having_fly_next_city_icon():
       self.device.click(self.loc.next_level_button_coords)
       time.sleep(2)
-      print('Flying to next city')
+      log.info('Flying to next city')
       self.device.click(
         self.loc.fly_next_city_button_coords)
       time.sleep(15)
@@ -309,7 +314,7 @@ class GameActions:
     redeem_button_coords = {
       'x': self.sc.redeem_investor_reward_x,
       'y': self.sc.redeem_investor_reward_y}
-    print('Finding investor')
+    log.debug('Finding investor')
     mc = None
 
     sc = self._gray()
@@ -331,9 +336,9 @@ class GameActions:
           mc[1] + self.sc.large_investor_click_offset_y])
 
     if mc:
-      print('Found investor')
+      log.info('Found investor')
       time.sleep(2)
-      print('Now claiming')
+      log.info('Now claiming')
       self.device.click(redeem_button_coords)
       time.sleep(5)
       self.device.start_app()
@@ -346,11 +351,11 @@ class GameActions:
       'y': self.sc.ad_button_y}
     time.sleep(1)
     for _ in range(12):
-      print('click ad button')
+      log.debug('click ad button')
       self.device.click(btn_coords)
       time.sleep(5)
       self.device.start_app()
-      print('app started')
+      log.info('app started')
       time.sleep(5)
 
   def run_ad(self):
@@ -359,11 +364,11 @@ class GameActions:
       'x': self.sc.ad_button_x,
       'y': self.sc.ad_button_y}
     time.sleep(5)
-    print('click ad button')
+    log.debug('click ad button')
     self.device.click(btn_coords)
     time.sleep(5)
     self.device.start_app()
-    print('app started')
+    log.info('app started')
     time.sleep(1)
 
   # ── Init / login ──────────────────────────────────────────
@@ -385,25 +390,25 @@ class GameActions:
     is_notification_closed = False
     is_first_stand_closed = False
     while True:
-      print('checking ')
+      log.debug('checking')
       self.device.capture_screenshot()
       if (not is_notification_closed
           and self.is_having_notification()):
-        print('found notification')
+        log.info('found notification')
         self.device.click(
           self.loc.close_nofication_coords)
         is_notification_closed = True
         continue
       elif (not is_first_stand_closed
             and self.is_having_first_lemonade_stand_open()):
-        print('found first stand')
+        log.info('found first stand')
         self.device.click(
           self.loc.first_lemonade_stand_open_coords)
         is_notification_closed = True
         is_first_stand_closed = True
         continue
       elif self.is_having_settings():
-        print('found settings')
+        log.info('found settings')
         self.device.click(self.loc.settings_coords)
         is_notification_closed = True
         is_first_stand_closed = True

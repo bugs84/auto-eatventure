@@ -11,12 +11,16 @@ import random
 
 from dotenv import load_dotenv
 
+load_dotenv()
+
+from logger import setup_logging, get_logger
 from constants import Constants
 from device import Device
 from template_matcher import TemplateMatcher
 from game_actions import GameActions
 
-load_dotenv()
+setup_logging()
+log = get_logger(__name__)
 
 
 class AutoEatventure:

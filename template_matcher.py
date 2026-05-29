@@ -11,6 +11,10 @@ import cv2
 import numpy as np
 from sklearn.cluster import DBSCAN
 
+from logger import get_logger
+
+log = get_logger(__name__)
+
 
 class TemplateMatcher:
   """Loads and matches templates against screenshots."""
@@ -27,21 +31,20 @@ class TemplateMatcher:
         override = float(scale_override)
         self.template_x_scale = override
         self.template_y_scale = override
-        print(
-          f"[TemplateMatcher] TEMPLATE_SCALE_OVERRIDE="
-          f"{override:.4f} — overriding auto-scale "
-          f"(was x={sc.x_scale:.4f}, y={sc.y_scale:.4f})")
+        log.info(
+          "TEMPLATE_SCALE_OVERRIDE=%.4f — overriding "
+          "auto-scale (was x=%.4f, y=%.4f)",
+          override, sc.x_scale, sc.y_scale)
       except ValueError:
-        print(
-          f"[TemplateMatcher] Invalid "
-          f"TEMPLATE_SCALE_OVERRIDE={scale_override!r} — "
-          f"ignored, using resolution-based scale "
-          f"x={sc.x_scale:.4f}, y={sc.y_scale:.4f}")
+        log.warning(
+          "Invalid TEMPLATE_SCALE_OVERRIDE=%r — "
+          "ignored, using resolution-based scale "
+          "x=%.4f, y=%.4f",
+          scale_override, sc.x_scale, sc.y_scale)
     else:
-      print(
-        f"[TemplateMatcher] Template scale: "
-        f"x={self.template_x_scale:.4f}, "
-        f"y={self.template_y_scale:.4f}")
+      log.info(
+        "Template scale: x=%.4f, y=%.4f",
+        self.template_x_scale, self.template_y_scale)
 
     self.debug = os.getenv(
       "DEBUG_TEMPLATE_MATCHING", "0").strip() == "1"
@@ -133,7 +136,7 @@ class TemplateMatcher:
       image, template, cv2.TM_CCOEFF_NORMED)
     matches = cv2.minMaxLoc(result)
     if self.debug:
-      print(matches)
+      log.debug("matchTemplate result: %s", matches)
     _, max_val, _, max_loc = matches
     if max_val > threshold:
       return max_loc
@@ -154,7 +157,8 @@ class TemplateMatcher:
     result = cv2.matchTemplate(
       image, template, cv2.TM_CCOEFF_NORMED)
     if self.debug:
-      print(cv2.minMaxLoc(result))
+      log.debug("matchTemplate minMaxLoc: %s",
+                cv2.minMaxLoc(result))
     locations = np.where(result >= threshold)
 
     coordinates = []

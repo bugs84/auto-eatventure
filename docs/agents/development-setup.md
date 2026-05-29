@@ -48,6 +48,15 @@ DEBUG_TEMPLATE_MATCHING="0"
 
 # Optional: override auto-computed template scale factor
 TEMPLATE_SCALE_OVERRIDE=""
+
+# Logging: console level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+LOG_LEVEL="INFO"
+
+# Logging: file level (written to logs/autoplay.log)
+LOG_FILE_LEVEL="DEBUG"
+
+# Logging: days to keep rotated log files
+LOG_MAX_DAYS="7"
 ```
 
 ## Dependencies
@@ -77,10 +86,11 @@ pylint adb_autoplay.py device.py template_matcher.py game_actions.py
 ## Source File Layout
 
 ```
-adb_autoplay.py              # Entry point + game loop (~84 lines)
-device.py                    # ADB device layer (~110 lines)
-template_matcher.py          # OpenCV matching (~220 lines)
-game_actions.py              # Game logic (~340 lines)
+adb_autoplay.py              # Entry point + game loop (~86 lines)
+logger.py                    # Logging setup (~75 lines)
+device.py                    # ADB device layer (~115 lines)
+template_matcher.py          # OpenCV matching (~267 lines)
+game_actions.py              # Game logic (~411 lines)
 coords.py                    # Reference coordinates
 scaled_coords.py             # Resolution scaling
 constants.py                 # Coordinate dicts

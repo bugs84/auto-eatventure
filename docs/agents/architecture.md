@@ -11,6 +11,8 @@ The project is a **multi-module Python bot** that automates the Android mobile g
 ```
 adb_autoplay.py (AutoEatventure - orchestrator)
     |
+    +-- logger.py --- centralized logging (console + file)
+    |
     +-- device.py (Device) --- ADB interaction layer
     |
     +-- template_matcher.py (TemplateMatcher) --- OpenCV detection engine
@@ -34,7 +36,8 @@ adb_autoplay.py (AutoEatventure - orchestrator)
 
 | Module | Class | Responsibility |
 |--------|-------|---------------|
-| `adb_autoplay.py` | `AutoEatventure` | Entry point. Initializes all modules, runs the ~40-line game loop that calls high-level actions. |
+| `adb_autoplay.py` | `AutoEatventure` | Entry point. Initializes logging and all modules, runs the ~40-line game loop that calls high-level actions. |
+| `logger.py` | (module-level) | Centralized logging configuration. Console handler (INFO default) + daily-rotating file handler (DEBUG default) writing to `logs/`. |
 | `device.py` | `Device` | ADB device interaction: click, swipe, text input, screenshot capture, app lifecycle. |
 | `template_matcher.py` | `TemplateMatcher` | Template loading/resizing, `find_template()`, `find_all_templates()` with DBSCAN, color masking, pixel color checks. |
 | `game_actions.py` | `GameActions` | All game logic: detection helpers (`is_having_*`), game actions (upgrade, boxes, chests, levels), stale state recovery, layout adjustments. |

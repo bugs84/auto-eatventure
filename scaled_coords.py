@@ -17,6 +17,10 @@ Usage:
 import re
 import coords
 
+from logger import get_logger
+
+log = get_logger(__name__)
+
 
 def detect_resolution(device) -> tuple[int, int]:
     """Query actual screen resolution from the device via ADB.
@@ -30,8 +34,9 @@ def detect_resolution(device) -> tuple[int, int]:
     if not match:
         raise RuntimeError(f"Could not parse resolution from 'wm size' output: {output!r}")
     width, height = int(match.group(1)), int(match.group(2))
-    print(f"[ScaledCoords] Detected resolution: {width}x{height} "
-          f"(reference: {coords.REFERENCE_WIDTH}x{coords.REFERENCE_HEIGHT})")
+    log.info("Detected resolution: %dx%d (reference: %dx%d)",
+             width, height,
+             coords.REFERENCE_WIDTH, coords.REFERENCE_HEIGHT)
     return width, height
 
 
@@ -43,8 +48,10 @@ def detect_resolution_appium(driver) -> tuple[int, int]:
     """
     size = driver.get_window_size()
     width, height = size['width'], size['height']
-    print(f"[ScaledCoords] Detected resolution (Appium): {width}x{height} "
-          f"(reference: {coords.REFERENCE_WIDTH}x{coords.REFERENCE_HEIGHT})")
+    log.info("Detected resolution (Appium): %dx%d "
+             "(reference: %dx%d)",
+             width, height,
+             coords.REFERENCE_WIDTH, coords.REFERENCE_HEIGHT)
     return width, height
 
 

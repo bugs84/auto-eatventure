@@ -26,12 +26,14 @@ adb_autoplay.py              # Entry point + main game loop (orchestration only)
 device.py                    # ADB device interaction (click, swipe, screenshot)
 template_matcher.py          # OpenCV template matching + DBSCAN clustering
 game_actions.py              # High-level game actions (upgrade, boxes, chests, levels)
+logger.py                    # Centralized logging config (console + file, daily rotation)
 coords.py                    # Raw pixel coordinates (reference: 1220x2712)
 scaled_coords.py             # Resolution-adaptive coordinate proxy
 constants.py                 # Bundles scaled coords into {x,y} dicts
 matching_screenshots/        # Template PNG images for OpenCV detection
   ads_crosses/               # Ad close button templates
 captured_screenshots_on_the_fly/  # Runtime screenshots
+logs/                        # Runtime log files (gitignored, daily rotation)
 experiments/                 # Experimental scripts (investor, box detection)
 .env-sample                  # Environment variable template
 .pylintrc                    # Pylint configuration
@@ -80,4 +82,5 @@ requirements.txt             # Python dependencies
 - **[Game Loop](docs/agents/game-loop.md)** - Main loop structure, periodic actions, level transitions, and recovery logic.
 - **[Coordinates and Scaling](docs/agents/coordinates-and-scaling.md)** - Resolution-independent coordinate system and how to add new coordinates.
 - **[ADB Interaction](docs/agents/adb-interaction.md)** - Device connection, input commands, screenshot capture, and platform differences.
+- **[Logging](docs/agents/logging.md)** - Centralized logging setup, log levels, daily rotation, and configuration.
 - **[Development Setup](docs/agents/development-setup.md)** - Prerequisites, quick start, dependencies, linting, and environment configuration.
