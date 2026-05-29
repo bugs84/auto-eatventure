@@ -18,7 +18,7 @@ scaled_coords.py (ScaledCoords proxy - scales by device ratio)
 constants.py (Constants - bundles into {x, y} dicts)
     |
     v
-adb_autoplay.py (uses self.loc.xxx for all interactions)
+game_actions.py (uses self.loc.xxx for all interactions)
 ```
 
 ## coords.py
@@ -34,9 +34,8 @@ Pure data module at project root. Contains:
 
 ### Naming Convention
 
-All coordinate variables follow the pattern: `<element_name>_<x|y>`
+All coordinate variables follow: `<element_name>_<x|y>`
 
-Examples:
 ```python
 settings_x = 1134
 settings_y = 161
@@ -44,13 +43,11 @@ swipe_layout_down_start_x = 646
 swipe_layout_down_start_y = 1889
 ```
 
+**Rule**: Variables with `_x` suffix are scaled horizontally, `_y` suffix vertically. Variables without these suffixes (e.g., `dbscan_eps`) pass through unscaled.
+
 ## scaled_coords.py
 
-`ScaledCoords` class uses Python's `__getattr__` to intercept attribute access:
-
-- Attributes ending in `_x` -> scaled by `actual_width / REFERENCE_WIDTH`
-- Attributes ending in `_y` -> scaled by `actual_height / REFERENCE_HEIGHT`
-- All other attributes -> passed through unscaled (e.g., `dbscan_eps`)
+`ScaledCoords` uses Python's `__getattr__` to intercept attribute access:
 
 ```python
 sc = ScaledCoords(actual_w, actual_h)
@@ -61,41 +58,34 @@ sc.dbscan_eps    # returns 10 (no suffix, no scaling)
 
 ### Resolution Detection
 
-`detect_resolution(device)` at `scaled_coords.py:21`:
-- Calls `device.shell("wm size")`
-- Parses output like `"Physical size: 1080x2400"`
-- Returns `(width, height)` tuple
+`detect_resolution(device)` calls `device.shell("wm size")` and parses output like `"Physical size: 1080x2400"`.
 
 ## constants.py
 
-`Constants` class bundles pairs of scaled coordinates into dictionaries:
+`Constants` bundles coordinate pairs into dicts:
 
 ```python
-self.settings_coords = {
-    'x': sc.settings_x,
-    'y': sc.settings_y
-}
-
+self.settings_coords = {'x': sc.settings_x, 'y': sc.settings_y}
 self.swipe_layout_down_coords = {
-    'start': {'x': sc.swipe_layout_down_start_x, 'y': sc.swipe_layout_down_start_y},
-    'end': {'x': sc.swipe_layout_down_end_x, 'y': sc.swipe_layout_down_end_y}
+    'start': {'x': ..., 'y': ...},
+    'end': {'x': ..., 'y': ...}
 }
 ```
 
-Used as: `self.click(self.loc.settings_coords)` or `self.swipe(**self.loc.swipe_layout_down_coords)`
+Used as: `self.device.click(self.loc.settings_coords)`
 
 ## Adding New Coordinates
 
 1. Add raw pixel values to `coords.py` with `_x` / `_y` suffix
 2. If it's a tap target, add a `{x, y}` dict in `constants.py`
-3. If it's a swipe, add a `{start: {x, y}, end: {x, y}}` dict in `constants.py`
-4. Use via `self.loc.<name>_coords` in `adb_autoplay.py`
+3. If it's a swipe, add a `{start: {x, y}, end: {x, y}}` dict
+4. Use via `self.loc.<name>_coords` in `game_actions.py`
 
 ## Key Boundaries and Thresholds
 
 | Variable | Value | Purpose |
 |----------|-------|---------|
-| `danger_max_y` | 2200 | Items below this Y excluded from food detection (club icon area) |
-| `food_icon_tooltip_boundary_y` | 1240 | Food icons above this need offset click to avoid tooltip overlap |
-| `food_icon_top_boundary_y` | 1100 | Icons above this trigger swipe-up to reposition layout |
-| `dbscan_eps` | 10 | Max pixel distance for DBSCAN clustering (not scaled) |
+| `danger_max_y` | 2200 | Items below this excluded from food detection |
+| `food_icon_tooltip_boundary_y` | 1240 | Food icons above this need offset click |
+| `food_icon_top_boundary_y` | 1100 | Icons above this trigger swipe-up |
+| `dbscan_eps` | 10 | DBSCAN pixel distance (not scaled) |

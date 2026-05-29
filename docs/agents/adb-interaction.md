@@ -4,25 +4,26 @@
 
 ## Overview
 
-All device interaction happens through **Android Debug Bridge (ADB)** via the `adbutils` Python library. The bot sends input events and captures screenshots without modifying the game.
+All device interaction happens through **Android Debug Bridge (ADB)** via the `adbutils` Python library. The `Device` class in `device.py` encapsulates all ADB communication.
 
 ## Device Connection
 
-Initialization at `adb_autoplay.py:20`:
+`Device.__init__()` at `device.py`:
 
 ```python
 serial = os.getenv("device_serial", "").strip()
 if serial:
     self.device = adb.device(serial=serial)
 else:
-    devices = adb.device_list()
-    self.device = devices[0]  # first connected device
+    self.device = adb.device_list()[0]  # first connected
 ```
 
 - Set `device_serial` in `.env` to target a specific device/emulator
 - Leave empty to auto-select the first connected device
 
 ## Input Commands
+
+All methods are on the `Device` class in `device.py`:
 
 ### Tap
 
@@ -32,11 +33,10 @@ def click(self, coords):
     self.device.shell(f"input tap {x} {y}")
 ```
 
-### Long Press (Click and Hold)
+### Long Press
 
 ```python
 def click_and_hold(self, x, y, hold_duration=1000):
-    # Simulates long press using a zero-distance swipe
     self.device.shell(f'input swipe {x} {y} {x} {y} {hold_duration}')
 ```
 
@@ -51,69 +51,44 @@ def swipe(self, start, end):
 
 ```python
 def input_text(self, text):
-    escaped_text = text.replace(" ", "%s").replace("&", "\\&").replace("|", "\\|")
+    escaped_text = text.replace(" ", "%s").replace("&", "\\&")...
     self.device.shell(f"input text '{escaped_text}'")
 ```
 
 ## Screenshot Capture
 
-Two methods exist:
+`Device.capture_screenshot()` at `device.py`:
 
-### In-Memory (Primary) -- `capture_screenshot()` at `adb_autoplay.py:140`
+- **Windows**: `adb shell screencap -p` with `\r\n` -> `\n` fix
+- **Linux/macOS**: `adb exec-out screencap -p` (raw binary)
 
-```python
-# Windows: shell screencap with \r\n -> \n fix
-adb_command = f'adb -s {self.device.serial} shell screencap -p'
-output = subprocess.check_output(adb_command.split())
-output = output.replace(b'\r\n', b'\n')
-
-# Linux/macOS: exec-out for raw binary
-adb_command = f'adb -s {self.device.serial} exec-out screencap -p'
-output = subprocess.check_output(adb_command.split())
-```
-
-Then converted:
-1. `output` -> PIL Image (`Image.open(BytesIO(output))`)
-2. PIL -> numpy array (RGB)
-3. RGB -> BGR (OpenCV format)
-4. BGR -> grayscale and HSV variants stored on instance
-
-### On-Disk (Legacy/Debug) -- `capture_screenshot_on_disk()` at `adb_autoplay.py:128`
-
-Saves to `./captured_screenshots_on_the_fly/screenshot.png` then reads back with `cv2.imread`.
+After capture, stores three representations on the instance:
+- `current_cv2_sc` -- BGR numpy array
+- `current_cv2_sc_grayscale` -- grayscale numpy array
+- `current_cv2_sc_bgr2hsv` -- HSV numpy array
 
 ## App Lifecycle
 
-### Launch
-
 ```python
 def start_app(self):
-    self.device.shell(f"monkey -p {self.package_name} -c android.intent.category.LAUNCHER 1")
-```
+    self.device.shell(f"monkey -p {self.package_name} -c ... 1")
 
-### Kill
-
-```python
 def close_app(self):
     self.device.shell(f"am force-stop {self.package_name}")
 ```
 
-### Package Name
-
-```python
-self.package_name = "com.hwqgrhhjfd.idlefastfood"
-```
+Package: `com.hwqgrhhjfd.idlefastfood`
 
 ## Platform Differences
 
 | Platform | Screenshot Method | Notes |
 |----------|-------------------|-------|
-| Windows | `adb shell screencap -p` + `\r\n` -> `\n` fix | ADB corrupts binary on Windows |
+| Windows | `adb shell screencap -p` + `\r\n` fix | ADB corrupts binary on Windows |
 | Linux/macOS | `adb exec-out screencap -p` | Raw binary output |
 
 ## Prerequisites
 
-- ADB must be installed and on `PATH`
-- Device must have USB debugging enabled
-- Emulator or physical device must be connected via `adb devices`
-- Game must be installed: `com.hwqgrhhjfd.idlefastfood` (Eatventure)
+- ADB installed and on `PATH`
+- Device has USB debugging enabled
+- Emulator or physical device connected (`adb devices` shows it)
+- Game installed: `com.hwqgrhhjfd.idlefastfood`

@@ -4,105 +4,97 @@
 
 ## Overview
 
-The project uses **OpenCV template matching** (`cv2.matchTemplate` with `TM_CCOEFF_NORMED`) to detect game UI elements in screenshots. No OCR is used.
+The project uses **OpenCV template matching** (`cv2.matchTemplate` with `TM_CCOEFF_NORMED`) to detect game UI elements in screenshots. No OCR is used. All matching logic lives in `template_matcher.py` (`TemplateMatcher` class).
 
 ## Matching Strategies
 
 ### 1. HSV Matching (Default)
 
-Used by `is_image_template_matching()` at `adb_autoplay.py:222`.
+`TemplateMatcher.match_hsv()` / `is_hsv_match()`:
 
 ```python
-hsv_sc = self.current_cv2_sc_bgr2hsv
-hsv_template = template_cv_imgs['bgr2hsv']
-matched_coordinates = self.find_template(hsv_sc, hsv_template, threshold=threshold)
+hsv_template = self.templates[key]['bgr2hsv']
+result = self.find_template(screenshot_hsv, hsv_template, threshold)
 ```
 
 - Converts both screenshot and template to HSV color space
 - More robust to lighting variations in the game
+- Used for most UI elements
 
 ### 2. Grayscale Matching
 
-Used by `is_bnw_image_template_matching()` at `adb_autoplay.py:231`.
+`TemplateMatcher.match_grayscale()` / `is_grayscale_match()`:
 
-- Used for small investor icon detection
+- Used for small investor icon, ad cross buttons
 - Less affected by color shifts
 
 ### 3. Color-Masked Matching
 
-Used for investor and box detection:
+Uses `apply_investor_mask()` or `apply_box_mask()` to isolate specific HSV color ranges before matching:
 
-- `apply_investor_mask()` at `adb_autoplay.py:249` -- isolates specific HSV colors (#696548, #776F4B, etc.)
-- `apply_box_mask()` at `adb_autoplay.py:267` -- isolates box-specific gold/brown colors
+- Investor: isolates gold/khaki tones
+- Box: isolates brown/gold tones
+- Lower threshold needed (0.65) due to reduced information after masking
 
 ### 4. Raw BGR Matching
 
-Used by `get_all_boxes_locations()` at `adb_autoplay.py:398`.
+Direct matching without color space conversion:
 
-- Direct matching without color space conversion
+- Used by `find_all_templates()` for box detection
 - Fallback when masked matching fails on different devices
 
 ## Multi-Match Detection with DBSCAN
 
-`find_all_templates()` at `adb_autoplay.py:181` finds **all** locations where a template matches above threshold, then uses **DBSCAN clustering** to deduplicate:
+`TemplateMatcher.find_all_templates()` at `template_matcher.py`:
 
-```python
-dbscan = DBSCAN(eps=self.sc.dbscan_eps, min_samples=5)
-dbscan.fit(coord_array)
-```
+1. Finds **all** locations above threshold
+2. Calculates center point for each match
+3. Clusters with DBSCAN (`eps=10`, `min_samples=5`)
+4. Returns cluster centroids as final positions
 
-- `eps` = 10 pixels (from `coords.py:150`) -- max distance between points in same cluster
-- `min_samples` = 5 -- minimum points to form a cluster
-- Returns cluster centroids as final match positions
+## Template Catalog
 
-## Template Images
+All templates are in `matching_screenshots/` and registered in `TemplateMatcher.__init__()`:
 
-All templates are in `matching_screenshots/`:
-
-| Template | Purpose | Matching Strategy |
-|----------|---------|-------------------|
-| `notification.png` | Notification dialog | HSV |
-| `settings.png` | Settings icon (game loaded check) | HSV |
-| `offline_earnings.png` | Offline earnings popup | HSV |
-| `upgrade_button.png` | Upgrade button (threshold 0.97) | HSV |
-| `buy_better_food_icon.png` | Food upgrade icon (multi-match) | Grayscale |
-| `buy_better_food_button.png` | Buy button in upgrade menu | HSV |
-| `box.png`, `box2.png` | Collectible boxes (multi-match) | Raw BGR |
-| `go_next_level_icon.png` | Next level indicator (threshold 0.95) | HSV |
-| `fly_next_city_icon.png` | Fly to next city (threshold 0.95) | HSV |
-| `small_investor_icon.png` | Small investor icon | Grayscale |
-| `investor.png` | Large investor (threshold 0.65) | Color-masked |
-| `chest_icon.png` | Chest icon | HSV |
-| `no_boost_indicator_2x.png` | No-boost check | HSV |
-| `ads_crosses/cross1.png` | Ad close button | Grayscale |
+| Template | Detection Method (in `game_actions.py`) | Strategy | Threshold |
+|----------|----------------------------------------|----------|-----------|
+| `notification.png` | `is_having_notification()` | HSV | 0.8 |
+| `settings.png` | `is_having_settings()` | HSV | 0.8 |
+| `offline_earnings.png` | `is_having_offline_earnings()` | HSV | 0.8 |
+| `upgrade_button.png` | `is_having_upgrade()` | HSV | 0.97 |
+| `buy_better_food_icon.png` | `get_food_icon_locations()` | Grayscale multi | 0.8 |
+| `buy_better_food_button.png` | (available) | HSV | 0.8 |
+| `box.png`, `box2.png` | `open_boxes()` | BGR multi | 0.7 |
+| `go_next_level_icon.png` | `is_having_next_level_icon()` | HSV | 0.95 |
+| `fly_next_city_icon.png` | `is_having_fly_next_city_icon()` | HSV | 0.95 |
+| `small_investor_icon.png` | `is_having_small_investor_icon()` | Grayscale | 0.8 |
+| `investor.png` | `is_having_investor()` | Color-masked | 0.65 |
+| `chest_icon.png` | `is_having_chest_icon()` | HSV | 0.8 |
+| `popup_close_cross.png` | `close_accidental_popups()` | HSV | 0.8 |
+| `no_boost_indicator_2x.png` | (available) | HSV | 0.92 |
+| `ads_crosses/cross1.png` | (available) | Grayscale | 0.8 |
 
 ## Template Scaling
 
-Templates are resized at load time to match the actual device resolution:
+Templates are resized at load time in `TemplateMatcher._resize_template()`:
 
 ```python
-def _resize_template(self, template):
-    target_w = max(1, round(w * self.template_x_scale))
-    target_h = max(1, round(h * self.template_y_scale))
-    interpolation = cv2.INTER_AREA if shrinking else cv2.INTER_LINEAR
-    return cv2.resize(template, (target_w, target_h), interpolation=interpolation)
+target_w = max(1, round(w * self.template_x_scale))
+target_h = max(1, round(h * self.template_y_scale))
 ```
 
-Scale factors are computed from `actual_resolution / reference_resolution` (1220x2712).
-
-Can be overridden with `TEMPLATE_SCALE_OVERRIDE` env var.
-
-## Thresholds
-
-Default threshold is `0.8`. Custom thresholds per element:
-
-- `upgrade_button`: 0.97 (very strict -- avoid false positives)
-- `go_next_level`: 0.95
-- `fly_next_city`: 0.95
-- `no_boost_indicator_2x`: 0.92
-- `investor` (color-masked): 0.65 (lenient due to mask reducing information)
-- `box` / `box2` (multi-match): 0.7
+- Scale factors = `actual_resolution / reference_resolution` (1220x2712)
+- Uses `INTER_AREA` when shrinking, `INTER_LINEAR` when enlarging
+- Can be overridden with `TEMPLATE_SCALE_OVERRIDE` env var
 
 ## Debug Mode
 
 Set `DEBUG_TEMPLATE_MATCHING="1"` in `.env` to print raw `cv2.minMaxLoc` values for every template check. Very noisy -- only use when tuning thresholds.
+
+## Adding a New Template
+
+1. Capture screenshot with the element visible
+2. Crop the element tightly as PNG, save to `matching_screenshots/`
+3. Add path to `self.matching_screenshots_path` dict in `TemplateMatcher.__init__()`
+4. Add detection method in `GameActions` (call `self.matcher.match_hsv()` or similar)
+5. Integrate into game loop in `adb_autoplay.py`

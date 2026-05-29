@@ -4,93 +4,87 @@
 
 ## Overview
 
-The main game loop lives in `AutoEatventure.start_playing_game()` at `adb_autoplay.py:684`. It runs **indefinitely**, performing actions based on what templates match in the current screenshot.
+The main game loop lives in `AutoEatventure.start_playing_game()` at `adb_autoplay.py:44`. It runs **indefinitely**, calling high-level methods from `GameActions`. The loop itself is ~40 lines of pure orchestration.
 
 ## Loop Structure
 
-```
-start_playing_game()
-  |
-  +-- Increment count
-  +-- Check stale state (nothing_to_update_count > 50 -> restart app)
-  +-- Swipe pattern (when nothing_to_update_count >= 15, every 5th frame)
-  +-- Capture screenshot
-  +-- [Every 5th iteration] Upgrade items (if upgrade button visible)
-  +-- [Every 2nd iteration] Find and open boxes
-  +-- Find food icons
-  +-- If food icons found:
-  |     +-- First time after level: swipe layout to reposition
-  |     +-- Check for "danger" food items too close to top -> swipe up
-  |     +-- Shuffle and upgrade food items (max 3 per iteration)
-  +-- If no food icons:
-  |     +-- Increment nothing_to_update_count
-  |     +-- [Every 10th iteration] Check for next level / next city
-  +-- Loop
+```python
+while True:
+    count += 1
+    swipe_count = actions.handle_stale_state(...)
+    device.capture_screenshot()
+    actions.close_accidental_popups()       # every 150 iterations
+    actions.try_upgrade_items(count, ...)   # every 5th iteration
+    actions.open_boxes()                    # every 2nd iteration
+    food_icons = actions.get_food_icon_locations()
+    # reposition after new level (once)
+    # adjust layout if icons too high
+    # upgrade food items or check next level
 ```
 
-## Periodic Actions by Count
+## Periodic Actions
 
-| Condition | Action |
-|-----------|--------|
-| `count % 2 == 0` | Find and open boxes |
-| `count % 5 == 0` | Open upgrade menu, click upgrade button (10x or 50x for new level) |
-| `count % 10 == 0` (no food icons) | Check if next level or next city is available |
+| Condition | Action | Method |
+|-----------|--------|--------|
+| Every iteration | Capture screenshot | `device.capture_screenshot()` |
+| `count % 2 == 0` | Find and open boxes | `actions.open_boxes()` |
+| `count % 5 == 0` | Open upgrade menu, click upgrades | `actions.try_upgrade_items()` |
+| `count % 10 == 0` (no food) | Check next level / city | `actions.check_to_go_next_level()` |
+| `count % 150 == 0` | Close accidental popups | `actions.close_accidental_popups()` |
 
 ## Stale State Recovery
 
-When `nothing_to_update_count` reaches thresholds:
+Handled by `GameActions.handle_stale_state()` in `game_actions.py`:
 
-- **>= 15** (every 5th after): Execute swipe pattern to reveal hidden elements
-- **> 50**: Force-restart the app via `start_app()` to escape stuck state
+- **`nothing_to_update_count >= 15`** (every 5th after): Swipe pattern to reveal hidden elements
+- **`nothing_to_update_count > 50`**: Force-restart the app
 
-Swipe pattern cycles through:
-```python
-[down, down, down, up, up, up]
-```
+Swipe pattern cycles through: `[down, down, down, up, up, up]`
 
 ## Level Transition Flow
 
-`check_to_go_next_level()` at `adb_autoplay.py:558`:
+`GameActions.check_to_go_next_level()` in `game_actions.py`:
 
 ### Same-city level (renovate):
-1. Detect `go_next_level_icon` template
-2. Click next level button
-3. Click renovate button
-4. Wait 10s for loading
-5. Click first lemonade stand
-6. Open all chests (recursive)
+1. Detect `go_next_level_icon` template (threshold 0.95)
+2. Click next level button -> renovate -> first lemonade stand
+3. Open all chests (recursive)
 
 ### New city (fly):
-1. Detect `fly_next_city_icon` template
-2. Click next level button
-3. Click fly to next city button
-4. Wait 15s for flight animation
-5. Click welcome OK button
-6. Click first lemonade stand
-7. Open all chests (recursive)
+1. Detect `fly_next_city_icon` template (threshold 0.95)
+2. Click next level -> fly -> welcome OK -> first stand
+3. Open all chests (recursive)
+
+### After transition:
+Reset all loop state: `swipe_count=0`, `nothing_to_update_count=0`, `new_level_started=True`, `new_level_first_food_icon_swipe=False`
 
 ## Food Upgrade Logic
 
-`upgrade_food_items()` at `adb_autoplay.py:585`:
+`GameActions.upgrade_food_items()` in `game_actions.py`:
 
 For each food icon (max 3 per iteration):
-1. Click the food icon (with Y offset to hit upgrade area)
-2. Click-and-hold above the icon (3000ms) to trigger "buy better food" menu
-3. Click dismiss (null zone or offset position depending on Y boundary)
+1. Click the food icon (with Y offset)
+2. Click-and-hold above (3000ms) to trigger "buy better food" menu
+3. Dismiss (null zone or offset depending on Y boundary)
 
-## Chest Opening
+## Layout Adjustment Methods
 
-`open_chests()` at `adb_autoplay.py:533` is **recursive**:
-1. Capture new screenshot
-2. If chest icon detected:
-   - Click chest icon (open it)
-   - Click 3 more times (collect items)
-   - Click close button
-   - Call `open_chests()` again (for multiple chests)
+| Method | Purpose | Trigger |
+|--------|---------|---------|
+| `reposition_after_new_level()` | Swipe first food icon to correct position | Once after new level, when food icons first appear |
+| `adjust_layout_if_icons_too_high()` | Swipe up if icon near top edge | Every iteration with food icons above `food_icon_top_boundary_y` |
+
+## Popup Closing
+
+`GameActions.close_accidental_popups()` in `game_actions.py`:
+- Uses `popup_close_cross` template (red X button)
+- Clicks center of detected button
+- Re-captures screenshot after closing
 
 ## Disabled Features
 
-Currently commented out in the game loop:
+Currently not called in the game loop (methods exist in `game_actions.py`):
 
-- **Investor redemption** (`redeem_investor()`) -- was checked every 3rd iteration
-- **Ad watching for boost** (`run_full_boost_ads()`) -- was checked every 100th iteration
+- `redeem_investor()` -- find and claim investor reward
+- `run_full_boost_ads()` -- watch 12 ads for full boost
+- `run_ad()` -- watch single ad

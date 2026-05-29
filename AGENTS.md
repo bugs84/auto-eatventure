@@ -22,7 +22,10 @@
 ## Project Structure
 
 ```
-adb_autoplay.py              # Entry point + AutoEatventure class (all bot logic)
+adb_autoplay.py              # Entry point + main game loop (orchestration only)
+device.py                    # ADB device interaction (click, swipe, screenshot)
+template_matcher.py          # OpenCV template matching + DBSCAN clustering
+game_actions.py              # High-level game actions (upgrade, boxes, chests, levels)
 coords.py                    # Raw pixel coordinates (reference: 1220x2712)
 scaled_coords.py             # Resolution-adaptive coordinate proxy
 constants.py                 # Bundles scaled coords into {x,y} dicts
@@ -41,7 +44,7 @@ requirements.txt             # Python dependencies
 ### Code Style
 - Follow `.pylintrc`: 2-space indent, max 79 chars, LF line endings.
 - KISS principle: keep implementations simple and readable (see `.github/agents/clean-code-implementer.agent.md`).
-- Single-class architecture: all bot logic stays in `AutoEatventure`.
+- Multi-module architecture: orchestration in `adb_autoplay.py`, details in dedicated modules.
 - No unnecessary abstractions or design patterns.
 
 ### Coordinate System
@@ -64,8 +67,8 @@ requirements.txt             # Python dependencies
 ### Adding New Game Actions
 1. Capture a template screenshot of the UI element.
 2. Save it to `matching_screenshots/` as PNG.
-3. Add path to `self.matching_screenshots_path` dict in `AutoEatventure.__init__()`.
-4. Add detection method (`is_having_*` or `get_all_*_locations`).
+3. Add path to `self.matching_screenshots_path` dict in `TemplateMatcher.__init__()`.
+4. Add detection method (`is_having_*` or `get_*`) in `game_actions.py`.
 5. Add coordinates to `coords.py` if tap targets are needed.
 6. Add coordinate dicts to `constants.py`.
 7. Integrate into the game loop in `start_playing_game()`.

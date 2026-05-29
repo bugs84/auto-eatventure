@@ -21,10 +21,7 @@ pip install -r requirements.txt
 python adb_autoplay.py
 ```
 
-Or use the batch script:
-```bash
-start.bat
-```
+Or use: `start.bat`
 
 ### Linux
 
@@ -36,10 +33,7 @@ pip install -r requirements.txt
 python3 adb_autoplay.py
 ```
 
-Or use the shell script:
-```bash
-./start.sh
-```
+Or use: `./start.sh`
 
 ## Environment Configuration
 
@@ -63,43 +57,31 @@ From `requirements.txt`:
 | Package | Version | Purpose |
 |---------|---------|---------|
 | `adbutils` | >= 1.2.9 | ADB device control |
-| `opencv-python` | >= 4.8.0 | Template matching and image processing |
+| `opencv-python` | >= 4.8.0 | Template matching |
 | `numpy` | >= 1.26.0 | Array operations |
 | `scikit-learn` | >= 1.3.0 | DBSCAN clustering |
 | `Pillow` | >= 10.0.0 | Image capture/conversion |
 | `python-dotenv` | >= 0.21.1 | `.env` file loading |
-| `requests` | >= 2.30.0 | HTTP requests |
-| `retry` | >= 0.9.2 | Retry logic |
-
-## Emulator Setup
-
-Tested configuration:
-- **Device**: Pixel 6 Pro API 33
-- **Android**: 13.0 (Tiramisu) Google APIs x86_64
-- **Game**: Eatventure v1.6.0+
 
 ## Linting
 
-Pylint is configured via `.pylintrc`:
+Pylint configured via `.pylintrc`:
 - 2-space indentation
 - Max line length: 79 characters
 - LF line endings
-- Disabled: `C0330` (bad-continuation)
 
 ```bash
-pylint adb_autoplay.py coords.py scaled_coords.py constants.py
+pylint adb_autoplay.py device.py template_matcher.py game_actions.py
 ```
 
-## Project File Layout
+## Source File Layout
 
 ```
-adb_autoplay.py              # Main entry point (run this)
-coords.py                    # Reference coordinates (1220x2712)
-scaled_coords.py             # Resolution scaling proxy
-constants.py                 # Coordinate dict wrapper
-matching_screenshots/        # Template images for detection
-captured_screenshots_on_the_fly/  # Runtime screenshots (gitignored content)
-experiments/                 # Experimental scripts
-.env-sample                  # Environment template
-start.bat / start.sh         # Launch scripts
+adb_autoplay.py              # Entry point + game loop (~84 lines)
+device.py                    # ADB device layer (~110 lines)
+template_matcher.py          # OpenCV matching (~220 lines)
+game_actions.py              # Game logic (~340 lines)
+coords.py                    # Reference coordinates
+scaled_coords.py             # Resolution scaling
+constants.py                 # Coordinate dicts
 ```
