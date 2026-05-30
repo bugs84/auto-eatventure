@@ -36,7 +36,7 @@ def setup_logging():
   """
   console_level = os.getenv("LOG_LEVEL", "INFO").upper()
   file_level = os.getenv("LOG_FILE_LEVEL", "DEBUG").upper()
-  max_days = int(os.getenv("LOG_MAX_DAYS", "7"))
+  max_days = int(os.getenv("LOG_MAX_DAYS", "30"))
 
   os.makedirs(LOG_DIR, exist_ok=True)
 
