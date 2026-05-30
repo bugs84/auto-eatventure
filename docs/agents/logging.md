@@ -32,8 +32,8 @@ logger.py              # setup_logging() + get_logger() + get_key_logger()
 
 | Level | Usage |
 |-------|-------|
-| `DEBUG` | Frequent actions: upgrading items, clicking ads, template match results, layout checks |
-| `INFO` | Notable events: chest opened, investor found, level transition, app started |
+| `DEBUG` | Internal details: raw template match scores, pixel checks |
+| `INFO` | All game actions: upgrading station, opening boxes, food upgrades, chests, level transitions, ads, layout adjustments, stale swipes |
 | `WARNING` | Recovery actions: stale state restart, missing config, invalid env values |
 | `ERROR` | Failures: template not found, mask empty (used in debug scripts) |
 

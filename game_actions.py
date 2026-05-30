@@ -140,6 +140,7 @@ class GameActions:
         and nothing_to_update_count % 5 == 0):
       coords = self._swipe_pattern[
         swipe_count % len(self._swipe_pattern)]
+      log.info('Stale swipe — scrolling to find items')
       self.device.swipe(**coords)
       time.sleep(3)
       swipe_count += 1
@@ -152,6 +153,7 @@ class GameActions:
     Called once after a new level starts when food icons
     are first detected.
     """
+    log.info('Repositioning layout after new level')
     y_coords = [c[1] for c in food_icon_locations]
     min_y_idx = y_coords.index(min(y_coords))
     swipe_x = food_icon_locations[min_y_idx][0]
@@ -174,6 +176,7 @@ class GameActions:
     """
     for c in food_icon_locations:
       if c[1] <= self.sc.food_icon_top_boundary_y:
+        log.info('Adjusting layout — icons too high')
         self.device.swipe(
           **self.loc.swipe_layout_little_up_coords)
         time.sleep(3)
@@ -189,7 +192,7 @@ class GameActions:
     Returns updated new_level_started flag.
     """
     if count % 5 == 0 and self.is_having_upgrade():
-      log.debug('Upgrading items')
+      log.info('Upgrades available — attempting to upgrade')
       if new_level_started:
         self.do_upgrades(upgrade_count=50)
         new_level_started = False
@@ -211,6 +214,7 @@ class GameActions:
         screenshot, template, end=False, threshold=0.7)
 
     for c in locations:
+      log.info('Opening box')
       self.device.click(c)
       time.sleep(0.2)
 
@@ -228,6 +232,8 @@ class GameActions:
   def upgrade_food_items(self, food_coords):
     """Click food icons to upgrade them."""
     for c in food_coords[:3]:
+      log.info('Upgrading food item at (%d, %d)',
+               c[0], c[1])
       self.device.click(
         [c[0], c[1] + self.sc.upgrade_food_offset_y])
       time.sleep(0.2)
@@ -257,12 +263,12 @@ class GameActions:
 
   def open_chests(self):
     """Recursively open all available chests."""
-    log.debug('Checking for chests')
+    log.info('Checking for chests')
     time.sleep(1)
     self.device.capture_screenshot()
     time.sleep(1)
     if self.is_having_chest_icon():
-      log.info('Chest found — opening.')
+      log.info('Chest found — opening')
       self.device.click(self.loc.chest_coords)
       time.sleep(2)
       self.device.click(self.loc.chest_coords)
@@ -283,6 +289,7 @@ class GameActions:
     gone_to_next_level = False
 
     if self.is_having_next_level_icon():
+      log.info('Renovating to next level')
       self.device.click(self.loc.next_level_button_coords)
       time.sleep(2)
       self.device.click(self.loc.renovate_button_coords)
@@ -318,7 +325,7 @@ class GameActions:
     redeem_button_coords = {
       'x': self.sc.redeem_investor_reward_x,
       'y': self.sc.redeem_investor_reward_y}
-    log.debug('Finding investor')
+    log.info('Finding investor')
     mc = None
 
     sc = self._gray()
@@ -355,11 +362,11 @@ class GameActions:
       'y': self.sc.ad_button_y}
     time.sleep(1)
     for _ in range(12):
-      log.debug('click ad button')
+      log.info('Clicking ad button')
       self.device.click(btn_coords)
       time.sleep(5)
       self.device.start_app()
-      log.info('app started')
+      log.info('App started after ad')
       time.sleep(5)
 
   def run_ad(self):
@@ -368,11 +375,11 @@ class GameActions:
       'x': self.sc.ad_button_x,
       'y': self.sc.ad_button_y}
     time.sleep(5)
-    log.debug('click ad button')
+    log.info('Clicking ad button')
     self.device.click(btn_coords)
     time.sleep(5)
     self.device.start_app()
-    log.info('app started')
+    log.info('App started after ad')
     time.sleep(1)
 
   # ── Init / login ──────────────────────────────────────────
@@ -394,7 +401,7 @@ class GameActions:
     is_notification_closed = False
     is_first_stand_closed = False
     while True:
-      log.debug('checking')
+      log.info('Checking game state')
       self.device.capture_screenshot()
       if (not is_notification_closed
           and self.is_having_notification()):
