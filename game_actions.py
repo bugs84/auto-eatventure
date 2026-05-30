@@ -9,9 +9,10 @@ handle their own screenshot refreshes when needed.
 import time
 import random
 
-from logger import get_logger
+from logger import get_logger, get_key_logger
 
 log = get_logger(__name__)
+key_log = get_key_logger()
 
 
 SWIPE_PATTERN_LENGTH = 6
@@ -129,6 +130,7 @@ class GameActions:
     """
     if nothing_to_update_count > STALE_RESTART_THRESHOLD:
       log.warning('Nothing to update — restarting app.')
+      key_log.info("RESTART - Stale state, restarting app")
       self.device.start_app()
       time.sleep(1)
       self.device.click(self.loc.null_click_coords)
@@ -288,6 +290,7 @@ class GameActions:
       self.device.click(
         self.loc.first_lemonade_stand_open_coords)
       gone_to_next_level = True
+      key_log.info("NEXT LEVEL - Renovated to next level")
 
     elif self.is_having_fly_next_city_icon():
       self.device.click(self.loc.next_level_button_coords)
@@ -303,6 +306,7 @@ class GameActions:
         self.loc.first_lemonade_stand_open_coords)
       time.sleep(5)
       gone_to_next_level = True
+      key_log.info("FLY - Flying to next city")
 
     if gone_to_next_level:
       self.open_chests()

@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from logger import setup_logging, get_logger
+from logger import setup_logging, get_logger, get_key_logger
 from constants import Constants
 from device import Device
 from template_matcher import TemplateMatcher
@@ -21,6 +21,7 @@ from game_actions import GameActions
 
 setup_logging()
 log = get_logger(__name__)
+key_log = get_key_logger()
 
 
 class AutoEatventure:
@@ -87,4 +88,5 @@ class AutoEatventure:
 bot = AutoEatventure()
 bot.device.start_app()
 bot.actions.init_game()
+key_log.info("START - Bot started")
 bot.start_playing_game()

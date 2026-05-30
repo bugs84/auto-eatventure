@@ -9,12 +9,15 @@ The project uses Python's built-in `logging` module configured in `logger.py`. A
 ## Architecture
 
 ```
-logger.py              # setup_logging() + get_logger() factory
+logger.py              # setup_logging() + get_logger() + get_key_logger()
   |
   +-- Console handler  # StreamHandler -> stdout (default: INFO)
   |
   +-- File handler     # TimedRotatingFileHandler -> logs/autoplay.log
-                       # Rotates daily, keeps LOG_MAX_DAYS backups
+  |                    # Rotates daily, keeps LOG_MAX_DAYS backups
+  |
+  +-- Key events       # TimedRotatingFileHandler -> logs/key_events.log
+                       # Key milestones only (file-only, no console)
 ```
 
 ## Configuration (via `.env`)
@@ -68,6 +71,44 @@ This is done in `adb_autoplay.py` (the entry point).
 - Rotation: daily at midnight
 - Retention: configurable via `LOG_MAX_DAYS`
 
+## Key Events Log
+
+A separate file recording only key milestones. Useful for tracking progress (e.g. counting cleared restaurants).
+
+- File: `logs/key_events.log`
+- Rotated daily (same retention as main log)
+- **No console output** — file only
+- Format: `2024-01-15 14:23:01,234  EVENT_TYPE - description`
+
+### Events recorded:
+
+| Event | When | Message |
+|-------|------|---------|
+| `START` | Bot process begins | `START - Bot started` |
+| `NEXT LEVEL` | Renovated to next level (same city) | `NEXT LEVEL - Renovated to next level` |
+| `FLY` | Flying to a new city/restaurant | `FLY - Flying to next city` |
+| `RESTART` | Stale state triggers app restart | `RESTART - Stale state, restarting app` |
+
+### Usage:
+
+```python
+from logger import get_key_logger
+
+key_log = get_key_logger()
+key_log.info("FLY - Flying to next city")
+```
+
+### Example output (`logs/key_events.log`):
+
+```
+2024-01-15 08:00:12,001  START - Bot started
+2024-01-15 08:05:44,321  NEXT LEVEL - Renovated to next level
+2024-01-15 08:12:01,456  NEXT LEVEL - Renovated to next level
+2024-01-15 08:19:33,789  FLY - Flying to next city
+2024-01-15 08:25:11,012  NEXT LEVEL - Renovated to next level
+2024-01-15 09:01:55,234  RESTART - Stale state, restarting app
+```
+
 ## Console Output Format
 
 ```
@@ -100,3 +141,5 @@ File format includes timestamp, level, and module name for debugging.
 - Experimental scripts and `sandbox.py` may still use `print()` for interactive CLI output.
 - Default console level (`INFO`) produces the same output users saw before the migration.
 - Increase to `DEBUG` only when troubleshooting specific issues.
+- Key game milestones must also be logged via `get_key_logger()` for progress tracking.
+- Key event messages follow the pattern: `EVENT_TYPE - description`.
