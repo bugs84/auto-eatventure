@@ -234,8 +234,10 @@ class GameActions:
     for c in food_coords[:3]:
       log.info('Upgrading food item at (%d, %d)',
                c[0], c[1])
-      self.device.click(
-        [c[0], c[1] + self.sc.upgrade_food_offset_y])
+      self.device.click([
+        c[0] + self.sc.upgrade_click_shift_x,
+        c[1] + self.sc.upgrade_food_offset_y
+        + self.sc.upgrade_click_shift_y])
       time.sleep(0.2)
 
       self.device.click_and_hold(

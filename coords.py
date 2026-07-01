@@ -129,6 +129,11 @@ boost_check_pixel2_y = 274
 # Y offset when tapping a food icon to open its upgrade menu
 upgrade_food_offset_y = 22
 
+# Small shift applied to the food icon tap to avoid misclicking an
+# adjacent station when two stations are close together
+upgrade_click_shift_x = 2
+upgrade_click_shift_y = 2
+
 # Offsets for the click-and-hold gesture that opens the "buy better food" menu
 better_food_neg_offset_y = 130
 better_food_pos_offset_x = 20
