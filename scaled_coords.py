@@ -76,6 +76,14 @@ class ScaledCoords:
     def y_scale(self) -> float:
         return object.__getattribute__(self, '_y_scale')
 
+    @property
+    def screen_width(self) -> int:
+        return round(coords.REFERENCE_WIDTH * self.x_scale)
+
+    @property
+    def screen_height(self) -> int:
+        return round(coords.REFERENCE_HEIGHT * self.y_scale)
+
     def __getattr__(self, name: str):
         try:
             val = getattr(coords, name)

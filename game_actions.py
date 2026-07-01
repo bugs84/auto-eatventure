@@ -229,6 +229,14 @@ class GameActions:
     danger_max_y = self.loc.danger_max_y
     return [c for c in matched if c[1] <= danger_max_y]
 
+  def _keep_away_from_side_buttons(self, x):
+    """Nudge x toward the center, away from the side UI buttons
+    (restaurant race, food boxes, etc.) pinned to the screen edges.
+    """
+    margin = self.sc.side_button_zone_width_x
+    max_x = self.sc.screen_width - margin
+    return max(margin, min(x, max_x))
+
   def upgrade_food_items(self, food_coords):
     """Click food icons to upgrade them."""
     for c in food_coords[:3]:
@@ -240,15 +248,18 @@ class GameActions:
         + self.sc.upgrade_click_shift_y])
       time.sleep(0.2)
 
+      hold_x = self._keep_away_from_side_buttons(
+        c[0] + self.sc.better_food_pos_offset_x)
       self.device.click_and_hold(
-        c[0] + self.sc.better_food_pos_offset_x,
+        hold_x,
         c[1] - self.sc.better_food_neg_offset_y, 3000)
       time.sleep(0.4)
 
       if c[1] < self.sc.food_icon_tooltip_boundary_y:
+        click_x = self._keep_away_from_side_buttons(
+          c[0] - self.sc.better_food_neg_offset_x)
         self.device.click([
-          c[0] - self.sc.better_food_neg_offset_x,
-          c[1] + self.sc.upgrade_food_offset_y])
+          click_x, c[1] + self.sc.upgrade_food_offset_y])
       else:
         self.device.click(self.loc.null_click_coords)
       time.sleep(0.2)

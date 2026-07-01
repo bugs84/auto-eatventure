@@ -141,6 +141,11 @@ better_food_pos_offset_x = 20
 # X offset for clicking the "buy better food" button relative to the food icon
 better_food_neg_offset_x = 110
 
+# Width of the side UI buttons (restaurant race, food boxes, etc.)
+# pinned to the left/right screen edges. Clicks are kept at least
+# this far from either edge to avoid triggering them.
+side_button_zone_width_x = 180
+
 # Offset applied when clicking a detected small investor icon
 small_investor_click_offset_x = 10
 small_investor_click_offset_y = 10
