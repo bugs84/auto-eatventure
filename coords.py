@@ -78,16 +78,20 @@ close_chest_button_x = 1127
 close_chest_button_y = 200
 
 # ── Swipe Coordinates ─────────────────────────────────────────────────────────
+# Distance kept to 650px: the usable playfield height (excluding side
+# buttons/ad banner zones) is only ~820px, so a swipe close to that
+# length would risk jumping straight over a row of stations. 650px
+# leaves ~170px (~20%) overlap between consecutive swipes.
 
 swipe_layout_down_start_x = 646
 swipe_layout_down_start_y = 1889
 swipe_layout_down_end_x = 646
-swipe_layout_down_end_y = 604
+swipe_layout_down_end_y = 1239
 
 swipe_layout_up_start_x = 646
 swipe_layout_up_start_y = 604
 swipe_layout_up_end_x = 646
-swipe_layout_up_end_y = 1889
+swipe_layout_up_end_y = 1254
 
 swipe_layout_little_up_start_x = 646
 swipe_layout_little_up_start_y = 604
