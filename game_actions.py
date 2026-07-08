@@ -227,7 +227,16 @@ class GameActions:
       screenshot, template, end=False, threshold=0.8)
 
     danger_max_y = self.loc.danger_max_y
-    return [c for c in matched if c[1] <= danger_max_y]
+    return [c for c in matched
+            if c[1] <= danger_max_y
+            and not self._is_near_club_button(c[0], c[1])]
+
+  def _is_near_club_button(self, x, y):
+    """Detect food icons whose first station box would overlap the club
+    button (bottom-left corner), so they couldn't be opened
+    """
+    return (x < self.sc.side_button_zone_width_x
+            and y > self.sc.club_button_danger_min_y)
 
   def _keep_away_from_side_buttons(self, x):
     """Nudge x toward the center, away from the side UI buttons

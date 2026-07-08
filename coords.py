@@ -104,6 +104,10 @@ swipe_layout_little_down_end_y = 604
 # Items below this Y are excluded from food icon detection (avoids club icon area)
 danger_max_y = 2200
 
+# Food icons below this Y AND within the left side button zone are excluded
+# (their station box may overlap the club button in the bottom-left corner)
+club_button_danger_min_y = 2029
+
 # Food icons above this Y need special click offset to avoid tooltip overlap
 food_icon_tooltip_boundary_y = 1240
 
