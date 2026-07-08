@@ -39,7 +39,10 @@ Handled by `GameActions.handle_stale_state()` in `game_actions.py`:
 - **`nothing_to_update_count >= 15`** (every 5th after): Swipe pattern to reveal hidden elements
 - **`nothing_to_update_count > 50`**: Force-restart the app
 
-Swipe pattern cycles through: `[down, down, down, up, up, up]`
+Swipe pattern cycles through 5 down-swipes then 5 up-swipes
+(`SWIPES_PER_DIRECTION = 5`), each 650px at reference resolution —
+chosen so the total distance per direction still spans a tall level
+before reversing.
 
 ## Level Transition Flow
 

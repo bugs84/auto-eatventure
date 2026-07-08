@@ -15,7 +15,11 @@ log = get_logger(__name__)
 key_log = get_key_logger()
 
 
-SWIPE_PATTERN_LENGTH = 6
+# Number of consecutive swipes in the same direction before reversing.
+# Kept high enough that repeats * swipe distance (650px) still covers
+# the same total travel as the old single 1285px swipe used to, so a
+# full stale-swipe cycle still reaches the top/bottom of a tall level.
+SWIPES_PER_DIRECTION = 5
 STALE_RESTART_THRESHOLD = 50
 STALE_SWIPE_THRESHOLD = 15
 
@@ -29,14 +33,6 @@ class GameActions:
     self.matcher = matcher
     self.loc = loc
     self.sc = device.sc
-    self._swipe_pattern = [
-      loc.swipe_layout_down_coords,
-      loc.swipe_layout_down_coords,
-      loc.swipe_layout_down_coords,
-      loc.swipe_layout_up_coords,
-      loc.swipe_layout_up_coords,
-      loc.swipe_layout_up_coords,
-    ]
 
   # ── Detection helpers ─────────────────────────────────────
 
@@ -138,8 +134,10 @@ class GameActions:
 
     if (nothing_to_update_count >= STALE_SWIPE_THRESHOLD
         and nothing_to_update_count % 5 == 0):
-      coords = self._swipe_pattern[
-        swipe_count % len(self._swipe_pattern)]
+      cycle_pos = swipe_count % (SWIPES_PER_DIRECTION * 2)
+      coords = (self.loc.swipe_layout_down_coords
+                if cycle_pos < SWIPES_PER_DIRECTION
+                else self.loc.swipe_layout_up_coords)
       log.info('Stale swipe — scrolling to find items')
       self.device.swipe(**coords)
       time.sleep(3)
