@@ -5,7 +5,7 @@
 **auto-eatventure** is a Python automation bot for the Android mobile game "Eatventure". It uses ADB (Android Debug Bridge) to send input events and OpenCV template matching to detect game UI elements from screenshots. The bot runs an infinite game loop that upgrades food items, opens boxes/chests, and progresses through levels automatically.
 
 - **Language**: Python 3.10+
-- **Target**: Android emulator or physical device running Eatventure (`com.hwqgrhhjfd.idlefastfood`)
+- **Target**: physical Android device running Eatventure (`com.hwqgrhhjfd.idlefastfood`). An Android Studio emulator can run the bot too, but Eatventure requires a Google Play Games login, which Google Play now blocks on emulators — so progress cannot be saved/loaded there.
 - **Interaction method**: ADB shell commands (tap, swipe, screencap)
 - **Detection method**: OpenCV template matching with DBSCAN clustering
 

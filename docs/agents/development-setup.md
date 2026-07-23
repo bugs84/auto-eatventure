@@ -5,9 +5,15 @@
 ## Prerequisites
 
 1. **Python 3.10+** (uses `tuple[int, int]` type hints)
-2. **Android Studio** with emulator (or physical Android device)
+2. **A physical Android device** (recommended) or Android Studio emulator
 3. **ADB** installed and on system PATH
 4. **Eatventure** game installed on the device/emulator
+
+> **Emulator limitation**: the bot runs fine against an Android Studio
+> emulator, but Eatventure requires signing in through Google Play
+> Games, and Google Play Games now blocks emulators from logging in.
+> Without a login you cannot save/restore progress, so a real physical
+> device is recommended for actual play.
 
 ## Quick Start
 

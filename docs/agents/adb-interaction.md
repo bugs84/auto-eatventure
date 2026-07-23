@@ -90,5 +90,5 @@ Package: `com.hwqgrhhjfd.idlefastfood`
 
 - ADB installed and on `PATH`
 - Device has USB debugging enabled
-- Emulator or physical device connected (`adb devices` shows it)
+- Emulator or physical device connected (`adb devices` shows it) — note: emulators can run the bot, but Eatventure's Google Play Games login is blocked on emulators, so a physical device is needed to actually sign in and keep progress
 - Game installed: `com.hwqgrhhjfd.idlefastfood`
