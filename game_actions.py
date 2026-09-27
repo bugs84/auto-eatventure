@@ -313,7 +313,12 @@ class GameActions:
       self.device.click(self.loc.next_level_button_coords)
       time.sleep(2)
       self.device.click(self.loc.renovate_button_coords)
-      time.sleep(10)
+      # Was 10 s. Raised by 4 s only because of a slow phone
+      # where the renovation animation sometimes did not finish
+      # in time, the click came too early and the bot got stuck.
+      # Better fix: capture a template of the button shown
+      # after the animation and wait until it is detected.
+      time.sleep(14)
       self.device.click(
         self.loc.first_lemonade_stand_open_coords)
       gone_to_next_level = True
@@ -325,7 +330,12 @@ class GameActions:
       log.info('Flying to next city')
       self.device.click(
         self.loc.fly_next_city_button_coords)
-      time.sleep(15)
+      # Was 15 s. Raised by 4 s only because of a slow phone
+      # where the flight animation sometimes did not finish in
+      # time, the OK click came too early and the bot got stuck.
+      # Better fix: capture a template of the welcome city OK
+      # button and wait until it is detected.
+      time.sleep(19)
       self.device.click(
         self.loc.welcome_city_ok_button_coords)
       time.sleep(5)
