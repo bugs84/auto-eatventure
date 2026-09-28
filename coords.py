@@ -68,7 +68,7 @@ fly_next_city_button_y = 1892
 welcome_city_ok_button_x = 618
 welcome_city_ok_button_y = 1695
 
-null_click_x = 686
+null_click_x = 706
 null_click_y = 278
 
 chest_x = 110
