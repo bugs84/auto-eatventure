@@ -19,7 +19,7 @@ key_log = get_key_logger()
 # Kept high enough that repeats * swipe distance (650px) still covers
 # the same total travel as the old single 1285px swipe used to, so a
 # full stale-swipe cycle still reaches the top/bottom of a tall level.
-SWIPES_PER_DIRECTION = 5
+SWIPES_PER_DIRECTION = 7
 STALE_RESTART_THRESHOLD = 50
 STALE_SWIPE_THRESHOLD = 15
 
