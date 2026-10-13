@@ -300,8 +300,16 @@ class GameActions:
     return False
 
   def place_null_click_below_top_bar(self):
-    """Move the null spot just below the top bar, found on the current
-    screenshot (call when the game is ready, no dialog open)."""
+    """Move the null spot just below the top bar, found on a fresh
+    screenshot (call when the game is ready)."""
+    for _ in range(5):
+      self.device.capture_screenshot()
+      if not self.close_unexpected_dialog():
+        break
+      time.sleep(1)
+    else:
+      self._log_null_click_fallback('the screen stays dimmed by a dialog')
+      return
     img = self._bgr()
     h = img.shape[0]
     # The line is at ~9-10% of the height; ads / loading screens have
@@ -311,29 +319,38 @@ class GameActions:
     black_share = (top.max(axis=2) < 10).mean(axis=1)
     rows = np.nonzero(black_share > 0.9)[0] + top_y
     if len(rows) == 0:
-      log.error(
-        'Top bar not found: no black line across the screen between '
-        '6%% and 15%% of its height. The null spot (tap that closes '
-        'station popups) stays at the fallback (%d, %d) from '
-        'null_click_x/y in coords.py, which may land on the top bar '
-        '(popups stay open) or on a customer\'s bubble (investor -> '
-        'ad). Fix: check a screenshot of this phone and adjust the '
-        'search in place_null_click_below_top_bar() in '
-        'game_actions.py.',
-        self.loc.null_click_coords['x'],
-        self.loc.null_click_coords['y'])
-      key_log.error(
-        "ERROR - Top bar not found, null spot at fallback (%d, %d); "
-        "fix place_null_click_below_top_bar()",
-        self.loc.null_click_coords['x'],
-        self.loc.null_click_coords['y'])
+      self._log_null_click_fallback(
+        'no black line across the screen between 6% and 15% of its '
+        'height')
       return
-    y = int(rows.max()) + round(
-      NULL_CLICK_BELOW_TOP_BAR_Y * self.sc.y_scale)
+    # End of the first run of black rows: a black row of the
+    # restaurant lower down must not move the spot
+    line_y = int(rows[0])
+    for r in rows[1:]:
+      if r != line_y + 1:
+        break
+      line_y = int(r)
+    y = line_y + round(NULL_CLICK_BELOW_TOP_BAR_Y * self.sc.y_scale)
     self.loc.null_click_coords = {
       'x': self.loc.null_click_coords['x'], 'y': y}
     log.info('Null spot below the top bar (y=%d): (%d, %d)',
-             int(rows.max()), self.loc.null_click_coords['x'], y)
+             line_y, self.loc.null_click_coords['x'], y)
+
+  def _log_null_click_fallback(self, reason):
+    """ERROR: the null spot stays at the coords.py fallback."""
+    x = self.loc.null_click_coords['x']
+    y = self.loc.null_click_coords['y']
+    log.error(
+      'Top bar not found: %s. The null spot (tap that closes station '
+      'popups) stays at the fallback (%d, %d) from null_click_x/y in '
+      'coords.py, which may land on the top bar (popups stay open) or '
+      'on a customer\'s bubble (investor -> ad). Fix: check a '
+      'screenshot of this phone and adjust the search in '
+      'place_null_click_below_top_bar() in game_actions.py.',
+      reason, x, y)
+    key_log.error(
+      "ERROR - Top bar not found (%s), null spot at fallback (%d, %d); "
+      "fix place_null_click_below_top_bar()", reason, x, y)
 
   def close_unexpected_dialog(self):
     """Close a modal dialog opened by a tap on the restaurant.
@@ -468,7 +485,6 @@ class GameActions:
       log.info('Opening box')
       self.device.click(c)
       time.sleep(0.2)
-
 
   def get_food_icon_locations(self):
     """Find all food upgrade icons on screen."""

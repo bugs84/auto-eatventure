@@ -235,7 +235,8 @@ busy for hours).
 The top bar's height differs between phones (its black bottom line is
 at y=226 of 2400 on a Xiaomi, 284 of 2772 on a OnePlus Nord 3), so at
 start `GameActions.place_null_click_below_top_bar()` finds that line on
-the screenshot and puts the null spot `NULL_CLICK_BELOW_TOP_BAR_Y` (22
+a fresh screenshot (after closing a dialog still open, e.g. offline
+earnings; the end of the first run of black rows) and puts the null spot `NULL_CLICK_BELOW_TOP_BAR_Y` (22
 reference px) below it, above the tables. `null_click_y` in coords.py
 is only the fallback: if the line is not found, an ERROR (with what was
 not found and how to fix it) goes to both `autoplay.log` and

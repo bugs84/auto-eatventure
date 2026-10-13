@@ -111,6 +111,9 @@ class AutoEatventure:
       self.device.capture_screenshot()
 
       if self.actions.close_unexpected_dialog():
+        # Counted as an empty loop, so a screen that stays dark (e.g.
+        # an ad) still gets the stale recovery
+        nothing_to_update_count += 1
         continue
 
       if (FOOD_DELIVERY_ENABLED
