@@ -87,11 +87,12 @@ fly_next_city_button_y = 1892
 welcome_city_ok_button_x = 618
 welcome_city_ok_button_y = 1695
 
-# Empty spot (floor below the top bar) tapped to close station popups.
-# On OnePlus Nord 3 the top bar catches taps down to ~300 px of 2772,
-# so a tap at y=278 (284 there) left the popup open.
+# Empty spot just below the top bar, tapped to close station popups.
+# The y is only the fallback: at start the bot places it below the top
+# bar found on the screen (GameActions.place_null_click_below_top_bar),
+# because the bar's height differs between phones.
 null_click_x = 886
-null_click_y = 340
+null_click_y = 278
 
 chest_x = 110
 chest_y = 734

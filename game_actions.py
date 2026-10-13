@@ -9,6 +9,8 @@ handle their own screenshot refreshes when needed.
 import time
 import random
 
+import numpy as np
+
 from logger import get_logger, get_key_logger
 
 log = get_logger(__name__)
@@ -81,9 +83,14 @@ UPGRADE_DIALOG_CLOSE_DELAY_S = 0.8
 # white settings gear drops from 255 to ~2-11 (~160-236 while fading in
 # or out). Station popups don't dim it. 200 also catches most fades.
 DIALOG_GEAR_MAX_BRIGHTNESS = 200
-# Time for a dialog opened by a tap on the restaurant to pop in before
-# the screen is checked
-DIALOG_POP_IN_DELAY_S = 0.5
+
+# The top bar ends with a black line across the screen (y=226 of 2400 on
+# a Xiaomi, 284 of 2772 on a OnePlus Nord 3). The null spot is placed
+# this many reference px below it: still the restaurant (a tap there
+# closes a station popup; the bar itself catches taps), but above the
+# tables, so it can't hit a customer's bubble (e.g. the investor's,
+# whose dialog has an ad button where stations are tapped).
+NULL_CLICK_BELOW_TOP_BAR_Y = 22
 
 POPULAR_DISH_BUTTON_TEMPLATES = {
   'select': 'popular_dish_select',
@@ -292,13 +299,36 @@ class GameActions:
       return True
     return False
 
+  def place_null_click_below_top_bar(self):
+    """Move the null spot just below the top bar, found on the current
+    screenshot (call when the game is ready, no dialog open)."""
+    img = self._bgr()
+    h = img.shape[0]
+    # The line is at ~9-10% of the height; ads / loading screens have
+    # other black rows higher up
+    top_y = int(h * 0.06)
+    top = img[top_y:int(h * 0.15)]
+    black_share = (top.max(axis=2) < 10).mean(axis=1)
+    rows = np.nonzero(black_share > 0.9)[0] + top_y
+    if len(rows) == 0:
+      log.warning('Top bar not found — null spot stays at y=%d',
+                  self.loc.null_click_coords['y'])
+      return
+    y = int(rows.max()) + round(
+      NULL_CLICK_BELOW_TOP_BAR_Y * self.sc.y_scale)
+    self.loc.null_click_coords = {
+      'x': self.loc.null_click_coords['x'], 'y': y}
+    log.info('Null spot below the top bar (y=%d): (%d, %d)',
+             int(rows.max()), self.loc.null_click_coords['x'], y)
+
   def close_unexpected_dialog(self):
     """Close a modal dialog opened by a tap on the restaurant.
 
-    E.g. a tap that closes a station popup can hit the investor's
+    E.g. a tap that closes a station popup could hit the investor's
     bubble; its dialog's Claim button starts an ad and sits where
-    stations are tapped, so nothing else may be tapped while a dialog
-    is open. Uses the current screenshot.
+    stations are tapped. Uses the current screenshot (no extra one), so
+    it is a safety net; the null spot itself is kept away from tables
+    (place_null_click_below_top_bar()).
 
     Returns True when a dialog was open.
     """
@@ -425,10 +455,6 @@ class GameActions:
       self.device.click(c)
       time.sleep(0.2)
 
-    if len(locations) > 0:
-      time.sleep(DIALOG_POP_IN_DELAY_S)
-      self.device.capture_screenshot()
-      self.close_unexpected_dialog()
 
   def get_food_icon_locations(self):
     """Find all food upgrade icons on screen."""
@@ -459,17 +485,8 @@ class GameActions:
     return max(margin, min(x, max_x))
 
   def upgrade_food_items(self, food_coords):
-    """Click food icons to upgrade them.
-
-    The tap that closes a station popup can open a dialog (see
-    close_unexpected_dialog()), so the screen is checked before each
-    next station.
-    """
-    for i, c in enumerate(food_coords[:3]):
-      if i > 0:
-        self.device.capture_screenshot()
-        if self.close_unexpected_dialog():
-          return
+    """Click food icons to upgrade them."""
+    for c in food_coords[:3]:
       log.info('Upgrading food item at (%d, %d)',
                c[0], c[1])
       self.device.click([
@@ -492,7 +509,7 @@ class GameActions:
           click_x, c[1] + self.sc.upgrade_food_offset_y])
       else:
         self.device.click(self.loc.null_click_coords)
-      time.sleep(DIALOG_POP_IN_DELAY_S)
+      time.sleep(0.2)
 
   def do_upgrades(self):
     """Open the upgrade menu and buy the first row's upgrade while it

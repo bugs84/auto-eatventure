@@ -222,27 +222,31 @@ For each food icon (max 3 per iteration):
 - Clicks center of detected button
 - Re-captures screenshot after closing
 
-### Unexpected dialogs (ad protection)
+### Null spot and unexpected dialogs (ad protection)
 
-A tap that closes a station popup (the null spot or the spot next to
-the icon) lands on the restaurant and can hit a customer's bubble. The
+The null spot (`null_click_coords`) is tapped to close station popups.
+It must be on the restaurant (the top bar catches taps, a tap there
+leaves the popup open) but must not hit a customer's bubble: the
 investor's bubble opens the "Investor" dialog, whose blue **Claim**
 button starts an ad and sits right where stations are tapped (seen
-twice: the next station tap / hold pressed it and the playable ad kept
-the bot busy for hours).
+twice when the spot was moved lower; a playable ad then kept the bot
+busy for hours).
 
-`GameActions.close_unexpected_dialog()` detects any modal dialog by the
-dimmed settings gear (`is_having_dialog()`: brightness ~2-11 instead of
-255, < 200 also catches most fades; station popups don't dim it) and
-closes it with its red X, or by a tap outside it (a modal dialog blocks
-taps on the restaurant). It is called on the loop screenshot, after the
-Upgrades visit, after opening boxes and before each next station in
-`upgrade_food_items()`, and in `init_game()`; taps on the restaurant are
-followed by `DIALOG_POP_IN_DELAY_S` (0.5 s) so the dialog is shown
-before the check. A late "Welcome to <city>" / first stand "Open" dialog
-is closed by its button. Logged as `DIALOG` in `key_events.log` (once
-per streak). Not every tap is checked: e.g. the station tap itself is
-followed by the hold without a check.
+The top bar's height differs between phones (its black bottom line is
+at y=226 of 2400 on a Xiaomi, 284 of 2772 on a OnePlus Nord 3), so at
+start `GameActions.place_null_click_below_top_bar()` finds that line on
+the screenshot and puts the null spot `NULL_CLICK_BELOW_TOP_BAR_Y` (22
+reference px) below it, above the tables. `null_click_y` in coords.py
+is only the fallback.
+
+Safety net without extra screenshots: `close_unexpected_dialog()`
+detects a modal dialog on screenshots the bot takes anyway (loop
+screenshot, after the Upgrades visit, `init_game()`) by the dimmed
+settings gear (`is_having_dialog()`: ~2-11 instead of 255, < 200 also
+catches most fades; station popups don't dim it) and closes it with its
+red X, a late "Welcome to <city>" / "Open" by its button, or by a tap
+outside (a modal dialog blocks taps on the restaurant). Logged as
+`DIALOG` in `key_events.log` (once per streak).
 
 ## Disabled Features
 
