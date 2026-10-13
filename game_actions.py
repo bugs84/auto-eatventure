@@ -311,8 +311,22 @@ class GameActions:
     black_share = (top.max(axis=2) < 10).mean(axis=1)
     rows = np.nonzero(black_share > 0.9)[0] + top_y
     if len(rows) == 0:
-      log.warning('Top bar not found — null spot stays at y=%d',
-                  self.loc.null_click_coords['y'])
+      log.error(
+        'Top bar not found: no black line across the screen between '
+        '6%% and 15%% of its height. The null spot (tap that closes '
+        'station popups) stays at the fallback (%d, %d) from '
+        'null_click_x/y in coords.py, which may land on the top bar '
+        '(popups stay open) or on a customer\'s bubble (investor -> '
+        'ad). Fix: check a screenshot of this phone and adjust the '
+        'search in place_null_click_below_top_bar() in '
+        'game_actions.py.',
+        self.loc.null_click_coords['x'],
+        self.loc.null_click_coords['y'])
+      key_log.error(
+        "ERROR - Top bar not found, null spot at fallback (%d, %d); "
+        "fix place_null_click_below_top_bar()",
+        self.loc.null_click_coords['x'],
+        self.loc.null_click_coords['y'])
       return
     y = int(rows.max()) + round(
       NULL_CLICK_BELOW_TOP_BAR_Y * self.sc.y_scale)

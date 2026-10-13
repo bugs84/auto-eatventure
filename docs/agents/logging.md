@@ -93,6 +93,7 @@ A separate file recording only key milestones. Useful for tracking progress (e.g
 | `DIALOG` | Unexpected modal dialog (e.g. investor) closed before tapping anything | `DIALOG - Unexpected dialog, closing it` |
 | `STALE` | Nothing to update for more than 50 loops, game brought to the foreground (not restarted; at most once per ~2-3 min) | `STALE - Nothing to update, bringing game to foreground` |
 | `POPULAR DISH` | Popular Dish selected and stopped (optional) | `POPULAR DISH - Selected first dish` |
+| `ERROR` | Top bar not found at start, the null spot stays at the `null_click_x/y` fallback (needs a fix for this phone) | `ERROR - Top bar not found, null spot at fallback (x, y); fix place_null_click_below_top_bar()` |
 | `WARNING` | First stand's "Open" button not found after renovate / fly (should not normally happen) | `WARNING - Open button not found` |
 | `WARNING` | "Welcome to <city>" dialog's "Okay" button not found after fly (should not normally happen) | `WARNING - Okay button not found` |
 
