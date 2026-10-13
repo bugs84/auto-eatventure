@@ -77,6 +77,11 @@ UPGRADES_DIALOG_MIN_RATIO = 0.4
 # loops kept missing the stations and went stale)
 UPGRADE_DIALOG_CLOSE_DELAY_S = 0.8
 
+# A modal dialog (investor, offline earnings, ...) dims the screen: the
+# white settings gear drops from 255 to ~2-11 (~200 while fading in or
+# out). Station popups don't dim it.
+DIALOG_GEAR_MAX_BRIGHTNESS = 128
+
 POPULAR_DISH_BUTTON_TEMPLATES = {
   'select': 'popular_dish_select',
   'start': 'popular_dish_start',
@@ -138,6 +143,15 @@ class GameActions:
     roi = self._hsv()[y - hh:y + hh, x - hw:x + hw]
     return (self.matcher.color_ratio(roi, UPGRADE_BADGE_RED)
             >= UPGRADES_DIALOG_MIN_RATIO)
+
+  def is_having_dialog(self):
+    """A modal dialog dims the screen, incl. the settings gear."""
+    x = self.sc.settings_x
+    y = self.sc.settings_y
+    hw = self.sc.settings_roi_half_width_x
+    hh = self.sc.settings_roi_half_height_y
+    roi = self._gray()[y - hh:y + hh, x - hw:x + hw]
+    return roi.max() < DIALOG_GEAR_MAX_BRIGHTNESS
 
   def is_first_upgrade_affordable(self):
     """Blue buy button of the first row in the Upgrades dialog."""
@@ -273,6 +287,29 @@ class GameActions:
       return True
     return False
 
+  def close_unexpected_dialog(self):
+    """Close a modal dialog opened by a tap on the restaurant.
+
+    E.g. a tap that closes a station popup can hit the investor's
+    bubble; its dialog's Claim button starts an ad and sits where
+    stations are tapped, so nothing else may be tapped while a dialog
+    is open. Uses the current screenshot.
+
+    Returns True when a dialog was open.
+    """
+    if not self.is_having_dialog():
+      return False
+    log.warning('Unexpected dialog — closing it')
+    key_log.info("DIALOG - Unexpected dialog, closing it")
+    if not self.close_accidental_popups():
+      # A tap outside a modal dialog closes it and can't reach the
+      # restaurant behind it
+      log.warning('Unexpected dialog has no red X — tapping outside')
+      self.device.click(self.loc.null_click_coords)
+      time.sleep(1)
+      self.device.capture_screenshot()
+    return True
+
   def handle_stale_state(self, nothing_to_update_count,
                          swipe_count):
     """Handle when no actionable items found for too long.
@@ -357,6 +394,7 @@ class GameActions:
       log.info('Upgrades available — attempting to upgrade')
       self.do_upgrades()
       self.device.capture_screenshot()
+      self.close_unexpected_dialog()
 
   def open_boxes(self):
     """Find and click all visible boxes."""
@@ -374,6 +412,10 @@ class GameActions:
       log.info('Opening box')
       self.device.click(c)
       time.sleep(0.2)
+
+    if len(locations) > 0:
+      self.device.capture_screenshot()
+      self.close_unexpected_dialog()
 
   def get_food_icon_locations(self):
     """Find all food upgrade icons on screen."""
@@ -404,8 +446,17 @@ class GameActions:
     return max(margin, min(x, max_x))
 
   def upgrade_food_items(self, food_coords):
-    """Click food icons to upgrade them."""
-    for c in food_coords[:3]:
+    """Click food icons to upgrade them.
+
+    The tap that closes a station popup can open a dialog (see
+    close_unexpected_dialog()), so the screen is checked before each
+    next station.
+    """
+    for i, c in enumerate(food_coords[:3]):
+      if i > 0:
+        self.device.capture_screenshot()
+        if self.close_unexpected_dialog():
+          return
       log.info('Upgrading food item at (%d, %d)',
                c[0], c[1])
       self.device.click([
@@ -757,6 +808,8 @@ class GameActions:
       if self.is_having_open_button():
         log.info('Init: tapping first stand "Open" button')
         self._wait_and_click_open_button()
+        continue
+      if self.close_unexpected_dialog():
         continue
       log.info('Init: waiting for game to be ready')
       time.sleep(5)

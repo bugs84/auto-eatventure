@@ -110,6 +110,9 @@ class AutoEatventure:
 
       self.device.capture_screenshot()
 
+      if self.actions.close_unexpected_dialog():
+        continue
+
       if (FOOD_DELIVERY_ENABLED
           and time.monotonic() >= food_delivery_next_try):
         truck_coords = self.actions.get_food_delivery_truck_coords()

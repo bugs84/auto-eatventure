@@ -222,6 +222,24 @@ For each food icon (max 3 per iteration):
 - Clicks center of detected button
 - Re-captures screenshot after closing
 
+### Unexpected dialogs (ad protection)
+
+A tap that closes a station popup (the null spot or the spot next to
+the icon) lands on the restaurant and can hit a customer's bubble. The
+investor's bubble opens the "Investor" dialog, whose blue **Claim**
+button starts an ad and sits right where stations are tapped (seen
+twice: the next station tap / hold pressed it and the playable ad kept
+the bot busy for hours).
+
+`GameActions.close_unexpected_dialog()` detects any modal dialog by the
+dimmed settings gear (`is_having_dialog()`: brightness ~2-11 instead of
+255; station popups don't dim it) and closes it with its red X, or by a
+tap outside it (a modal dialog blocks taps on the restaurant). It is
+called on the loop screenshot, after the Upgrades visit, after opening
+boxes and before each next station in `upgrade_food_items()`, and in
+`init_game()`. Nothing else is tapped while a dialog is open. Logged as
+`DIALOG` in `key_events.log`.
+
 ## Disabled Features
 
 Currently not called in the game loop (methods exist in `game_actions.py`):

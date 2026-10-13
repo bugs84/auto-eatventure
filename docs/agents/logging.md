@@ -90,6 +90,7 @@ A separate file recording only key milestones. Useful for tracking progress (e.g
 | `START` | Bot process begins | `START - Bot started` |
 | `NEXT LEVEL` | Renovated to next level (same city) | `NEXT LEVEL - Renovated to next level` |
 | `FLY` | Flying to a new city/restaurant | `FLY - Flying to next city` |
+| `DIALOG` | Unexpected modal dialog (e.g. investor) closed before tapping anything | `DIALOG - Unexpected dialog, closing it` |
 | `STALE` | Nothing to update for more than 50 loops, game brought to the foreground (not restarted; at most once per ~2-3 min) | `STALE - Nothing to update, bringing game to foreground` |
 | `POPULAR DISH` | Popular Dish selected and stopped (optional) | `POPULAR DISH - Selected first dish` |
 | `WARNING` | First stand's "Open" button not found after renovate / fly (should not normally happen) | `WARNING - Open button not found` |

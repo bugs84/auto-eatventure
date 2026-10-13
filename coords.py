@@ -19,6 +19,9 @@ first_lemonade_stand_open_y = 1604
 
 settings_x = 1134
 settings_y = 161
+# Area around the white settings gear, dimmed by modal dialogs
+settings_roi_half_width_x = 30
+settings_roi_half_height_y = 30
 
 cloud_save_x = 554
 cloud_save_y = 1419
