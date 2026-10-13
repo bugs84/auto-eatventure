@@ -78,9 +78,12 @@ UPGRADES_DIALOG_MIN_RATIO = 0.4
 UPGRADE_DIALOG_CLOSE_DELAY_S = 0.8
 
 # A modal dialog (investor, offline earnings, ...) dims the screen: the
-# white settings gear drops from 255 to ~2-11 (~200 while fading in or
-# out). Station popups don't dim it.
-DIALOG_GEAR_MAX_BRIGHTNESS = 128
+# white settings gear drops from 255 to ~2-11 (~160-236 while fading in
+# or out). Station popups don't dim it. 200 also catches most fades.
+DIALOG_GEAR_MAX_BRIGHTNESS = 200
+# Time for a dialog opened by a tap on the restaurant to pop in before
+# the screen is checked
+DIALOG_POP_IN_DELAY_S = 0.5
 
 POPULAR_DISH_BUTTON_TEMPLATES = {
   'select': 'popular_dish_select',
@@ -98,6 +101,8 @@ class GameActions:
     self.matcher = matcher
     self.loc = loc
     self.sc = device.sc
+    # An unexpected dialog is logged to key_events.log once per streak
+    self.unexpected_dialog_logged = False
 
   # ── Detection helpers ─────────────────────────────────────
 
@@ -298,10 +303,17 @@ class GameActions:
     Returns True when a dialog was open.
     """
     if not self.is_having_dialog():
+      self.unexpected_dialog_logged = False
       return False
     log.warning('Unexpected dialog — closing it')
-    key_log.info("DIALOG - Unexpected dialog, closing it")
-    if not self.close_accidental_popups():
+    if not self.unexpected_dialog_logged:
+      key_log.info("DIALOG - Unexpected dialog, closing it")
+      self.unexpected_dialog_logged = True
+    if self.is_having_welcome_city_okay():
+      self._wait_and_click_welcome_okay()
+    elif self.is_having_open_button():
+      self._wait_and_click_open_button()
+    elif not self.close_accidental_popups():
       # A tap outside a modal dialog closes it and can't reach the
       # restaurant behind it
       log.warning('Unexpected dialog has no red X — tapping outside')
@@ -414,6 +426,7 @@ class GameActions:
       time.sleep(0.2)
 
     if len(locations) > 0:
+      time.sleep(DIALOG_POP_IN_DELAY_S)
       self.device.capture_screenshot()
       self.close_unexpected_dialog()
 
@@ -479,7 +492,7 @@ class GameActions:
           click_x, c[1] + self.sc.upgrade_food_offset_y])
       else:
         self.device.click(self.loc.null_click_coords)
-      time.sleep(0.2)
+      time.sleep(DIALOG_POP_IN_DELAY_S)
 
   def do_upgrades(self):
     """Open the upgrade menu and buy the first row's upgrade while it

@@ -233,12 +233,16 @@ the bot busy for hours).
 
 `GameActions.close_unexpected_dialog()` detects any modal dialog by the
 dimmed settings gear (`is_having_dialog()`: brightness ~2-11 instead of
-255; station popups don't dim it) and closes it with its red X, or by a
-tap outside it (a modal dialog blocks taps on the restaurant). It is
-called on the loop screenshot, after the Upgrades visit, after opening
-boxes and before each next station in `upgrade_food_items()`, and in
-`init_game()`. Nothing else is tapped while a dialog is open. Logged as
-`DIALOG` in `key_events.log`.
+255, < 200 also catches most fades; station popups don't dim it) and
+closes it with its red X, or by a tap outside it (a modal dialog blocks
+taps on the restaurant). It is called on the loop screenshot, after the
+Upgrades visit, after opening boxes and before each next station in
+`upgrade_food_items()`, and in `init_game()`; taps on the restaurant are
+followed by `DIALOG_POP_IN_DELAY_S` (0.5 s) so the dialog is shown
+before the check. A late "Welcome to <city>" / first stand "Open" dialog
+is closed by its button. Logged as `DIALOG` in `key_events.log` (once
+per streak). Not every tap is checked: e.g. the station tap itself is
+followed by the hold without a check.
 
 ## Disabled Features
 
