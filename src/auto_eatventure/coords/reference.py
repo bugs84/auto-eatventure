@@ -237,12 +237,18 @@ potion_shop_cauldron_close_roi = Region.around(
   potion_shop_cauldron_close, 40, 40)
 
 # The event's map is taller than the screen. The shop with all its
-# stations fits on it when the landmark (ink, quill and books on the
-# counter's right part) is at potion_shop_landmark_y; it is searched in
-# its column and moved there by swipes on the floor right of the
-# kettle (no station there).
+# stations fits on it when its landmarks are at their _y: the ink, quill
+# and books on the counter's right part (hidden by the customers' prices
+# when the counter is full), the barrel in the bottom left corner and
+# the skull on the wall above the counter (shown only when the map is
+# scrolled too far up). Each is searched in its column and moved there
+# by swipes on the floor right of the kettle (no station there).
 potion_shop_landmark_roi = Region(780, 230, 1050, 2450)
 potion_shop_landmark_y = 548
+potion_shop_barrel_roi = Region(80, 230, 400, 2450)
+potion_shop_barrel_y = 2133
+potion_shop_skull_roi = Region(400, 230, 820, 2450)
+potion_shop_skull_y = 6
 potion_shop_aligned_y = 25
 potion_shop_max_swipe_y = 1000
 potion_shop_swipe_x = 830
