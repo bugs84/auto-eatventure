@@ -41,3 +41,15 @@ class Swipe(NamedTuple):
   """A swipe gesture from start to end."""
   start: Point
   end: Point
+
+
+class Top(NamedTuple):
+  """A position in coords/reference.py that stays at the top of the
+  screen, below the status bar (top bar, side button columns)."""
+  value: object
+
+
+class Bottom(NamedTuple):
+  """A position in coords/reference.py that stays at the bottom of the
+  screen (bottom button bar)."""
+  value: object
