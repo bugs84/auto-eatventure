@@ -5,7 +5,7 @@ import logging
 import cv2
 
 from auto_eatventure.coords.geometry import Region
-from auto_eatventure.vision import colors, matching
+from auto_eatventure.vision import colors, level_label, matching
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ class Screen:
     self._device = device
     self._templates = templates
     self._debug = debug
+    self._digit_samples = level_label.load_digit_samples()
     self.bgr = None
     self.gray = None
     self.hsv = None
@@ -79,6 +80,11 @@ class Screen:
     """Centers (Points) of all matches (BGR) above the threshold."""
     return matching.all_matches(
       self.bgr, self._templates[name].bgr, threshold)
+
+  def read_level(self, region):
+    """The number of a level label ("Lvl 7") in the region, None when
+    it can't be read."""
+    return level_label.read_level(self.gray, region, self._digit_samples)
 
   def color_ratio(self, region, ranges):
     """Share (0-1) of the region's pixels in the HSV ranges."""

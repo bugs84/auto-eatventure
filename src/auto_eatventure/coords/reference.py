@@ -229,6 +229,9 @@ potion_shop_cauldron_badge_roi = Region(793, 2439, 929, 2574)
 potion_shop_brew_tab = Point(184, 625)
 potion_shop_brew_list_roi = Region(900, 900, 1190, 2600)
 potion_shop_potion_icons_roi = Region(30, 900, 260, 2600)
+# A potion's level label ("Lvl 3") relative to its icon's center; in
+# the Brew list it shows the level the next brew makes
+potion_shop_level_label = Region(-82, 76, 87, 132)
 potion_shop_cauldron_close = Point(1130, 249)
 potion_shop_cauldron_close_roi = Region.around(
   potion_shop_cauldron_close, 40, 40)
