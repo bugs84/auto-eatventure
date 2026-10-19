@@ -31,18 +31,23 @@ CAULDRON_DELAY_S = 1.5
 # to, in this order; each brew raises the level by one. The levels
 # follow the fastest runs found on the web (experiments/potion_shop/
 # NOTES.md): Swift (walk) and Sizzle (food) first, then Instant and
-# Double food, then with the cellar's ingredients Divine and Golden. A
-# potion stays active (5 slots) until bottled.
+# Double food. A potion stays active (5 slots) until bottled.
 BREW_PLAN = (
   ('swift', 4), ('sizzle', 4), ('instant', 4), ('double', 4),
   ('perfect', 3), ('swift', 8), ('instant', 6), ('double', 6),
   ('sizzle', 6), ('sizzle', 7), ('instant', 7), ('double', 7),
-  ('perfect', 5), ('divine', 6), ('golden', 5))
+  ('perfect', 5))
+# Once the cellar's ingredients show Divine and Golden in the list, the
+# guides' final set: Perfect and Sizzle are bottled for them (bottling
+# sets a potion's level back to 1, so they are not brewed again)
+LATE_PLAN = (
+  ('swift', 8), ('instant', 6), ('double', 6), ('divine', 6),
+  ('golden', 5))
+LATE_POTION = 'divine'
 POTIONS = ('swift', 'sizzle', 'perfect', 'instant', 'double',
            'telepathic', 'divine', 'golden')
 # When a planned potion can't be brewed because all slots are full,
-# the first active of these is bottled (1 cork), as the guides do for
-# Divine and Golden
+# the first active of these is bottled (1 cork)
 BOTTLE_ORDER = ('perfect', 'sizzle')
 POTION_THRESHOLD = 0.8
 # Landmarks of the map (template potion_shop_<name>, coords
@@ -161,32 +166,46 @@ def _claim(game):
 
 
 def _brew_next(game):
-  """Brew the first potion of BREW_PLAN below its level that has a
+  """Brew the first potion of the plan below its level that has a
   Brew button (while a potion is brewing the list shows only it,
-  without a Brew button), on the list's first page, else on its
+  without a Brew button). The list is read on its first page and its
   scrolled part. Returns True when one was brewed."""
-  for page in range(2):
-    if page:
-      game.device.swipe(game.coords.potion_shop_brew_list_swipe)
-      time.sleep(CAULDRON_DELAY_S)
-      game.screen.capture()
-    rows = _potion_rows(game)
-    log.debug('Potion Shop: potions %s', {
-      name: level for name, (level, _, _) in rows.items()})
-    for name, level_to in BREW_PLAN:
-      level, button, _ = rows.get(name, (None, None, False))
-      if button is not None and level is not None and level <= level_to:
-        return _tap_brew(game, button, f'{name} (level {level})')
-  if _needs_slot(rows):
+  coords = game.coords
+  first = _potion_rows(game)
+  _scroll_brew_list(game, coords.potion_shop_brew_list_swipe)
+  rows = _potion_rows(game)
+  both = {**first, **rows}
+  plan = LATE_PLAN if LATE_POTION in both else BREW_PLAN
+  log.debug('Potion Shop: potions %s', {
+    name: level for name, (level, _, _) in both.items()})
+  for name, level_to in plan:
+    level, button, _ = both.get(name, (None, None, False))
+    if button is None or level is None or level > level_to:
+      continue
+    if name not in rows or rows[name][1] is None:
+      # On the first page only
+      swipe = coords.potion_shop_brew_list_swipe
+      _scroll_brew_list(game, Swipe(swipe.end, swipe.start))
+      button = _potion_rows(game).get(name, (None, None, False))[1]
+      if button is None:
+        return False
+    return _tap_brew(game, button, f'{name} (level {level})')
+  if _needs_slot(plan, both):
     _bottle(game)
   log.info('Potion Shop: nothing to brew')
   return False
 
 
-def _needs_slot(rows):
+def _scroll_brew_list(game, swipe):
+  game.device.swipe(swipe)
+  time.sleep(CAULDRON_DELAY_S)
+  game.screen.capture()
+
+
+def _needs_slot(plan, rows):
   """Whether a planned potion can't be brewed only because all slots
   are full."""
-  for name, level_to in BREW_PLAN:
+  for name, level_to in plan:
     level, _, full = rows.get(name, (None, None, False))
     if full and level is not None and level <= level_to:
       return True
