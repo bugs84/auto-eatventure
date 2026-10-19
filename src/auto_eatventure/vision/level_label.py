@@ -12,8 +12,10 @@ PILL_MAX_GRAY = 60
 TEXT_MIN_GRAY = 170
 # Digits are compared at this size (width, height); a digit whose best
 # sample differs more than MAX_DIFFERENCE (share of pixels) is unknown
+# (the samples match with 0-0.01; an 8 without its sample was 0.17
+# from the 6)
 DIGIT_SIZE = (12, 18)
-MAX_DIFFERENCE = 0.2
+MAX_DIFFERENCE = 0.1
 # "Lvl" is three letters before the number
 PREFIX_CHARS = 3
 

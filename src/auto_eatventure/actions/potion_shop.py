@@ -35,7 +35,8 @@ CAULDRON_DELAY_S = 1.5
 BREW_PLAN = (
   ('swift', 4), ('sizzle', 4), ('instant', 4), ('double', 4),
   ('perfect', 3), ('swift', 8), ('instant', 6), ('double', 6),
-  ('sizzle', 6), ('sizzle', 7), ('instant', 7), ('double', 7))
+  ('sizzle', 6), ('sizzle', 7), ('instant', 7), ('double', 7),
+  ('perfect', 5))
 POTIONS = ('swift', 'sizzle', 'perfect', 'instant', 'double',
            'telepathic')
 POTION_THRESHOLD = 0.8
