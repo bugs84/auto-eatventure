@@ -48,14 +48,15 @@ def invite(game):
     log.info('Helper button no longer available')
     return False
   game.device.tap(game.coords.helper_button)
-  if not _wait_for_invite_button(game):
+  button = _wait_for_invite_button(game)
+  if button is None:
     log.info('Invite a helper dialog not found')
     popups.close_popup(game)
     return False
-  game.device.tap(game.coords.helper_invite)
+  game.device.tap(button.center)
   time.sleep(DIALOG_DELAY_S)
   game.screen.capture()
-  if _is_invite_shown(game):
+  if _find_invite_button(game) is not None:
     log.info('Invite a helper dialog still open after Invite')
     popups.close_popup(game)
     return False
@@ -68,12 +69,13 @@ def _wait_for_invite_button(game):
   while time.monotonic() < deadline:
     time.sleep(1)
     game.screen.capture()
-    if _is_invite_shown(game):
-      return True
-  return False
+    button = _find_invite_button(game)
+    if button is not None:
+      return button
+  return None
 
 
-def _is_invite_shown(game):
-  """Invite button of the first helper in the dialog."""
-  return game.screen.has('helper_invite', game.coords.helper_invite_roi,
-                         INVITE_THRESHOLD)
+def _find_invite_button(game):
+  """Invite button of the first helper in the dialog, or None."""
+  return game.screen.find('helper_invite', game.coords.helper_invite_roi,
+                          INVITE_THRESHOLD)
