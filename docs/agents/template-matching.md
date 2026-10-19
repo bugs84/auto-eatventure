@@ -124,11 +124,11 @@ keeps it out. Data: `experiments/upgrade_icons/NOTES.md`.
 Templates are resized at load time in `vision/templates.py` (`load_templates()` -> `_resize()`):
 
 ```python
-target_width = max(1, round(width * x_scale))
-target_height = max(1, round(height * y_scale))
+target_width = max(1, round(width * scale))
+target_height = max(1, round(height * scale))
 ```
 
-- Scale factors = `actual_resolution / reference_resolution` (1220x2712)
+- One scale in both directions = `screen_width / 1220`: the game scales its UI by the screen width. Separate x/y scales distorted the templates on a phone with another aspect ratio (LG G6, 2:1: the renovate icon scored 0.886 instead of 0.984).
 - Uses `INTER_AREA` when shrinking, `INTER_LINEAR` when enlarging
 - Can be overridden with `TEMPLATE_SCALE_OVERRIDE` env var (`_template_scale()` in `main.py`)
 
