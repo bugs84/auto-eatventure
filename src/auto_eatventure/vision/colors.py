@@ -16,3 +16,6 @@ def color_ratio(image_hsv, ranges):
   for lower, upper in ranges:
     mask |= cv2.inRange(image_hsv, np.array(lower), np.array(upper))
   return np.count_nonzero(mask) / mask.size
+
+# Green of the Potion Shop event coin
+GREEN = [((35, 120, 120), (85, 255, 255))]

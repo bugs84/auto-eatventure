@@ -69,6 +69,7 @@ def _log_features():
     ('Food Delivery', config.FOOD_DELIVERY_ENABLED),
     ('Helper invite', config.HELPER_INVITE_ENABLED),
     ('Collect Adventures', config.COLLECT_ADVENTURES_ENABLED),
+    ('Potion Shop event', config.POTION_SHOP_ENABLED),
   )
   for name, enabled in features:
     log.info('%s: %s', name, 'enabled' if enabled else 'disabled')

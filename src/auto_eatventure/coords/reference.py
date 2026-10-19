@@ -204,3 +204,43 @@ adventure_complete_last = Point(412, 1949)
 adventure_reward_bg_roi = Region(0, 395, 181, 621)
 adventure_reveal_tap = Point(610, 1356)
 adventure_summary_close_roi = Region.around(Point(1118, 186), 56, 56)
+
+# ── Potion Shop event ─────────────────────────────────────────────────
+# The event's cauldron button in the right column (main screen: 3rd
+# white button, inside the event: 2nd); its place depends on the
+# buttons above it, so it is searched in the column
+potion_shop_button_roi = Region(1080, 280, 1220, 1250)
+# Enter (main screen) and Exit (inside the event) of the "Potion Shop"
+# dialog, at the same place
+potion_shop_enter_exit = Point(610, 2054)
+potion_shop_enter_exit_roi = Region.around(potion_shop_enter_exit, 180, 80)
+# Red X of the "Potion Shop" dialog
+potion_shop_dialog_close = Point(1057, 660)
+# Green event coin left of the coin counter: shown only inside
+potion_shop_coin_roi = Region(100, 60, 300, 260)
+
+# Cauldron button (2nd from the right in the bottom bar, after a
+# Potion Kettle was bought) and its red "!" badge (a potion can be
+# brewed); the badge area mirrors upgrade_badge_roi
+potion_shop_cauldron_button = Point(915, 2556)
+potion_shop_cauldron_badge_roi = Region(793, 2439, 929, 2574)
+# Cauldron dialog: Brew tab, the list of potions (icons on the left,
+# Brew / Claim buttons on the right, level with the icon) and the red X
+potion_shop_brew_tab = Point(184, 625)
+potion_shop_brew_list_roi = Region(900, 900, 1190, 2600)
+potion_shop_potion_icons_roi = Region(30, 900, 260, 2600)
+potion_shop_cauldron_close = Point(1130, 249)
+potion_shop_cauldron_close_roi = Region.around(
+  potion_shop_cauldron_close, 40, 40)
+
+# The event's map is taller than the screen. The shop with all its
+# stations fits on it when the landmark (ink, quill and books on the
+# counter's right part) is at potion_shop_landmark_y; it is searched in
+# its column and moved there by swipes on the floor right of the
+# kettle (no station there).
+potion_shop_landmark_roi = Region(780, 230, 1050, 2450)
+potion_shop_landmark_y = 548
+potion_shop_aligned_y = 25
+potion_shop_max_swipe_y = 1000
+potion_shop_swipe_x = 830
+potion_shop_swipe_from_y = 1469

@@ -27,6 +27,7 @@ src/auto_eatventure/         # The only package (src layout)
   __main__.py                # Entry point: python -m auto_eatventure
   main.py                    # run(): connect, wait for the game, play
   game_loop.py               # GameLoop: the endless loop (play_once)
+  potion_shop_loop.py        # PotionShopLoop: plays the Potion Shop event
   config.py                  # Settings from .env (feature switches, logs)
   timer.py                   # Timer: when an occasional action is due
   logger.py                  # setup_logging(), key_log (daily rotation)
@@ -44,6 +45,7 @@ src/auto_eatventure/         # The only package (src layout)
     stale.py                 # StaleWatch: recovery + search swipes
     popular_dish.py, food_delivery.py, helper_invite.py, adventures.py
                              # Optional features (see .env-sample)
+    potion_shop.py           # Potion Shop event: enter, crates, brewing
   android/device.py          # Device: ADB taps, swipes, screenshots, app
   vision/                    # Detection on screenshots
     screen.py                # Screen: last screenshot + find/has/...
