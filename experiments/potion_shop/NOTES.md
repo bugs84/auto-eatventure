@@ -156,8 +156,15 @@ Learned while automating (2026-10-19/20, Xiaomi):
 - Brew list: rows of potions with icon + "Lvl N" (= level of the next
   brew) + Brew button; while brewing only the brewing row, no button.
   Levels are read by `vision/level_label.py` (digit samples in
-  `matching_screenshots/level_digits/`, missing: 7, 8 - add them
-  from `brew_log/` screenshots when they appear).
+  `matching_screenshots/level_digits/`, all 0-9 now). A missing
+  sample is dangerous: an 8 was read as 6 -> brewed one level too far;
+  MAX_DIFFERENCE is now 0.1 (real matches 0-0.01).
+- A swipe that starts on a station opens its popup, which eats the next
+  swipes (map stuck at one offset): tap the null spot when the map did
+  not move.
+- Night 2 state (01:15): Swift 9, Sizzle 8, Instant 8, Double 8,
+  Perfect 3 (active levels); Telepathic shows "Slots Full!". No Divine/
+  Golden in the list yet (need cellar ingredients).
 - Active Potions tab: up to 5 active potions (Bandolier MAX); a brewed
   potion stays active until bottled (1 cork). Divine/Golden (cellar
   ingredients) will need bottling Perfect and Sizzle (TODO).
