@@ -39,8 +39,11 @@ BREW_PLAN = (
 POTIONS = ('swift', 'sizzle', 'perfect', 'instant', 'double',
            'telepathic')
 POTION_THRESHOLD = 0.8
-# The landmark (counter decoration) is sometimes partly hidden by an
-# alchemist; it is aligned when this close to its place
+# Landmarks of the map (template potion_shop_<name>, coords
+# potion_shop_<name>_roi and _y); one is sometimes partly hidden by an
+# alchemist or a price. The map is aligned when one is this close to
+# its place.
+LANDMARKS = ('barrel', 'landmark', 'skull')
 LANDMARK_THRESHOLD = 0.7
 LANDMARK_MISSES = 2
 ALIGN_TRIES = 8
@@ -202,19 +205,21 @@ def show_shop(game):
   game.device.tap(game.null_spot)
   time.sleep(SWIPE_DELAY_S)
   misses = 0
+  direction = 1
   for _ in range(ALIGN_TRIES):
     game.screen.capture()
     offset = shop_offset(game)
     log.debug('Potion Shop: landmark offset %s', offset)
     limit = coords.potion_shop_max_swipe_y
     if offset is None:
-      # Hidden for a moment (an alchemist), or the map is below the
-      # shop (from its top the landmark is still visible): scroll up
+      # Hidden for a moment (an alchemist), or the map is far away:
+      # scroll a screen up, then down, ...
       misses += 1
       if misses < LANDMARK_MISSES:
         time.sleep(SWIPE_DELAY_S)
         continue
-      distance = limit
+      distance = limit * direction
+      direction = -direction
     elif abs(offset) <= coords.potion_shop_aligned_y:
       return True
     else:
@@ -228,14 +233,16 @@ def show_shop(game):
 
 
 def shop_offset(game):
-  """How far (px, + = lower) the landmark is from its place on the
-  last screenshot, None when it is not found."""
-  mark = game.screen.find('potion_shop_landmark',
-                          game.coords.potion_shop_landmark_roi,
-                          LANDMARK_THRESHOLD)
-  if mark is None:
-    return None
-  return mark.center.y - game.coords.potion_shop_landmark_y
+  """How far (px, + = lower) the map is from its place on the last
+  screenshot by the first landmark found, None when none is found."""
+  coords = game.coords
+  for name in LANDMARKS:
+    mark = game.screen.find(f'potion_shop_{name}',
+                            getattr(coords, f'potion_shop_{name}_roi'),
+                            LANDMARK_THRESHOLD)
+    if mark is not None:
+      return mark.center.y - getattr(coords, f'potion_shop_{name}_y')
+  return None
 
 
 def _open_dialog(game, button_name):
