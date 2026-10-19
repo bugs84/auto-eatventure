@@ -120,3 +120,51 @@ Pitfalls: too many customers early, idle cauldron, bottling the core
 potions, opening extra stations too early (customers order cheaper
 food), leaving the event (reopens station boxes).
 Times: casual 2-7.5 h, good runs 27-40 min, best ~13-21 min.
+
+## Automation status (branch potion-shop)
+
+Code: `actions/potion_shop.py` (actions), `potion_shop_loop.py`
+(PotionShopLoop), wired in `game_loop.py` (`POTION_SHOP_ENABLED`, off by
+default, checked every 30 min). Overnight test runner (not in the repo):
+runs PotionShopLoop directly, saves every Cauldron list to
+`brew_log/` and the map every 10 min to `progress/`.
+
+Learned while automating (2026-10-19/20, Xiaomi):
+- Swipes on the event map are not repeatable (inertia, ~1.1-1.3x the
+  swipe length; a swipe starting on a station/tile opens its popup and
+  doesn't scroll). So the map is aligned by a landmark (ink, quill and
+  books on the counter's right part, `potion_shop_landmark`) measured
+  after every swipe; swipes start on the floor right of the kettle.
+- At the start the whole shop (counter + 6 stations + 2 tiles) fits on
+  one screen; the cellar ("Dig a Cellar" upgrade, 133aa) adds stations
+  below that need a second view (TODO: own landmark).
+- Crates (wooden boxes by the stations) = more slots of a station;
+  without them ingredients come slowly. Own template (the main game's
+  box template scores only ~0.6 there), threshold 0.7 (moving shine).
+- Cauldron red badge = a brewed potion is DONE (while brewing the kettle
+  shows bubbles with the ingredients it still needs, no badge). The
+  badge fades out ~20 s after a new brew; the Claim shows a moment after
+  the badge appears. "Brew Complete!" may also open the dialog itself.
+- Brew list: rows of potions with icon + "Lvl N" (= level of the next
+  brew) + Brew button; while brewing only the brewing row, no button.
+  Levels are read by `vision/level_label.py` (digit samples in
+  `matching_screenshots/level_digits/`, missing: 5, 6, 7, 8 - add them
+  from `brew_log/` screenshots when they appear).
+- Active Potions tab: up to 5 active potions (Bandolier MAX); a brewed
+  potion stays active until bottled (1 cork). Divine/Golden (cellar
+  ingredients) will need bottling Perfect and Sizzle (TODO).
+- Without levels the bot brewed Swift up to level 10 (too much; plan
+  says 4 then 8). Now BREW_PLAN with target levels.
+- Upgrades badge: a station icon next to the button looks like it ->
+  when nothing was bought, the badge is ignored for 60 s.
+
+Next steps (ideas):
+1. Cellar view + its stations; Popular Dish on Spider/Frog (guides).
+2. Customers vs alchemists: buy all alchemists, only 3-4 customers
+   early (needs reading the Upgrades rows: icon templates).
+3. Station targeting: upgrade the best-paying station to its x10/x50/
+   x75 milestones instead of every icon.
+4. Bottle Perfect + Sizzle when Divine/Golden become available.
+5. Leaving the event when 15/15 (not seen yet) and returning to the
+   restaurant; untested `potion_shop.leave()`.
+6. Boosts x2/x5 (gems) for speed - only when the user allows it.

@@ -102,7 +102,8 @@ def open_crates(game):
 
 
 def can_brew(game):
-  """The Cauldron button shows its red "!" badge."""
+  """The Cauldron button shows its red "!" badge (a brewed potion is
+  done)."""
   return (game.screen.color_ratio(
             game.coords.potion_shop_cauldron_badge_roi, RED)
           >= BADGE_MIN_RATIO)
