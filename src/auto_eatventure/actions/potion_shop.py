@@ -35,7 +35,7 @@ CAULDRON_DELAY_S = 1.5
 BREW_PLAN = (
   ('swift', 4), ('sizzle', 4), ('instant', 4), ('double', 4),
   ('perfect', 3), ('swift', 8), ('instant', 6), ('double', 6),
-  ('sizzle', 6))
+  ('sizzle', 6), ('sizzle', 7), ('instant', 7), ('double', 7))
 POTIONS = ('swift', 'sizzle', 'perfect', 'instant', 'double',
            'telepathic')
 POTION_THRESHOLD = 0.8
@@ -218,11 +218,19 @@ def _scroll_to(game, view_y):
   time.sleep(SWIPE_DELAY_S)
   misses = 0
   direction = 1
+  last_offset = None
   for _ in range(ALIGN_TRIES):
     game.screen.capture()
     offset = shop_offset(game)
     log.debug('Potion Shop: landmark offset %s', offset)
     limit = coords.potion_shop_max_swipe_y
+    if (offset is not None and last_offset is not None
+        and abs(offset - last_offset) <= coords.potion_shop_aligned_y):
+      # The swipe didn't move the map: it opened a station popup, which
+      # takes the next swipes too
+      game.device.tap(game.null_spot)
+      time.sleep(SWIPE_DELAY_S)
+    last_offset = offset
     if offset is None:
       # Hidden for a moment (an alchemist), or the map is far away:
       # scroll a screen up, then down, ...
