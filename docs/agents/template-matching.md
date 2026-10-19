@@ -74,7 +74,7 @@ All templates are in `matching_screenshots/` and listed (file name without `.png
 | `food_delivery_available.png` | `food_delivery.find_truck()` (left button column) | BGR SQDIFF | < 0.02 |
 | `food_delivery_accept.png` | `food_delivery._is_accept_shown()` (region around the first order's Accept) | HSV | 0.9 |
 | `helper_available.png` | `helper_invite.is_available()` (region around the helper button) | BGR SQDIFF | < 0.015 |
-| `helper_invite.png` | `helper_invite._is_invite_shown()` (region around the first helper's Invite) | HSV | 0.8 |
+| `helper_invite.png` | `helper_invite._find_invite_button()` (first helper row of the dialog) | HSV | 0.8 |
 | `adventure_zeus_key.png`, `adventure_pirates_key.png` | `adventures._find_enter_button()` (key icon of an adventure in the "Events" list) | HSV | 0.8 |
 | `adventure_zeus_dialog_key.png`, `adventure_pirates_dialog_key.png` | `adventures._has_key()` (counter of the level dialog; the other key / an ad icon there scores <= 0.46) | HSV | 0.8 |
 
