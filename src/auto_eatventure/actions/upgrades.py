@@ -39,18 +39,19 @@ def buy_if_available(game):
   """Buy upgrades when the upgrade button shows its badge.
 
   Checked on every loop screenshot, so upgrades are bought soon after
-  they become affordable.
+  they become affordable. Returns True when something was bought.
   """
-  if not _has_badge(game):
-    return
+  if not has_badge(game):
+    return False
   log.info('Upgrades available — attempting to upgrade')
-  _buy_upgrades(game)
+  taps = _buy_upgrades(game)
   game.screen.capture()
+  return taps > 0
 
 
 def _buy_upgrades(game):
   """Open the dialog and buy the first row's upgrade while it is
-  affordable, in rounds of TAPS_PER_CHECK taps."""
+  affordable, in rounds of TAPS_PER_CHECK taps. Returns the taps."""
   device = game.device
   coords = game.coords
   # A station popup may still be open after stations.upgrade(); a tap
@@ -66,7 +67,7 @@ def _buy_upgrades(game):
     log.info('Upgrades dialog did not open')
     device.tap(game.null_spot)
     time.sleep(DIALOG_CLOSE_DELAY_S)
-    return
+    return 0
   taps = 0
   while taps < MAX_TAPS:
     if taps:
@@ -80,9 +81,11 @@ def _buy_upgrades(game):
   log.info('Upgrade taps: %d', taps)
   device.tap(coords.close_upgrades)
   time.sleep(DIALOG_CLOSE_DELAY_S)
+  return taps
 
 
-def _has_badge(game):
+def has_badge(game):
+  """The red badge on the upgrade button."""
   return (game.screen.color_ratio(game.coords.upgrade_badge_roi, RED)
           >= BADGE_MIN_RATIO)
 

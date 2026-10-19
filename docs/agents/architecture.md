@@ -67,11 +67,13 @@ __main__.py --- entry point (python -m auto_eatventure), calls main.run()
 | `actions/race_reward.py` | `claim()` | "Restaurant Race ended!" reward. |
 | `actions/stale.py` | `StaleWatch` | Recovery and search swipes when nothing can be upgraded. |
 | `actions/popular_dish.py`, `food_delivery.py`, `helper_invite.py`, `adventures.py` | | Optional features (switches in `config.py`). |
+| `actions/potion_shop.py` | `is_available()`, `is_inside()`, `enter()`, `leave()`, `open_crates()`, `can_brew()`, `brew()` | Potion Shop event (optional). |
+| `potion_shop_loop.py` | `PotionShopLoop` | Plays the Potion Shop event while inside it. |
 | `android/device.py` | `Device` | ADB: `tap()`, `long_press()`, `swipe()`, `screenshot()` (BGR), `screen_size()`, `start_app()`, `close_app()`. |
 | `vision/screen.py` | `Screen` | Last screenshot in BGR / gray / HSV; `capture()`, `find()`, `has()`, `find_exact()`, `find_all()`, `color_ratio()`. |
 | `vision/templates.py` | `TEMPLATE_NAMES`, `load_templates()` | Template catalog, loading and resizing to the phone. |
 | `vision/matching.py` | `best_match()`, `closest_match()`, `all_matches()` | OpenCV template matching, DBSCAN clustering. |
-| `vision/colors.py` | `RED`, `color_ratio()` | HSV color ranges and their share of an image. |
+| `vision/colors.py` | `RED`, `GREEN`, `color_ratio()` | HSV color ranges and their share of an image. |
 | `vision/upgrade_icons.py` | `find_upgrade_icons()` | Station upgrade icons by shape and color. |
 | `vision/top_bar.py` | `find_top_bar_line()` | Black line at the bottom of the top bar. |
 | `coords/reference.py` | positions | All screen positions at 1220x2712. Pure data, no logic. |

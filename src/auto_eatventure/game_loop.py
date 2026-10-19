@@ -3,9 +3,10 @@
 from auto_eatventure import config
 from auto_eatventure.actions import (
   adventures, boxes, food_delivery, helper_invite, levels, popular_dish,
-  popups, stations, upgrades)
+  popups, potion_shop, stations, upgrades)
 from auto_eatventure.actions.stale import StaleWatch
 from auto_eatventure.actions.start_dialogs import LateDialogWatch
+from auto_eatventure.potion_shop_loop import PotionShopLoop
 from auto_eatventure.timer import Timer
 
 # Every this many loops: popups closed, the next level checked (when
@@ -13,6 +14,8 @@ from auto_eatventure.timer import Timer
 POPUP_CHECK_LOOPS = 150
 NEXT_LEVEL_CHECK_LOOPS = 10
 BOX_CHECK_LOOPS = 2
+# The Potion Shop event (weekly) is looked for this often
+POTION_SHOP_CHECK_S = 30 * 60
 
 
 class GameLoop:
@@ -33,6 +36,7 @@ class GameLoop:
     self.food_delivery_timer = Timer()
     self.helper_invite_timer = Timer()
     self.adventures_timer = Timer()
+    self.potion_shop_timer = Timer()
 
   def run(self):
     while True:
@@ -54,6 +58,9 @@ class GameLoop:
 
     game.screen.capture()
     if self.late_dialogs.close_dialogs(game):
+      return
+    if (config.POTION_SHOP_ENABLED and self.potion_shop_timer.is_due()
+        and self._play_potion_shop()):
       return
     if (config.FOOD_DELIVERY_ENABLED and self.food_delivery_timer.is_due()
         and self._accept_food_delivery()):
@@ -112,6 +119,19 @@ class GameLoop:
       return False
     food_delivery.accept(self.game, truck)
     self.food_delivery_timer.postpone(food_delivery.PAUSE_S)
+    return True
+
+  def _play_potion_shop(self):
+    """Play the Potion Shop event while it runs. Returns True when
+    the bot was inside."""
+    self.potion_shop_timer.postpone(POTION_SHOP_CHECK_S)
+    game = self.game
+    if not (potion_shop.is_inside(game)
+            or (potion_shop.is_available(game) and potion_shop.enter(game))):
+      return False
+    PotionShopLoop(game).run()
+    self.stale.reset()
+    self.needs_reposition = True
     return True
 
   def _invite_helper(self):

@@ -12,7 +12,7 @@ generated-members=cv2.*
 docstring-min-length=5
 
 [DESIGN]
-max-attributes=10
+max-attributes=12
 min-public-methods=0
 
 [FORMAT]

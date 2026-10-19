@@ -102,6 +102,8 @@ self._collect_adventures()                      # after start, every 5 h
 game.screen.capture()
 if self.late_dialogs.close_dialogs(game):       # first 60 s, every 15 s
   return
+if self._play_potion_shop():                    # every 30 min, if running
+  return
 if self._accept_food_delivery():                # truck available
   return
 if helper_invite.is_available(game):            # helper available
@@ -136,6 +138,7 @@ their `Timer` (`timer.py`) is due.
 | `HELPER_INVITE_ENABLED` and helper available | Invite the first helper | `helper_invite.is_available()`, `invite()` |
 | `COLLECT_ADVENTURES_ENABLED` and its timer due (first loop, then every 5 h) | Collect the free Adventures rewards | `adventures.collect()` |
 | `POPULAR_DISH_ENABLED` and its timer due | Select first dish as Popular Dish, Start + Stop at once | `popular_dish.select()` |
+| `POTION_SHOP_ENABLED` and its timer due (first loop, then every 30 min) | Enter the Potion Shop event and play it until it ends | `potion_shop.enter()`, `PotionShopLoop.run()` |
 
 ### Popular Dish (Masterchef quest farming, optional)
 
@@ -251,6 +254,42 @@ first loop after the start, then every `adventures.INTERVAL_S`
   (`ADVENTURES - Collected rewards: Zeus' Feast 2x, Hangry Pirates 1x`);
   a check with nothing to collect only to `autoplay.log`
 - Screenshots and measurements: `experiments/adventures/NOTES.md`
+
+### Potion Shop event (work in progress, off by default)
+
+Enable with `POTION_SHOP_ENABLED="1"` in `.env`. The weekly event
+(Saturday-Tuesday) is a restaurant-like map with its own green coins:
+ingredient stations, crates (more slots of a station), an Upgrades
+dialog (customers, alchemists, Potion Kettle) and a Cauldron where
+potions are brewed (each brew raises the potion's level; alchemists
+carry the ingredients). Every `POTION_SHOP_CHECK_S` (30 min) the loop
+checks `potion_shop.is_inside()` / `is_available()`, enters it
+(`potion_shop.enter()`: event button, Enter, Open) and hands over to
+`PotionShopLoop.run()` (`potion_shop_loop.py`) until the bot is no
+longer inside (the event ended). One loop of `PotionShopLoop`:
+
+1. Cauldron dialog open (also opens by itself with "Brew Complete!")
+   -> `potion_shop.brew()`: Claim the finished potion, brew the next
+   one by `potion_shop.BREW_ORDER` (only a row with a Brew button).
+2. Dimmed screen -> close the dialog.
+3. Red "!" on the Cauldron button -> `brew()` (retried after 60 s
+   when nothing could be brewed).
+4. `upgrades.buy_if_available()` (same button as in the restaurant).
+5. Every 2nd loop `potion_shop.open_crates()`.
+6. The map is taller than the screen; at the start the whole shop
+   with its stations fits on it. `potion_shop.show_shop()` scrolls the
+   map until a landmark (counter decoration) is at its place, measuring
+   after every swipe; it runs again when the landmark was out of place
+   in 2 loops in a row.
+7. `stations.find_icons()` / `upgrade()` (also unlocks new stations).
+
+- Never tapped: Boost (ad), Activate / Pass (real money)
+- Not done yet: choosing what to buy (customers vs. alchemists) and
+  which station to upgrade, the later stations in the basement (a
+  second view with its own landmark), potions of the later stations,
+  leaving the event when completed
+- Screenshots, flow and the strategy found on the web:
+  `experiments/potion_shop/NOTES.md`
 
 ## Stale State Recovery
 
