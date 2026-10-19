@@ -171,9 +171,11 @@ def _brew_next(game):
   without a Brew button). The list is read on its first page and its
   scrolled part. Returns True when one was brewed."""
   coords = game.coords
-  first = _potion_rows(game)
-  _scroll_brew_list(game, coords.potion_shop_brew_list_swipe)
-  rows = _potion_rows(game)
+  first = rows = _potion_rows(game)
+  if len(first) > 1:
+    # Not brewing (then only the brewing potion is listed)
+    _scroll_brew_list(game, coords.potion_shop_brew_list_swipe)
+    rows = _potion_rows(game)
   both = {**first, **rows}
   plan = LATE_PLAN if LATE_POTION in both else BREW_PLAN
   log.debug('Potion Shop: potions %s', {
