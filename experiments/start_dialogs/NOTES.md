@@ -1,6 +1,6 @@
-# Start dialogs (OnePlus Nord 3, Jenik's phone)
+# Start dialogs (OnePlus Nord 3)
 
-Device KZXCZ9HA79WKJR55, 1240x2772. 2026-10-14 the bot hung in
+Device <serial>, 1240x2772. 2026-10-14 the bot hung in
 `init_game()` (now `start_dialogs.wait_until_ready()`) ("Init:
 waiting for game to be ready" forever): two dialogs covered (dimmed)
 the settings gear.

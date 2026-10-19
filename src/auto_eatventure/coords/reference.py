@@ -162,9 +162,11 @@ helper_button = Point(side_button_tap_x, 434)
 # person's body + the empty line where a countdown / ad icon would be)
 helper_roi = Region(0, 400, 170, 560)
 
-# Invite button of the first helper in the "Invite a helper" dialog
-helper_invite = Point(804, 1019)
-helper_invite_roi = Region.around(helper_invite, 147, 79)
+# Search area of the first helper's Invite button in the "Invite a
+# helper" dialog. The dialog is centered, so on a shorter screen it is
+# higher than the scaling says (LG G6 2:1: ~90 px). The area covers the
+# first row on both, but not the second row (~230 px lower).
+helper_invite_roi = Region(657, 840, 951, 1130)
 
 # ── Adventures ────────────────────────────────────────────────────────
 # Party popper, the first white button in the right column; it opens
