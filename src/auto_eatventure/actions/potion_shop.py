@@ -31,14 +31,19 @@ CAULDRON_DELAY_S = 1.5
 # to, in this order; each brew raises the level by one. The levels
 # follow the fastest runs found on the web (experiments/potion_shop/
 # NOTES.md): Swift (walk) and Sizzle (food) first, then Instant and
-# Double food. A potion stays active (5 slots) until bottled.
+# Double food, then with the cellar's ingredients Divine and Golden. A
+# potion stays active (5 slots) until bottled.
 BREW_PLAN = (
   ('swift', 4), ('sizzle', 4), ('instant', 4), ('double', 4),
   ('perfect', 3), ('swift', 8), ('instant', 6), ('double', 6),
   ('sizzle', 6), ('sizzle', 7), ('instant', 7), ('double', 7),
-  ('perfect', 5))
+  ('perfect', 5), ('divine', 6), ('golden', 5))
 POTIONS = ('swift', 'sizzle', 'perfect', 'instant', 'double',
-           'telepathic')
+           'telepathic', 'divine', 'golden')
+# When a planned potion can't be brewed because all slots are full,
+# the first active of these is bottled (1 cork), as the guides do for
+# Divine and Golden
+BOTTLE_ORDER = ('perfect', 'sizzle')
 POTION_THRESHOLD = 0.8
 # Landmarks of the map (template potion_shop_<name>, coords
 # potion_shop_<name>_roi and _y); one is sometimes partly hidden by an
@@ -158,37 +163,86 @@ def _claim(game):
 def _brew_next(game):
   """Brew the first potion of BREW_PLAN below its level that has a
   Brew button (while a potion is brewing the list shows only it,
-  without a Brew button). Returns True when one was brewed."""
-  rows = _potion_rows(game)
-  log.debug('Potion Shop: potions %s', {
-    name: level for name, (level, _) in rows.items()})
-  for name, level_to in BREW_PLAN:
-    level, button = rows.get(name, (None, None))
-    if button is not None and level is not None and level <= level_to:
-      return _tap_brew(game, button, f'{name} (level {level})')
+  without a Brew button), on the list's first page, else on its
+  scrolled part. Returns True when one was brewed."""
+  for page in range(2):
+    if page:
+      game.device.swipe(game.coords.potion_shop_brew_list_swipe)
+      time.sleep(CAULDRON_DELAY_S)
+      game.screen.capture()
+    rows = _potion_rows(game)
+    log.debug('Potion Shop: potions %s', {
+      name: level for name, (level, _, _) in rows.items()})
+    for name, level_to in BREW_PLAN:
+      level, button, _ = rows.get(name, (None, None, False))
+      if button is not None and level is not None and level <= level_to:
+        return _tap_brew(game, button, f'{name} (level {level})')
+  if _needs_slot(rows):
+    _bottle(game)
   log.info('Potion Shop: nothing to brew')
   return False
 
 
+def _needs_slot(rows):
+  """Whether a planned potion can't be brewed only because all slots
+  are full."""
+  for name, level_to in BREW_PLAN:
+    level, _, full = rows.get(name, (None, None, False))
+    if full and level is not None and level <= level_to:
+      return True
+  return False
+
+
 def _potion_rows(game):
-  """{potion: (level shown, its Brew button or None)} of the potions
-  found in the Brew list."""
+  """{potion: (level shown, its Brew button or None, whether "Slots
+  Full!" is shown)} of the potions found in the Brew list."""
   coords = game.coords
   buttons = coords.potion_shop_brew_list_roi
   rows = {}
   for name in POTIONS:
-    icon = game.screen.find(f'potion_shop_{name}',
-                            coords.potion_shop_potion_icons_roi,
-                            POTION_THRESHOLD)
+    icon = _find_potion(game, name)
     if icon is None:
       continue
     center = icon.center
     level = game.screen.read_level(
       coords.potion_shop_level_label.moved(center.x, center.y))
-    row = Region(buttons.left, icon.top, buttons.right, icon.bottom)
-    rows[name] = (level, game.screen.find('potion_shop_brew', row,
-                                          BUTTON_THRESHOLD))
+    # "Slots Full!" is a bit above the icon's top
+    row = Region(buttons.left, icon.top - (icon.bottom - icon.top) // 4,
+                 buttons.right, icon.bottom)
+    rows[name] = (
+      level, game.screen.find('potion_shop_brew', row, BUTTON_THRESHOLD),
+      game.screen.has('potion_shop_slots_full', row, BUTTON_THRESHOLD))
   return rows
+
+
+def _bottle(game):
+  """Bottle the first active potion of BOTTLE_ORDER (Active Potions
+  tab) to free its slot."""
+  coords = game.coords
+  game.device.tap(coords.potion_shop_active_tab)
+  time.sleep(CAULDRON_DELAY_S)
+  game.screen.capture()
+  for name in BOTTLE_ORDER:
+    icon = _find_potion(game, name)
+    if icon is None:
+      continue
+    center = icon.center
+    button = game.screen.find(
+      'potion_shop_bottle',
+      coords.potion_shop_bottle_row.moved(center.x, center.y),
+      BUTTON_THRESHOLD)
+    if button is not None:
+      key_log.info('POTION SHOP - Bottled %s to free a slot', name)
+      game.device.tap(button.center)
+      time.sleep(CAULDRON_DELAY_S)
+      return
+  log.info('Potion Shop: no potion to bottle')
+
+
+def _find_potion(game, name):
+  return game.screen.find(f'potion_shop_{name}',
+                          game.coords.potion_shop_potion_icons_roi,
+                          POTION_THRESHOLD)
 
 
 def _tap_brew(game, button, name):

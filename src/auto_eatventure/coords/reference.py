@@ -232,6 +232,12 @@ potion_shop_potion_icons_roi = Region(30, 900, 260, 2600)
 # A potion's level label ("Lvl 3") relative to its icon's center; in
 # the Brew list it shows the level the next brew makes
 potion_shop_level_label = Region(-82, 76, 87, 132)
+# The Brew list is longer than the screen (Divine, Golden, ... below)
+potion_shop_brew_list_swipe = Swipe(Point(610, 2260), Point(610, 1017))
+# Active Potions tab: the active potions, each with a Bottle button
+# (relative to its icon's center like the level label)
+potion_shop_active_tab = Point(429, 633)
+potion_shop_bottle_row = Region(731, -20, 1013, 115)
 potion_shop_cauldron_close = Point(1130, 249)
 potion_shop_cauldron_close_roi = Region.around(
   potion_shop_cauldron_close, 40, 40)
