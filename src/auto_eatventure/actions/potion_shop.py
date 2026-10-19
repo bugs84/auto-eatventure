@@ -27,15 +27,23 @@ BADGE_MIN_RATIO = 0.12
 # The red X of the Cauldron dialog fills most of its area
 CLOSE_MIN_RATIO = 0.4
 CAULDRON_DELAY_S = 1.5
-# Potions brewed first (template potion_shop_<name>); each brew of a
-# potion raises its level. Swift (walk) and Sizzle (food) speed the
-# alchemists up the most early on (see experiments/potion_shop/NOTES).
-BREW_ORDER = ('swift', 'sizzle', 'perfect')
+# Potions (template potion_shop_<name>) and the level each is brewed
+# to, in this order; each brew raises the level by one. The levels
+# follow the fastest runs found on the web (experiments/potion_shop/
+# NOTES.md): Swift (walk) and Sizzle (food) first, then Instant and
+# Double food. A potion stays active (5 slots) until bottled.
+BREW_PLAN = (
+  ('swift', 4), ('sizzle', 4), ('instant', 4), ('double', 4),
+  ('perfect', 3), ('swift', 8), ('instant', 6), ('double', 6),
+  ('sizzle', 6))
+POTIONS = ('swift', 'sizzle', 'perfect', 'instant', 'double',
+           'telepathic')
 POTION_THRESHOLD = 0.8
 # The landmark (counter decoration) is sometimes partly hidden by an
 # alchemist; it is aligned when this close to its place
 LANDMARK_THRESHOLD = 0.7
-ALIGN_TRIES = 6
+LANDMARK_MISSES = 2
+ALIGN_TRIES = 8
 SWIPE_DELAY_S = 1.5
 # A 1 s swipe moves the map ~1.1-1.3x its length, so a correction swipe
 # covers a part of the offset and is repeated
@@ -143,26 +151,39 @@ def _claim(game):
 
 
 def _brew_next(game):
-  """Tap Brew of the first potion of BREW_ORDER that has a Brew button
-  in its row, else of the first potion with one. While a potion is
-  brewing the list shows it without a Brew button."""
+  """Brew the first potion of BREW_PLAN below its level that has a
+  Brew button (while a potion is brewing the list shows only it,
+  without a Brew button). Returns True when one was brewed."""
+  rows = _potion_rows(game)
+  log.debug('Potion Shop: potions %s', {
+    name: level for name, (level, _) in rows.items()})
+  for name, level_to in BREW_PLAN:
+    level, button = rows.get(name, (None, None))
+    if button is not None and level is not None and level <= level_to:
+      return _tap_brew(game, button, f'{name} (level {level})')
+  log.info('Potion Shop: nothing to brew')
+  return False
+
+
+def _potion_rows(game):
+  """{potion: (level shown, its Brew button or None)} of the potions
+  found in the Brew list."""
   coords = game.coords
   buttons = coords.potion_shop_brew_list_roi
-  for name in BREW_ORDER:
+  rows = {}
+  for name in POTIONS:
     icon = game.screen.find(f'potion_shop_{name}',
                             coords.potion_shop_potion_icons_roi,
                             POTION_THRESHOLD)
     if icon is None:
       continue
+    center = icon.center
+    level = game.screen.read_level(
+      coords.potion_shop_level_label.moved(center.x, center.y))
     row = Region(buttons.left, icon.top, buttons.right, icon.bottom)
-    button = game.screen.find('potion_shop_brew', row, BUTTON_THRESHOLD)
-    if button is not None:
-      return _tap_brew(game, button, name)
-  button = game.screen.find('potion_shop_brew', buttons, BUTTON_THRESHOLD)
-  if button is None:
-    log.info('Potion Shop: nothing to brew')
-    return False
-  return _tap_brew(game, button, 'an unknown potion')
+    rows[name] = (level, game.screen.find('potion_shop_brew', row,
+                                          BUTTON_THRESHOLD))
+  return rows
 
 
 def _tap_brew(game, button, name):
@@ -176,12 +197,22 @@ def show_shop(game):
   """Scroll the map so the whole shop with its stations is shown (the
   landmark on the counter at its place). Returns True when shown."""
   coords = game.coords
+  # An open station popup would take the first swipe
+  game.device.tap(game.null_spot)
+  time.sleep(SWIPE_DELAY_S)
+  misses = 0
   for _ in range(ALIGN_TRIES):
+    game.screen.capture()
     offset = shop_offset(game)
+    log.debug('Potion Shop: landmark offset %s', offset)
     limit = coords.potion_shop_max_swipe_y
     if offset is None:
-      # Below the shop (the map's top is the shop's roof, from where
-      # the landmark is still visible): scroll up
+      # Hidden for a moment (an alchemist), or the map is below the
+      # shop (from its top the landmark is still visible): scroll up
+      misses += 1
+      if misses < LANDMARK_MISSES:
+        time.sleep(SWIPE_DELAY_S)
+        continue
       distance = limit
     elif abs(offset) <= coords.potion_shop_aligned_y:
       return True
@@ -191,7 +222,6 @@ def show_shop(game):
                   coords.potion_shop_swipe_from_y)
     game.device.swipe(Swipe(start, Point(start.x, start.y + distance)))
     time.sleep(SWIPE_DELAY_S)
-    game.screen.capture()
   log.info('Potion Shop: could not scroll to the shop')
   return False
 
