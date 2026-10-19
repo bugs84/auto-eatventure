@@ -15,9 +15,14 @@ CRATE_CHECK_LOOPS = 2
 # The map is scrolled back to the shop when its landmark was out of
 # place (or hidden) in this many loops in a row
 MISPLACED_LOOPS = 2
-# The Cauldron's badge may stay while nothing can be brewed (e.g. a
-# potion is brewing); then it is looked at again only after this time
-BREW_RETRY_S = 60
+# The Cauldron's red badge shows when a brewed potion is done (while
+# brewing the kettle shows the ingredients it still needs). It fades
+# out for a while after a new brew, and the finished potion's Claim
+# shows a moment after the badge: so the badge is ignored for
+# BREW_PAUSE_S after a brew and looked at again after BREW_RETRY_S
+# when the Cauldron had nothing to do.
+BREW_PAUSE_S = 20
+BREW_RETRY_S = 15
 # A red station icon next to the Upgrades button looks like its badge;
 # when nothing could be bought the badge is ignored for this time
 UPGRADES_RETRY_S = 60
@@ -57,15 +62,16 @@ class PotionShopLoop:
     game = self.game
     self.loops += 1
     if potion_shop.is_cauldron_open(game):
-      potion_shop.brew(game)
+      if potion_shop.brew(game):
+        self.brew_timer.postpone(BREW_PAUSE_S)
       return
     if popups.is_screen_dimmed(game):
       if not popups.close_popup(game):
         self._close_unknown_dialog()
       return
     if potion_shop.can_brew(game) and self.brew_timer.is_due():
-      if not potion_shop.brew(game):
-        self.brew_timer.postpone(BREW_RETRY_S)
+      brewed = potion_shop.brew(game)
+      self.brew_timer.postpone(BREW_PAUSE_S if brewed else BREW_RETRY_S)
       return
     if (upgrades.has_badge(game) and self.upgrades_timer.is_due()
         and not upgrades.buy_if_available(game)):
