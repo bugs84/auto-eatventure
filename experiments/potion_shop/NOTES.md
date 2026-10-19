@@ -162,6 +162,17 @@ Learned while automating (2026-10-19/20, Xiaomi):
 - A swipe that starts on a station opens its popup, which eats the next
   swipes (map stuck at one offset): tap the null spot when the map did
   not move.
+- Brew list is longer than the screen: Perfect, Telepathic, Divine
+  Decoction (Spider Silk + Mushrooms), Greedy Gulp, Golden Gulp (Beetle
+  + Mushrooms), Addictive Aether below (ps_54, ps_55); they show
+  "Slots Full!" while 5 potions are active. Read on both pages.
+- Bottle (Active Potions tab, ps_56/57): immediate, no confirmation,
+  1 cork, frees the slot - and sets the potion's Brew level back to 1
+  (the early plan then brewed Perfect again -> LATE_PLAN once Divine is
+  in the list: Swift 8, Instant 6, Double 6, Divine 6, Golden 5;
+  Perfect then Sizzle bottled when a planned potion needs a slot).
+- Cellar stations (01:27): Purified Water, Spider Silk (lvl 132),
+  Mystic Mushrooms, Frog - all unlocked by the normal station loop.
 - Night 2 state (01:15): Swift 9, Sizzle 8, Instant 8, Double 8,
   Perfect 3 (active levels); Telepathic shows "Slots Full!". No Divine/
   Golden in the list yet (need cellar ingredients).
