@@ -136,8 +136,16 @@ Learned while automating (2026-10-19/20, Xiaomi):
   books on the counter's right part, `potion_shop_landmark`) measured
   after every swipe; swipes start on the floor right of the kettle.
 - At the start the whole shop (counter + 6 stations + 2 tiles) fits on
-  one screen; the cellar ("Dig a Cellar" upgrade, 133aa) adds stations
-  below that need a second view (TODO: own landmark).
+  one screen; the cellar ("Dig a Cellar" upgrade, 133aa, bought by the
+  Upgrades loop) adds 4 station tiles + crates below the shop (ps_51,
+  ps_52); the map ends below it with a closed building.
+- Landmarks (all measured as the offset from the shop view, device px):
+  counter ink/quill (hidden once 9 customers' prices cover the counter,
+  00:27 night 2), barrel bottom left, skull above the counter (only
+  when scrolled up to the roof, offset ~+1015 = map top), barrel with
+  candle at the cellar entrance. Map bottom = offset -2045, cellar view
+  -1743 (ref -1970). Without any landmark the fallback swipes alternate
+  up/down (one direction only got stuck at the map top).
 - Crates (wooden boxes by the stations) = more slots of a station;
   without them ingredients come slowly. Own template (the main game's
   box template scores only ~0.6 there), threshold 0.7 (moving shine).
@@ -148,7 +156,7 @@ Learned while automating (2026-10-19/20, Xiaomi):
 - Brew list: rows of potions with icon + "Lvl N" (= level of the next
   brew) + Brew button; while brewing only the brewing row, no button.
   Levels are read by `vision/level_label.py` (digit samples in
-  `matching_screenshots/level_digits/`, missing: 5, 6, 7, 8 - add them
+  `matching_screenshots/level_digits/`, missing: 7, 8 - add them
   from `brew_log/` screenshots when they appear).
 - Active Potions tab: up to 5 active potions (Bandolier MAX); a brewed
   potion stays active until bottled (1 cork). Divine/Golden (cellar
@@ -159,7 +167,9 @@ Learned while automating (2026-10-19/20, Xiaomi):
   when nothing was bought, the badge is ignored for 60 s.
 
 Next steps (ideas):
-1. Cellar view + its stations; Popular Dish on Spider/Frog (guides).
+1. Cellar: done (every 60 s, 3 loops there). Popular Dish on
+   Spider/Frog (guides); don't open the Frog until its x75 (TODO: which
+   cellar tile is the Frog).
 2. Customers vs alchemists: buy all alchemists, only 3-4 customers
    early (needs reading the Upgrades rows: icon templates).
 3. Station targeting: upgrade the best-paying station to its x10/x50/
