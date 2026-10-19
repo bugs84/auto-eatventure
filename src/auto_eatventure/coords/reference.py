@@ -1,24 +1,40 @@
 """Screen positions at the reference resolution (1220x2712).
 
 ScaledCoords scales them to the phone's resolution: Point, Region and
-Swipe values in both directions, numbers ending in _x horizontally and
-numbers ending in _y vertically. Other values are not scaled.
+Swipe values and numbers ending in _x or _y. Other values are not
+scaled.
+
+The game scales its UI by the screen width; on a phone with another
+aspect ratio only the room between the top bar and the bottom bar
+changes. So each position says where it stays:
+
+- Top(...): at the top, below the status bar (top bar, side button
+  columns, full screen dialogs' corners)
+- Bottom(...): at the bottom (bottom button bar)
+- plain Point / Region / Swipe: centered between them (dialogs, the
+  restaurant)
+
+A plain number ending in _y is a size (a height, an offset); a y
+position given as a number is wrapped in Top or Bottom.
 """
 
 # Lowercase names: they are positions, read through ScaledCoords
 # pylint: disable=invalid-name
 
-from auto_eatventure.coords.geometry import Point, Region, Swipe
+from auto_eatventure.coords.geometry import Bottom, Point, Region, Swipe, Top
 
 REFERENCE_WIDTH = 1220
 REFERENCE_HEIGHT = 2712
+# y of the top bar's black line at the reference (Xiaomi: 226 at
+# 1080x2400). Top positions move with the line measured at start.
+TOP_BAR_LINE_Y = 255
 
 # ── Restaurant screen ─────────────────────────────────────────────────
 
 # White settings gear (top right). A dialog dims it, so it tells
 # whether a dialog covers the screen (station popups don't dim it).
-settings = Point(1134, 161)
-settings_roi = Region.around(settings, 30, 30)
+settings = Top(Point(1134, 161))
+settings_roi = Top(Region.around(settings.value, 30, 30))
 
 # Empty spot (restaurant just below the top bar) tapped to close
 # station popups. y is only a fallback: the status bar height differs
@@ -27,7 +43,7 @@ settings_roi = Region.around(settings, 30, 30)
 # tap and the popup stays open (OnePlus Nord 3); too low, it can hit a
 # customer bubble, whose Investor dialog starts an ad with Claim
 # (Xiaomi at y=340, 301 there).
-null_spot_fallback = Point(886, 278)
+null_spot_fallback = Top(Point(886, 278))
 
 # The top bar ends with a black line across the screen. Shorter runs of
 # black rows are gaps between HUD elements, not the line (Xiaomi: 13
@@ -44,10 +60,10 @@ close_offline_earnings = Point(974, 1012)
 
 # ── Upgrades dialog ───────────────────────────────────────────────────
 
-upgrade_button = Point(1093, 2524)
+upgrade_button = Bottom(Point(1093, 2524))
 # Red badge on the upgrade button (shown while an upgrade can be
 # bought). The badge pulses, the area fits its largest size.
-upgrade_badge_roi = Region(971, 2407, 1107, 2542)
+upgrade_badge_roi = Bottom(Region(971, 2407, 1107, 2542))
 
 # Buy button of the first row in the Upgrades dialog
 first_upgrade_buy = Point(968, 1115)
@@ -58,7 +74,7 @@ close_upgrades_roi = Region.around(close_upgrades, 40, 40)
 
 # ── Next level / next city ────────────────────────────────────────────
 
-next_level_button = Point(127, 2521)
+next_level_button = Bottom(Point(127, 2521))
 renovate_button = Point(593, 1912)
 fly_next_city_button = Point(593, 1892)
 # "Okay" of the "Welcome to <city>" dialog after a flight
@@ -66,8 +82,8 @@ welcome_okay_button = Point(618, 1695)
 # "Open" of the first stand after a renovation or a flight
 first_stand_open_button = Point(604, 1604)
 
-chest = Point(110, 734)
-close_chest = Point(1127, 200)
+chest = Top(Point(110, 734))
+close_chest = Top(Point(1127, 200))
 
 # ── Station upgrade icons ─────────────────────────────────────────────
 
@@ -79,16 +95,16 @@ upgrade_arrow_max_height_y = 48
 # Icons below this y are ignored: keeps taps off the club button and
 # off the red badge of the bottom Upgrades button, which looks like a
 # station upgrade icon (~2474)
-station_icon_max_y = 2200
+station_icon_max_y = Bottom(2200)
 # Icons below this y AND within the left side button zone are ignored
 # (their station box may overlap the club button in the bottom-left
 # corner)
-club_button_zone_top_y = 2029
+club_button_zone_top_y = Bottom(2029)
 # Icons above this y are too close to the top of the viewport and
 # trigger a swipe up
-station_icon_min_y = 1100
+station_icon_min_y = Top(1100)
 # Icons above this y need a special tap to avoid the tooltip
-station_icon_tooltip_y = 1240
+station_icon_tooltip_y = Top(1240)
 
 # Y offset when tapping a station icon to open its upgrade menu
 station_tap_offset_y = 22
@@ -131,7 +147,7 @@ side_button_tap_x = 120
 # Single circle while all skills are ready (cooldown resets on every
 # renovation / fly to a new city); it splits into two circles while
 # Popular Dish is active or cooling down.
-skills_circle = Point(610, 325)
+skills_circle = Top(Point(610, 325))
 
 # Select / Start / Stop button of the Popular Dish row (same position).
 # Its search area keeps the Sold Out row's own Select button (~305px
@@ -149,7 +165,7 @@ first_dish_candidates = (
 # ── Food Delivery ─────────────────────────────────────────────────────
 # Truck button in the left button column. It moves up when the button
 # above it is missing, so it is searched in this area.
-food_delivery_roi = Region(0, 283, 226, 960)
+food_delivery_roi = Top(Region(0, 283, 226, 960))
 
 # Accept button of the first order in the "Food Delivery" dialog
 food_delivery_accept = Point(610, 1166)
@@ -157,21 +173,20 @@ food_delivery_accept_roi = Region.around(food_delivery_accept, 147, 79)
 
 # ── Invite a Helper ───────────────────────────────────────────────────
 # Helper (person) button, the top one in the left button column
-helper_button = Point(side_button_tap_x, 434)
+helper_button = Top(Point(side_button_tap_x, 434))
 # Search area of the "available" template (lower part of the button:
 # person's body + the empty line where a countdown / ad icon would be)
-helper_roi = Region(0, 400, 170, 560)
+helper_roi = Top(Region(0, 400, 170, 560))
 
 # Search area of the first helper's Invite button in the "Invite a
-# helper" dialog. The dialog is centered, so on a shorter screen it is
-# higher than the scaling says (LG G6 2:1: ~90 px). The area covers the
-# first row on both, but not the second row (~230 px lower).
+# helper" dialog. The area covers the first row, but not the second
+# row (~230 px lower).
 helper_invite_roi = Region(657, 840, 951, 1130)
 
 # ── Adventures ────────────────────────────────────────────────────────
 # Party popper, the first white button in the right column; it opens
 # the "Events" dialog with the Adventures at the bottom
-events_button = Point(1141, 429)
+events_button = Top(Point(1141, 429))
 
 # Red X of the "Events" dialog and of an adventure's level dialog
 # (e.g. "Feast on Olympus"); the red share around it tells which one
@@ -201,6 +216,6 @@ adventure_complete_last = Point(412, 1949)
 # Full screen reward cards: taps reveal them one by one, then the
 # summary shows a red X in the top right corner. An empty area of the
 # screen's background tells the reward screen.
-adventure_reward_bg_roi = Region(0, 395, 181, 621)
+adventure_reward_bg_roi = Top(Region(0, 395, 181, 621))
 adventure_reveal_tap = Point(610, 1356)
-adventure_summary_close_roi = Region.around(Point(1118, 186), 56, 56)
+adventure_summary_close_roi = Top(Region.around(Point(1118, 186), 56, 56))
