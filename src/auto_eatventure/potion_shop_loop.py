@@ -26,6 +26,10 @@ BREW_RETRY_S = 15
 # A red station icon next to the Upgrades button looks like its badge;
 # when nothing could be bought the badge is ignored for this time
 UPGRADES_RETRY_S = 60
+# Every CELLAR_CHECK_S the map is scrolled to the cellar for
+# CELLAR_LOOPS loops of crates and station upgrades there
+CELLAR_CHECK_S = 60
+CELLAR_LOOPS = 3
 # Screenshots outside the event in a row that end the loop (the event
 # ended or the game left it)
 OUTSIDE_LOOPS = 3
@@ -41,6 +45,7 @@ class PotionShopLoop:
     self.misplaced_loops = 0
     self.brew_timer = Timer()
     self.upgrades_timer = Timer()
+    self.cellar_timer = Timer()
 
   def run(self):
     """Play until the bot is no longer inside the event."""
@@ -79,12 +84,30 @@ class PotionShopLoop:
     if (self.loops % CRATE_CHECK_LOOPS == 0
         and potion_shop.open_crates(game)):
       return
+    if self.cellar_timer.is_due():
+      self.cellar_timer.postpone(CELLAR_CHECK_S)
+      self._play_cellar()
+      return
     if self._shop_misplaced():
       potion_shop.show_shop(game)
       return
     icons = stations.find_icons(game)
     if icons:
       stations.upgrade(game, icons)
+
+  def _play_cellar(self):
+    """Open the crates and upgrade the stations of the cellar, then
+    back to the shop."""
+    game = self.game
+    if potion_shop.show_cellar(game):
+      for _ in range(CELLAR_LOOPS):
+        game.screen.capture()
+        potion_shop.open_crates(game)
+        icons = stations.find_icons(game)
+        if not icons:
+          break
+        stations.upgrade(game, icons)
+    potion_shop.show_shop(game)
 
   def _shop_misplaced(self):
     """Whether the map was moved away from the shop (e.g. by a tap

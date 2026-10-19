@@ -43,7 +43,7 @@ POTION_THRESHOLD = 0.8
 # potion_shop_<name>_roi and _y); one is sometimes partly hidden by an
 # alchemist or a price. The map is aligned when one is this close to
 # its place.
-LANDMARKS = ('barrel', 'landmark', 'skull')
+LANDMARKS = ('barrel', 'landmark', 'skull', 'cellar')
 LANDMARK_THRESHOLD = 0.7
 LANDMARK_MISSES = 2
 ALIGN_TRIES = 8
@@ -198,8 +198,20 @@ def _tap_brew(game, button, name):
 
 
 def show_shop(game):
-  """Scroll the map so the whole shop with its stations is shown (the
-  landmark on the counter at its place). Returns True when shown."""
+  """Scroll the map so the whole shop with its stations is shown.
+  Returns True when shown."""
+  return _scroll_to(game, 0)
+
+
+def show_cellar(game):
+  """Scroll the map down to the cellar's stations. Returns True when
+  shown."""
+  return _scroll_to(game, game.coords.potion_shop_cellar_view_y)
+
+
+def _scroll_to(game, view_y):
+  """Scroll the map until shop_offset() is view_y. Returns True when
+  there."""
   coords = game.coords
   # An open station popup would take the first swipe
   game.device.tap(game.null_spot)
@@ -220,15 +232,16 @@ def show_shop(game):
         continue
       distance = limit * direction
       direction = -direction
-    elif abs(offset) <= coords.potion_shop_aligned_y:
+    elif abs(offset - view_y) <= coords.potion_shop_aligned_y:
       return True
     else:
-      distance = max(-limit, min(limit, round(-offset * SWIPE_SHARE)))
+      distance = max(-limit, min(limit,
+                                 round((view_y - offset) * SWIPE_SHARE)))
     start = Point(coords.potion_shop_swipe_x,
                   coords.potion_shop_swipe_from_y)
     game.device.swipe(Swipe(start, Point(start.x, start.y + distance)))
     time.sleep(SWIPE_DELAY_S)
-  log.info('Potion Shop: could not scroll to the shop')
+  log.info('Potion Shop: could not scroll the map to %d', view_y)
   return False
 
 

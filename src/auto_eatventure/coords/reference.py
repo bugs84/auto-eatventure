@@ -249,6 +249,13 @@ potion_shop_barrel_roi = Region(80, 230, 400, 2450)
 potion_shop_barrel_y = 2133
 potion_shop_skull_roi = Region(400, 230, 820, 2450)
 potion_shop_skull_y = 6
+# Below the shop the cellar ("Dig a Cellar" upgrade) has more stations:
+# its landmark is the barrel with a candle at its entrance (_y on the
+# shop view like the others); the cellar view is the map scrolled to
+# potion_shop_cellar_view_y (offset from the shop view).
+potion_shop_cellar_roi = Region(150, 230, 700, 2450)
+potion_shop_cellar_y = 2754
+potion_shop_cellar_view_y = -1970
 potion_shop_aligned_y = 25
 potion_shop_max_swipe_y = 1000
 potion_shop_swipe_x = 830
