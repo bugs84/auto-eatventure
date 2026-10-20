@@ -19,10 +19,11 @@ DIALOG_DELAY_S = 2
 ENTER_TIMEOUT_S = 30
 # End game: once Beetle Juice (the shop's last station) is MAX, only the
 # best paying station is upgraded, coins are saved for it, until it is
-# MAX (level 1000), then the next one. Spider Silk paid ~6x Frog and ~20x
-# Mushrooms per second (ps_68-71).
+# MAX (level 1000), then the next one. Cellar stations from the cheapest
+# (guide; a better station costs more at the same level): Purified
+# Water, Spider Silk, Mystic Mushrooms, Frog Screams.
 END_GAME_STATION = 'beetle'
-FOCUS_STATIONS = ('spider', 'frog', 'mushrooms')
+FOCUS_STATIONS = ('spider', 'mushrooms', 'frog')
 POPUP_DELAY_S = 1
 # The rewards list is scrolled to its bottom by this many swipes; a
 # reward's green check fills ~10% of its icon's area (0% without it)
