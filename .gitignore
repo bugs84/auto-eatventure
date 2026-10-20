@@ -4,4 +4,4 @@
 *.AppImage
 .venv
 /.idea/
-logs/
+logs/potion_shop_bottles.json

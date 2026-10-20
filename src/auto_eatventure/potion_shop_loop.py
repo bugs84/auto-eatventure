@@ -6,6 +6,7 @@ import time
 
 from auto_eatventure.actions import popups, potion_shop, stations, upgrades
 from auto_eatventure.logger import key_log
+from auto_eatventure.potion_bottles_loop import PotionBottlesLoop
 from auto_eatventure.timer import Timer
 
 log = logging.getLogger(__name__)
@@ -35,8 +36,8 @@ UPGRADES_RETRY_S = 60
 # CELLAR_LOOPS loops of crates and station upgrades there
 CELLAR_CHECK_S = 60
 CELLAR_LOOPS = 3
-# The rewards are looked at (Exit when all are done) right away and
-# then every COMPLETION_CHECK_S
+# The rewards are looked at (when all are done: bottling, then Exit)
+# right away and then every COMPLETION_CHECK_S
 COMPLETION_CHECK_S = 15 * 60
 # In the end game (potion_shop.END_GAME_STATION MAX, looked at every
 # END_GAME_CHECK_S) the focused station's last upgrade (bought yet?)
@@ -70,12 +71,14 @@ class PotionShopLoop:
     self.station_states = {}
 
   def run(self):
-    """Play until the bot is no longer inside the event. Returns True
-    when it left because all rewards were done."""
+    """Play until the bot is no longer inside the event or all rewards
+    are done; then the ordered potions are bottled
+    (PotionBottlesLoop) and the bot leaves. Returns True when all
+    rewards were done."""
     key_log.info('POTION SHOP - Playing the event')
     potion_shop.show_shop(self.game)
     outside = 0
-    while outside < OUTSIDE_LOOPS:
+    while outside < OUTSIDE_LOOPS and not self.completed:
       self.game.screen.capture()
       if potion_shop.is_inside(self.game):
         outside = 0
@@ -83,6 +86,9 @@ class PotionShopLoop:
       else:
         outside += 1
         popups.close_popup(self.game)
+    if (self.completed and PotionBottlesLoop(self.game).run()
+        and not potion_shop.leave(self.game)):
+      log.warning('Potion Shop: Exit did not leave the event')
     key_log.info('POTION SHOP - Left the event')
     return self.completed
 
@@ -118,7 +124,7 @@ class PotionShopLoop:
     when one was played."""
     if self.completion_timer.is_due():
       self.completion_timer.postpone(COMPLETION_CHECK_S)
-      self.completed = potion_shop.leave_if_completed(self.game)
+      self.completed = potion_shop.is_completed(self.game)
       return True
     if self._play_end_game():
       return True
