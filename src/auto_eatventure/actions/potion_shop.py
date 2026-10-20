@@ -57,10 +57,11 @@ BREW_PLAN = (
   ('perfect', 5))
 # Once the cellar's ingredients show Divine and Golden in the list, the
 # guides' final set: Perfect and Sizzle are bottled for them (bottling
-# sets a potion's level back to 1, so they are not brewed again)
+# sets a potion's level back to 1, so they are not brewed again);
+# Golden to 7 (user's advice: worth it near the end)
 LATE_PLAN = (
   ('swift', 8), ('instant', 6), ('double', 6), ('divine', 6),
-  ('golden', 5))
+  ('golden', 7))
 LATE_POTION = 'divine'
 POTIONS = ('swift', 'sizzle', 'perfect', 'instant', 'double',
            'telepathic', 'divine', 'golden')

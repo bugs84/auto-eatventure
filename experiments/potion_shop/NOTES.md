@@ -206,6 +206,9 @@ Learned while automating (2026-10-19/20, Xiaomi):
   Mystic Mushrooms profit x100 1.01at and "Layer with tritone" Frog
   Scream profit x175 1.51au left; Spider Silk 992 (2 stars) 20.5ar/9.3s,
   next level 132as, coins ~136as (+~0.6as/s).
+- 12:54 brewed: Swift 9, Instant 8, Double 8, Divine 6, Golden 5
+  (list shows the next level). User: Golden at least to 7 ->
+  LATE_PLAN golden 7.
 - Bug 10:30: in the cellar the Spider Silk popup stayed open - its icon
   is above station_icon_tooltip_y, so stations.upgrade() closes the
   popup by a tap beside the icon, which lands on the station again;
