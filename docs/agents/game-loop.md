@@ -286,19 +286,26 @@ not entered again for `POTION_SHOP_DONE_S`, 24 h). One loop of
    shows when the plan is done).
 5. `upgrades.buy_if_available()` (same button as in the restaurant).
 6. Every 2nd loop `potion_shop.open_crates()`.
-7. Every minute the cellar below the shop: `potion_shop.show_cellar()`,
+7. End game, once Beetle Juice is MAX (`is_station_max()`, its popup;
+   looked at every 5 min): only the first of `FOCUS_STATIONS` (Spider
+   Silk, Mystic Mushrooms, Frog) that isn't MAX is upgraded, in the
+   cellar; for one of `LAST_UPGRADES` only after its last upgrade has
+   left the Upgrades dialog (`has_last_upgrade()`), coins are saved
+   meanwhile. When all are MAX the loop goes on as below.
+8. Every minute the cellar below the shop: `potion_shop.show_cellar()`,
    then its crates and stations for up to 3 loops, back by
    `show_shop()`.
-8. The map is taller than the screen. `show_shop()` / `show_cellar()`
+9. The map is taller than the screen. `show_shop()` / `show_cellar()`
    scroll it until a landmark (counter decoration, barrel, skull above
    the counter, cellar entrance; each with its place on the shop view)
    is at the view's offset, measuring after every swipe; the shop view
    is restored when it was out of place in 2 loops in a row.
-9. `stations.find_icons()` / `upgrade()` (also unlocks new stations).
+10. `stations.find_icons()` / `upgrade()` (also unlocks new
+    stations).
 
 - Never tapped: Boost (ad), Activate / Pass (real money)
-- Not done yet: choosing what to buy (customers vs. alchemists) and
-  which station to upgrade, speed boosts
+- Not done yet: choosing what to buy (customers vs. alchemists),
+  which station to upgrade before the end game, speed boosts
 - Screenshots, flow and the strategy found on the web:
   `experiments/potion_shop/NOTES.md`
 

@@ -52,21 +52,7 @@ def buy_if_available(game):
 def _buy_upgrades(game):
   """Open the dialog and buy the first row's upgrade while it is
   affordable, in rounds of TAPS_PER_CHECK taps. Returns the taps."""
-  device = game.device
-  coords = game.coords
-  # A station popup may still be open after stations.upgrade(); a tap
-  # on the upgrade button would only close it
-  device.tap(game.null_spot)
-  time.sleep(STATION_POPUP_CLOSE_DELAY_S)
-  device.tap(coords.upgrade_button)
-  time.sleep(DIALOG_OPEN_DELAY_S)
-  game.screen.capture()
-  if not _is_dialog_open(game):
-    # The close tap would land on the restaurant and could open a
-    # station popup hiding the station icons, so tap the null spot
-    log.info('Upgrades dialog did not open')
-    device.tap(game.null_spot)
-    time.sleep(DIALOG_CLOSE_DELAY_S)
+  if not open_dialog(game):
     return 0
   taps = 0
   while taps < MAX_TAPS:
@@ -75,13 +61,39 @@ def _buy_upgrades(game):
     if not _is_first_affordable(game):
       break
     for _ in range(TAPS_PER_CHECK):
-      device.tap(coords.first_upgrade_buy)
+      game.device.tap(game.coords.first_upgrade_buy)
       time.sleep(0.2)
     taps += TAPS_PER_CHECK
   log.info('Upgrade taps: %d', taps)
-  device.tap(coords.close_upgrades)
-  time.sleep(DIALOG_CLOSE_DELAY_S)
+  close_dialog(game)
   return taps
+
+
+def open_dialog(game):
+  """Open the Upgrades dialog (screenshot taken). Returns False when it
+  did not open."""
+  device = game.device
+  # A station popup may still be open after stations.upgrade(); a tap
+  # on the upgrade button would only close it
+  device.tap(game.null_spot)
+  time.sleep(STATION_POPUP_CLOSE_DELAY_S)
+  device.tap(game.coords.upgrade_button)
+  time.sleep(DIALOG_OPEN_DELAY_S)
+  game.screen.capture()
+  if _is_dialog_open(game):
+    return True
+  # The close tap would land on the restaurant and could open a
+  # station popup hiding the station icons, so tap the null spot
+  log.info('Upgrades dialog did not open')
+  device.tap(game.null_spot)
+  time.sleep(DIALOG_CLOSE_DELAY_S)
+  return False
+
+
+def close_dialog(game):
+  """Close the open Upgrades dialog."""
+  game.device.tap(game.coords.close_upgrades)
+  time.sleep(DIALOG_CLOSE_DELAY_S)
 
 
 def has_badge(game):

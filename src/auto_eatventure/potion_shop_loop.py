@@ -39,10 +39,10 @@ CELLAR_LOOPS = 3
 # then every COMPLETION_CHECK_S
 COMPLETION_CHECK_S = 15 * 60
 # In the end game (potion_shop.END_GAME_STATION MAX, looked at every
-# END_GAME_CHECK_S) a focused station without an arrow is looked at for
-# MAX every MAX_CHECK_S
+# END_GAME_CHECK_S) the focused station's last upgrade (bought yet?)
+# and, without an arrow, its MAX are looked at every STATION_CHECK_S
 END_GAME_CHECK_S = 5 * 60
-MAX_CHECK_S = 60
+STATION_CHECK_S = 60
 # Screenshots outside the event in a row that end the loop (the event
 # ended or the game left it)
 OUTSIDE_LOOPS = 3
@@ -63,8 +63,9 @@ class PotionShopLoop:
     self.completion_timer = Timer()
     self.completed = False
     self.end_game_timer = Timer()
-    self.max_check_timer = Timer()
-    self.maxed_stations = set()
+    self.station_check_timer = Timer()
+    # Station name -> 'bought' (its last upgrade) or 'max'
+    self.station_states = {}
 
   def run(self):
     """Play until the bot is no longer inside the event. Returns True
@@ -127,15 +128,19 @@ class PotionShopLoop:
 
   def _play_end_game(self):
     """End game: upgrade only the first focused station that isn't MAX
-    (in the cellar), else wait for coins. Returns False while it isn't
-    the end game or when all focused stations are MAX."""
+    (in the cellar) once its last upgrade is bought, else wait for
+    coins. Returns False while it isn't the end game or when all
+    focused stations are MAX."""
     game = self.game
     if not self._is_end_game():
       return False
     name = next((name for name in potion_shop.FOCUS_STATIONS
-                 if name not in self.maxed_stations), None)
+                 if self.station_states.get(name) != 'max'), None)
     if name is None:
       return False
+    if (name not in self.station_states
+        and not self._is_last_upgrade_bought(name)):
+      return True
     if not potion_shop.is_cellar_shown(game):
       potion_shop.show_cellar(game)
       return True
@@ -143,18 +148,35 @@ class PotionShopLoop:
                                       stations.find_icons(game))
     if arrow is not None:
       stations.upgrade(game, [arrow])
-    elif self.max_check_timer.is_due():
-      self.max_check_timer.postpone(MAX_CHECK_S)
+      # Near the top of the screen stations.upgrade() closes the popup
+      # by a tap beside the icon, which in the cellar opens it again
+      game.device.tap(game.null_spot)
+    elif self.station_check_timer.is_due():
+      self.station_check_timer.postpone(STATION_CHECK_S)
       if potion_shop.is_station_max(game, name):
         key_log.info('POTION SHOP - %s is MAX', name)
-        self.maxed_stations.add(name)
+        self.station_states[name] = 'max'
+    return True
+
+  def _is_last_upgrade_bought(self, name):
+    """Whether the station's last upgrade is bought (none for a station
+    not in potion_shop.LAST_UPGRADES); looked at every
+    STATION_CHECK_S."""
+    if name in potion_shop.LAST_UPGRADES:
+      if not self.station_check_timer.is_due():
+        return False
+      self.station_check_timer.postpone(STATION_CHECK_S)
+      if potion_shop.has_last_upgrade(self.game, name):
+        return False
+      key_log.info('POTION SHOP - %s: last upgrade bought', name)
+    self.station_states[name] = 'bought'
     return True
 
   def _is_end_game(self):
     """Whether potion_shop.END_GAME_STATION is MAX (looked at in the
     shop view every END_GAME_CHECK_S until it is)."""
     station = potion_shop.END_GAME_STATION
-    if station in self.maxed_stations:
+    if self.station_states.get(station) == 'max':
       return True
     if not self.end_game_timer.is_due():
       return False
@@ -165,7 +187,7 @@ class PotionShopLoop:
       return False
     key_log.info('POTION SHOP - End game: upgrading only %s',
                  ', '.join(potion_shop.FOCUS_STATIONS))
-    self.maxed_stations.add(station)
+    self.station_states[station] = 'max'
     return True
 
   def _handle_dialog(self):
