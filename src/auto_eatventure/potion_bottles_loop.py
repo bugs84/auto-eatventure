@@ -25,19 +25,24 @@ OUTSIDE_LOOPS = 3
 
 
 def parse_orders(text):
-  """[(potion, count)] of "golden:2,divine:1"; unknown potions and bad
-  counts are skipped with a warning."""
+  """[(potion, count)] of "swift:max,golden:2,divine:1"; count None
+  ("max") means brewed to its max level and kept, not bottled. Unknown
+  potions and bad counts are skipped with a warning."""
   orders = []
   for item in text.split(','):
     if not item.strip():
       continue
     name, _, count = item.partition(':')
     name = name.strip().lower()
-    try:
-      count = int(count or '1')
-    except ValueError:
-      count = 0
-    if name not in potion_shop.POTIONS or count < 1:
+    count = count.strip().lower() or '1'
+    if count == 'max':
+      count = None
+    else:
+      try:
+        count = int(count)
+      except ValueError:
+        count = 0
+    if name not in potion_shop.POTIONS or count is not None and count < 1:
       log.warning('POTION_SHOP_BOTTLES: %r ignored', item)
       continue
     orders.append((name, count))
@@ -53,6 +58,8 @@ class PotionBottlesLoop:
     self.orders = parse_orders(config.POTION_SHOP_BOTTLES)
     self.event = _event_start()
     self.bottled = _load_bottled(self.event)
+    # Indexes of the "max" orders whose potion reached its max level
+    self.maxed = set()
     self.cauldron_timer = Timer()
 
   def run(self):
@@ -60,22 +67,23 @@ class PotionBottlesLoop:
     no longer inside the event (False)."""
     outside = 0
     while outside < OUTSIDE_LOOPS:
-      name = self._next_potion()
-      if name is None:
+      index = self._next_order()
+      if index is None:
         if self.orders:
-          key_log.info('POTION SHOP - All ordered potions bottled')
+          key_log.info('POTION SHOP - All ordered potions done')
         return True
       self.game.screen.capture()
       if potion_shop.is_inside(self.game):
         outside = 0
-        self.play_once(name)
+        self.play_once(index)
       else:
         outside += 1
         popups.close_popup(self.game)
     return False
 
-  def play_once(self, name):
-    """Brew or bottle the potion when the Cauldron is open or due."""
+  def play_once(self, index):
+    """Brew or bottle the potion of the order when the Cauldron is open
+    or due."""
     game = self.game
     if not (potion_shop.is_cauldron_open(game)
             or self.cauldron_timer.is_due()):
@@ -84,18 +92,35 @@ class PotionBottlesLoop:
       time.sleep(LOOP_DELAY_S)
       return
     self.cauldron_timer.postpone(CAULDRON_CHECK_S)
+    name, count = self.orders[index]
     keep = [order for order, _ in self.orders]
-    if potion_shop.bottle_or_brew(game, name, keep) == 'bottled':
+    result = potion_shop.bottle_or_brew(game, name, keep,
+                                        bottle=count is not None)
+    if result == 'max':
+      self.maxed.add(index)
+      key_log.info('POTION SHOP - %s at its max level, kept', name)
+    elif result == 'bottled':
       self.bottled[name] = self.bottled.get(name, 0) + 1
       _save_bottled(self.event, self.bottled)
-      count = dict(self.orders)[name]
+      total = sum(order_count or 0 for order, order_count in self.orders
+                  if order == name)
       key_log.info('POTION SHOP - %s bottled %d/%d', name,
-                   self.bottled[name], count)
+                   self.bottled[name], total)
 
-  def _next_potion(self):
-    """The first ordered potion not bottled often enough yet."""
-    return next((name for name, count in self.orders
-                 if self.bottled.get(name, 0) < count), None)
+  def _next_order(self):
+    """Index of the first order not done yet: a "max" order until its
+    potion reaches its max level, else until the potion was bottled as
+    often as the orders up to this one want."""
+    wanted = {}
+    for index, (name, count) in enumerate(self.orders):
+      if count is None:
+        if index not in self.maxed:
+          return index
+        continue
+      wanted[name] = wanted.get(name, 0) + count
+      if self.bottled.get(name, 0) < wanted[name]:
+        return index
+    return None
 
 
 def _event_start():

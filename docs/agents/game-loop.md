@@ -283,9 +283,10 @@ not entered again for `POTION_SHOP_DONE_S`, 24 h). One loop of
    green check at the last reward). When done, `PotionBottlesLoop`
    (`potion_bottles_loop.py`) brews each potion of
    `POTION_SHOP_BOTTLES` (e.g. `golden:2,divine:1`) to its max level
-   ("MAX" in its Brew row) and bottles it
+   ("MAX" in its Brew row) and bottles it, one order after another
    (`potion_shop.bottle_or_brew()`, Cauldron every 30 s; counts of the
-   event in `potion_shop_bottles.json`), then `potion_shop.leave()`
+   event in `potion_shop_bottles.json`; `name:max` brews to the max
+   level and keeps the potion active), then `potion_shop.leave()`
    (Exit).
 4. Red "!" on the Cauldron button -> `brew()` (retried after 15 s,
    only every 5 min after 3 checks without a brew: the badge also
