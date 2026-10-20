@@ -73,3 +73,6 @@ def _log_features():
   )
   for name, enabled in features:
     log.info('%s: %s', name, 'enabled' if enabled else 'disabled')
+  if config.POTION_SHOP_ENABLED:
+    log.info('Potion Shop bottles: %s',
+             config.POTION_SHOP_BOTTLES or 'none')

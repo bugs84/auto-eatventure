@@ -225,6 +225,15 @@ Learned while automating (2026-10-19/20, Xiaomi):
   15/15 (Frog reached 1000 before), "All rewards done, leaving the
   event", Exit, back in the restaurant (Food Delivery, stations) - the
   leave path works. The active potions also show in the restaurant.
+- Phase 2, bottling (user 2026-10-20): POTION_SHOP_BOTTLES="golden:2,
+  divine:1" - after the rewards each potion is brewed to its max level
+  and bottled, then Exit. Findings 14:35 (sw_*, cd_*): re-entering
+  shows "Offline Earnings" (X; Collect x2 = ad); 390 corks; Active
+  tab shows the real level (brew list = the next one); at level 10
+  the Brew row shows "Lvl 10" + grey "MAX" without a button
+  (template potion_shop_brew_max; no match on the grey Brew buttons
+  of "Slots Full!" rows); bottled effect = x0.5 (Swift 350% -> 175%),
+  20 min outside the event; a brew took ~3 min (Swift 9->10).
 - After a restart the end game checks took ~4 min (one a minute even
   after a yes) -> they wait only after a "not yet" (not tested live:
   the event was over).

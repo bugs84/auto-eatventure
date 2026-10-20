@@ -279,8 +279,14 @@ not entered again for `POTION_SHOP_DONE_S`, 24 h). One loop of
    Perfect, then Sizzle (Active Potions tab, 1 cork).
 2. Dimmed screen -> close the dialog.
 3. Right after entering and every 15 min:
-   `potion_shop.leave_if_completed()` (rewards list scrolled to the
-   bottom, green check at the last reward -> Exit).
+   `potion_shop.is_completed()` (rewards list scrolled to the bottom,
+   green check at the last reward). When done, `PotionBottlesLoop`
+   (`potion_bottles_loop.py`) brews each potion of
+   `POTION_SHOP_BOTTLES` (e.g. `golden:2,divine:1`) to its max level
+   ("MAX" in its Brew row) and bottles it
+   (`potion_shop.bottle_or_brew()`, Cauldron every 30 s; counts of the
+   event in `potion_shop_bottles.json`), then `potion_shop.leave()`
+   (Exit).
 4. Red "!" on the Cauldron button -> `brew()` (retried after 15 s,
    only every 5 min after 3 checks without a brew: the badge also
    shows when the plan is done).

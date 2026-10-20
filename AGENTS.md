@@ -28,6 +28,7 @@ src/auto_eatventure/         # The only package (src layout)
   main.py                    # run(): connect, wait for the game, play
   game_loop.py               # GameLoop: the endless loop (play_once)
   potion_shop_loop.py        # PotionShopLoop: plays the Potion Shop event
+  potion_bottles_loop.py     # PotionBottlesLoop: bottles potions after it
   config.py                  # Settings from .env (feature switches, logs)
   timer.py                   # Timer: when an occasional action is due
   logger.py                  # setup_logging(), key_log (daily rotation)
