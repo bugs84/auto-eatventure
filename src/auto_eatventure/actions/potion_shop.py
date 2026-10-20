@@ -191,7 +191,9 @@ def bottle_or_brew(game, name, keep):
   row = both.get(name)
   result = None
   if row is None:
-    log.info('Potion Shop: %s not in the Brew list', name)
+    # While brewing the list shows only the brewing potion (its icon
+    # isn't always found then)
+    log.debug('Potion Shop: %s not in the Brew list', name)
   elif row.maxed:
     if _bottle(game, (name,), 'at its max level'):
       result = 'bottled'
