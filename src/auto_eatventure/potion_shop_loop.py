@@ -23,6 +23,11 @@ MISPLACED_LOOPS = 2
 # when the Cauldron had nothing to do.
 BREW_PAUSE_S = 20
 BREW_RETRY_S = 15
+# The badge also shows when the plan has nothing more to brew: after
+# IDLE_BREWS checks in a row without a brew it is looked at only every
+# IDLE_BREW_S
+IDLE_BREWS = 3
+IDLE_BREW_S = 5 * 60
 # A red station icon next to the Upgrades button looks like its badge;
 # when nothing could be bought the badge is ignored for this time
 UPGRADES_RETRY_S = 60
@@ -43,6 +48,7 @@ class PotionShopLoop:
     self.game = game
     self.loops = 0
     self.misplaced_loops = 0
+    self.idle_brews = 0
     self.brew_timer = Timer()
     self.upgrades_timer = Timer()
     self.cellar_timer = Timer()
@@ -75,8 +81,7 @@ class PotionShopLoop:
         self._close_unknown_dialog()
       return
     if potion_shop.can_brew(game) and self.brew_timer.is_due():
-      brewed = potion_shop.brew(game)
-      self.brew_timer.postpone(BREW_PAUSE_S if brewed else BREW_RETRY_S)
+      self._brew()
       return
     if (upgrades.has_badge(game) and self.upgrades_timer.is_due()
         and not upgrades.buy_if_available(game)):
@@ -94,6 +99,16 @@ class PotionShopLoop:
     icons = stations.find_icons(game)
     if icons:
       stations.upgrade(game, icons)
+
+  def _brew(self):
+    """Claim and brew; looked at again sooner after a brew."""
+    if potion_shop.brew(self.game):
+      self.idle_brews = 0
+      self.brew_timer.postpone(BREW_PAUSE_S)
+      return
+    self.idle_brews += 1
+    self.brew_timer.postpone(
+      IDLE_BREW_S if self.idle_brews >= IDLE_BREWS else BREW_RETRY_S)
 
   def _play_cellar(self):
     """Open the crates and upgrade the stations of the cellar, then
