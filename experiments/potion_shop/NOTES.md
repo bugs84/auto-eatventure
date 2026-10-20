@@ -177,6 +177,8 @@ Learned while automating (2026-10-19/20, Xiaomi):
   coins ~200-800ah. Station popup: a 3 s hold bought Beetle 361->412,
   a 10 s hold 412->469 and ran out of coins - so coins, not the hold
   time, limit the levels (ps_61-63).
+- Rewards 12/15 at 03:55 (Unicorn 1000 done; left: Beetle 1000,
+  Spider Silk 1000, all stations 1000); coins ~600ap.
 - Night 2 state (01:15): Swift 9, Sizzle 8, Instant 8, Double 8,
   Perfect 3 (active levels); Telepathic shows "Slots Full!". No Divine/
   Golden in the list yet (need cellar ingredients).
@@ -197,6 +199,7 @@ Next steps (ideas):
 3. Station targeting: upgrade the best-paying station to its x10/x50/
    x75 milestones instead of every icon.
 4. Bottle Perfect + Sizzle when Divine/Golden become available.
-5. Leaving the event when 15/15 (not seen yet) and returning to the
-   restaurant; untested `potion_shop.leave()`.
+5. Leaving the event when 15/15: `leave_if_completed()` looks for the
+   green check at the last reward (ps_67; ratio 0.10 with a check, 0
+   without) - the Exit path is untested until 15/15.
 6. Boosts x2/x5 (gems) for speed - only when the user allows it.
