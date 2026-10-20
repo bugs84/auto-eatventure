@@ -35,6 +35,9 @@ UPGRADES_RETRY_S = 60
 # CELLAR_LOOPS loops of crates and station upgrades there
 CELLAR_CHECK_S = 60
 CELLAR_LOOPS = 3
+# The rewards are looked at (Exit when all are done) right away and
+# then every COMPLETION_CHECK_S
+COMPLETION_CHECK_S = 15 * 60
 # Screenshots outside the event in a row that end the loop (the event
 # ended or the game left it)
 OUTSIDE_LOOPS = 3
@@ -52,9 +55,12 @@ class PotionShopLoop:
     self.brew_timer = Timer()
     self.upgrades_timer = Timer()
     self.cellar_timer = Timer()
+    self.completion_timer = Timer()
+    self.completed = False
 
   def run(self):
-    """Play until the bot is no longer inside the event."""
+    """Play until the bot is no longer inside the event. Returns True
+    when it left because all rewards were done."""
     key_log.info('POTION SHOP - Playing the event')
     potion_shop.show_shop(self.game)
     outside = 0
@@ -67,18 +73,17 @@ class PotionShopLoop:
         outside += 1
         popups.close_popup(self.game)
     key_log.info('POTION SHOP - Left the event')
+    return self.completed
 
   def play_once(self):
     """One loop on the current screenshot."""
     game = self.game
     self.loops += 1
-    if potion_shop.is_cauldron_open(game):
-      if potion_shop.brew(game):
-        self.brew_timer.postpone(BREW_PAUSE_S)
+    if self._handle_dialog():
       return
-    if popups.is_screen_dimmed(game):
-      if not popups.close_popup(game):
-        self._close_unknown_dialog()
+    if self.completion_timer.is_due():
+      self.completion_timer.postpone(COMPLETION_CHECK_S)
+      self.completed = potion_shop.leave_if_completed(game)
       return
     if potion_shop.can_brew(game) and self.brew_timer.is_due():
       self._brew()
@@ -99,6 +104,20 @@ class PotionShopLoop:
     icons = stations.find_icons(game)
     if icons:
       stations.upgrade(game, icons)
+
+  def _handle_dialog(self):
+    """Brew in the Cauldron dialog (it also opens by itself) or close
+    another dialog. Returns True when one was open."""
+    game = self.game
+    if potion_shop.is_cauldron_open(game):
+      if potion_shop.brew(game):
+        self.brew_timer.postpone(BREW_PAUSE_S)
+      return True
+    if popups.is_screen_dimmed(game):
+      if not popups.close_popup(game):
+        self._close_unknown_dialog()
+      return True
+    return False
 
   def _brew(self):
     """Claim and brew; looked at again sooner after a brew."""

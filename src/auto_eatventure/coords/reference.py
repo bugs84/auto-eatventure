@@ -216,6 +216,10 @@ potion_shop_enter_exit = Point(610, 2054)
 potion_shop_enter_exit_roi = Region.around(potion_shop_enter_exit, 180, 80)
 # Red X of the "Potion Shop" dialog
 potion_shop_dialog_close = Point(1057, 660)
+# Its list of rewards, scrolled to the bottom by a few swipes: the last
+# reward (all stations level 1000) gets a green check when done
+potion_shop_rewards_swipe = Swipe(Point(452, 1808), Point(452, 1017))
+potion_shop_last_reward_roi = Region.around(Point(810, 1836), 90, 79)
 # Green event coin left of the coin counter: shown only inside
 potion_shop_coin_roi = Region(100, 60, 300, 260)
 
