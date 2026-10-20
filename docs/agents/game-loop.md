@@ -266,28 +266,39 @@ carry the ingredients). Every `POTION_SHOP_CHECK_S` (30 min) the loop
 checks `potion_shop.is_inside()` / `is_available()`, enters it
 (`potion_shop.enter()`: event button, Enter, Open) and hands over to
 `PotionShopLoop.run()` (`potion_shop_loop.py`) until the bot is no
-longer inside (the event ended). One loop of `PotionShopLoop`:
+longer inside (the event ended, or all rewards were done: then it is
+not entered again for `POTION_SHOP_DONE_S`, 24 h). One loop of
+`PotionShopLoop`:
 
 1. Cauldron dialog open (also opens by itself with "Brew Complete!")
-   -> `potion_shop.brew()`: Claim the finished potion, brew the next
-   one by `potion_shop.BREW_ORDER` (only a row with a Brew button).
+   -> `potion_shop.brew()`: Claim the finished potion, read the Brew
+   list (both pages; levels by `vision/level_label.py`) and brew the
+   first potion of `BREW_PLAN` below its level (only a row with a Brew
+   button). Once Divine is in the list `LATE_PLAN` (the guides' final
+   set) is used; a planned potion with "Slots Full!" makes it bottle
+   Perfect, then Sizzle (Active Potions tab, 1 cork).
 2. Dimmed screen -> close the dialog.
-3. Red "!" on the Cauldron button -> `brew()` (retried after 60 s
-   when nothing could be brewed).
-4. `upgrades.buy_if_available()` (same button as in the restaurant).
-5. Every 2nd loop `potion_shop.open_crates()`.
-6. The map is taller than the screen; at the start the whole shop
-   with its stations fits on it. `potion_shop.show_shop()` scrolls the
-   map until a landmark (counter decoration) is at its place, measuring
-   after every swipe; it runs again when the landmark was out of place
-   in 2 loops in a row.
-7. `stations.find_icons()` / `upgrade()` (also unlocks new stations).
+3. Right after entering and every 15 min:
+   `potion_shop.leave_if_completed()` (rewards list scrolled to the
+   bottom, green check at the last reward -> Exit).
+4. Red "!" on the Cauldron button -> `brew()` (retried after 15 s,
+   only every 5 min after 3 checks without a brew: the badge also
+   shows when the plan is done).
+5. `upgrades.buy_if_available()` (same button as in the restaurant).
+6. Every 2nd loop `potion_shop.open_crates()`.
+7. Every minute the cellar below the shop: `potion_shop.show_cellar()`,
+   then its crates and stations for up to 3 loops, back by
+   `show_shop()`.
+8. The map is taller than the screen. `show_shop()` / `show_cellar()`
+   scroll it until a landmark (counter decoration, barrel, skull above
+   the counter, cellar entrance; each with its place on the shop view)
+   is at the view's offset, measuring after every swipe; the shop view
+   is restored when it was out of place in 2 loops in a row.
+9. `stations.find_icons()` / `upgrade()` (also unlocks new stations).
 
 - Never tapped: Boost (ad), Activate / Pass (real money)
 - Not done yet: choosing what to buy (customers vs. alchemists) and
-  which station to upgrade, the later stations in the basement (a
-  second view with its own landmark), potions of the later stations,
-  leaving the event when completed
+  which station to upgrade, speed boosts
 - Screenshots, flow and the strategy found on the web:
   `experiments/potion_shop/NOTES.md`
 
