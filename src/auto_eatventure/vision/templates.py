@@ -41,6 +41,7 @@ TEMPLATE_NAMES = (
   'potion_shop_golden',
   'potion_shop_instant',
   'potion_shop_landmark',
+  'potion_shop_max',
   'potion_shop_perfect',
   'potion_shop_sizzle',
   'potion_shop_skull',

@@ -38,6 +38,11 @@ CELLAR_LOOPS = 3
 # The rewards are looked at (Exit when all are done) right away and
 # then every COMPLETION_CHECK_S
 COMPLETION_CHECK_S = 15 * 60
+# In the end game (potion_shop.END_GAME_STATION MAX, looked at every
+# END_GAME_CHECK_S) a focused station without an arrow is looked at for
+# MAX every MAX_CHECK_S
+END_GAME_CHECK_S = 5 * 60
+MAX_CHECK_S = 60
 # Screenshots outside the event in a row that end the loop (the event
 # ended or the game left it)
 OUTSIDE_LOOPS = 3
@@ -57,6 +62,9 @@ class PotionShopLoop:
     self.cellar_timer = Timer()
     self.completion_timer = Timer()
     self.completed = False
+    self.end_game_timer = Timer()
+    self.max_check_timer = Timer()
+    self.maxed_stations = set()
 
   def run(self):
     """Play until the bot is no longer inside the event. Returns True
@@ -81,10 +89,6 @@ class PotionShopLoop:
     self.loops += 1
     if self._handle_dialog():
       return
-    if self.completion_timer.is_due():
-      self.completion_timer.postpone(COMPLETION_CHECK_S)
-      self.completed = potion_shop.leave_if_completed(game)
-      return
     if potion_shop.can_brew(game) and self.brew_timer.is_due():
       self._brew()
       return
@@ -94,9 +98,7 @@ class PotionShopLoop:
     if (self.loops % CRATE_CHECK_LOOPS == 0
         and potion_shop.open_crates(game)):
       return
-    if self.cellar_timer.is_due():
-      self.cellar_timer.postpone(CELLAR_CHECK_S)
-      self._play_cellar()
+    if self._play_occasional():
       return
     if self._shop_misplaced():
       potion_shop.show_shop(game)
@@ -107,6 +109,64 @@ class PotionShopLoop:
     else:
       # The shop's stations are MAX (level 1000) or too expensive
       self.cellar_timer.reset()
+
+  def _play_occasional(self):
+    """The rewards check, the end game or a cellar visit. Returns True
+    when one was played."""
+    if self.completion_timer.is_due():
+      self.completion_timer.postpone(COMPLETION_CHECK_S)
+      self.completed = potion_shop.leave_if_completed(self.game)
+      return True
+    if self._play_end_game():
+      return True
+    if self.cellar_timer.is_due():
+      self.cellar_timer.postpone(CELLAR_CHECK_S)
+      self._play_cellar()
+      return True
+    return False
+
+  def _play_end_game(self):
+    """End game: upgrade only the first focused station that isn't MAX
+    (in the cellar), else wait for coins. Returns False while it isn't
+    the end game or when all focused stations are MAX."""
+    game = self.game
+    if not self._is_end_game():
+      return False
+    name = next((name for name in potion_shop.FOCUS_STATIONS
+                 if name not in self.maxed_stations), None)
+    if name is None:
+      return False
+    if not potion_shop.is_cellar_shown(game):
+      potion_shop.show_cellar(game)
+      return True
+    arrow = potion_shop.station_arrow(game, name,
+                                      stations.find_icons(game))
+    if arrow is not None:
+      stations.upgrade(game, [arrow])
+    elif self.max_check_timer.is_due():
+      self.max_check_timer.postpone(MAX_CHECK_S)
+      if potion_shop.is_station_max(game, name):
+        key_log.info('POTION SHOP - %s is MAX', name)
+        self.maxed_stations.add(name)
+    return True
+
+  def _is_end_game(self):
+    """Whether potion_shop.END_GAME_STATION is MAX (looked at in the
+    shop view every END_GAME_CHECK_S until it is)."""
+    station = potion_shop.END_GAME_STATION
+    if station in self.maxed_stations:
+      return True
+    if not self.end_game_timer.is_due():
+      return False
+    self.end_game_timer.postpone(END_GAME_CHECK_S)
+    game = self.game
+    if not (potion_shop.show_shop(game)
+            and potion_shop.is_station_max(game, station)):
+      return False
+    key_log.info('POTION SHOP - End game: upgrading only %s',
+                 ', '.join(potion_shop.FOCUS_STATIONS))
+    self.maxed_stations.add(station)
+    return True
 
   def _handle_dialog(self):
     """Brew in the Cauldron dialog (it also opens by itself) or close
