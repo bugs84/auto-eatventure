@@ -179,6 +179,10 @@ Learned while automating (2026-10-19/20, Xiaomi):
   time, limit the levels (ps_61-63).
 - Rewards 12/15 at 03:55 (Unicorn 1000 done; left: Beetle 1000,
   Spider Silk 1000, all stations 1000); coins ~600ap.
+- Stations stop at level 1000 (popup "MAX"); late in the event the
+  shop has no icons -> the loop goes to the cellar (coins limit it).
+- 06:32 the phone was taken (Google app in front), the runner stopped
+  ("Not inside the event"); not resumed without the user (dad's phone).
 - Night 2 state (01:15): Swift 9, Sizzle 8, Instant 8, Double 8,
   Perfect 3 (active levels); Telepathic shows "Slots Full!". No Divine/
   Golden in the list yet (need cellar ingredients).
