@@ -216,6 +216,11 @@ Learned while automating (2026-10-19/20, Xiaomi):
   arrow, so Spider got a level only every few minutes (180as in hand,
   147as the price). A tap on the empty cellar floor
   (potion_shop_cellar_floor) closes it.
+- 13:07-13:23 the same with Frog (level 937): the first floor spot was
+  inside the Frog popup (middle of the screen); moved left of the
+  frogs, outside all three popups.
+- Spider MAX 11:09, Mushrooms x100 11:21 and MAX 13:05, Frog x175
+  13:06 (user's x2 + Boost x12 ad from 12:50: x52.8, coins ~1au/s).
 - 06:32 the phone was taken (Google app in front), the runner stopped
   ("Not inside the event"); not resumed without the user (dad's phone).
 - Night 2 state (01:15): Swift 9, Sizzle 8, Instant 8, Double 8,
