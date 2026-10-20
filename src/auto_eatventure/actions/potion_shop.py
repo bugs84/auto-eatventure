@@ -16,8 +16,9 @@ log = logging.getLogger(__name__)
 BUTTON_THRESHOLD = 0.8
 # Time for the "Potion Shop" dialog to open
 DIALOG_DELAY_S = 2
-# The green loading screen after Enter takes ~8 s
-ENTER_TIMEOUT_S = 30
+# The green loading screen after Enter takes ~8 s, the "Open" of the
+# first stand (first entry only) shows up later
+ENTER_TIMEOUT_S = 60
 # End game: once Beetle Juice (the shop's last station) is MAX, only the
 # best paying station is upgraded, coins are saved for it, until it is
 # MAX (level 1000), then the next one. Stations by income: Bat Wing,
@@ -107,13 +108,18 @@ def enter(game):
     return False
   log.info('Potion Shop: entering')
   game.device.tap(game.coords.potion_shop_enter_exit)
-  levels.tap_open_button(game)
   deadline = time.monotonic() + ENTER_TIMEOUT_S
   while time.monotonic() < deadline:
     game.screen.capture()
     if is_inside(game):
       key_log.info('POTION SHOP - Entered the event')
       return True
+    # Never tapped blindly: entered again, "Offline Earnings" shows
+    # instead, with its Collect x2 (an ad) next to the Open spot
+    if levels.is_open_button_shown(game):
+      game.device.tap(game.coords.first_stand_open_button)
+    else:
+      popups.close_popup(game)
     time.sleep(1)
   log.warning('Potion Shop: not inside after Enter')
   return False
