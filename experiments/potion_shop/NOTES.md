@@ -187,6 +187,11 @@ Learned while automating (2026-10-19/20, Xiaomi):
   57.4aq/12s; Mushrooms 876, 14.5aq/10.7s; Purified Water and Beetle
   MAX. -> FOCUS_STATIONS spider, frog, mushrooms; the bot upgraded only
   Spider Silk (~1 hold a minute, coins limit it).
+- Station order (guide lN8mXr71loA: Mermaid 1000 -> Beetle -> cellar
+  Purified Water x75 158aq -> Spider x75 551ar -> Mushrooms x75 1at ->
+  Frog x75 1.5au; costs agree: Frog 807 = 283ar > Spider 936 = 230ar)
+  -> FOCUS_STATIONS spider, mushrooms, frog. Income per second today
+  says little (Spider has its x75, the others don't).
 - 06:32 the phone was taken (Google app in front), the runner stopped
   ("Not inside the event"); not resumed without the user (dad's phone).
 - Night 2 state (01:15): Swift 9, Sizzle 8, Instant 8, Double 8,
