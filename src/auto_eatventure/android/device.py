@@ -92,7 +92,11 @@ class Device:
     """Launch the game, or bring it to the foreground.
 
     It does not restart a running game (that needs close_app()).
+    The screen is woken first and the lock screen dismissed (without a
+    PIN): after the game crashes, the phone goes to sleep.
     """
+    self._adb.shell('input keyevent KEYCODE_WAKEUP')
+    self._adb.shell('wm dismiss-keyguard')
     self._adb.shell(f'monkey -p {GAME_PACKAGE} '
                     '-c android.intent.category.LAUNCHER 1')
 
