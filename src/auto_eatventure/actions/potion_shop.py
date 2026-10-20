@@ -17,6 +17,13 @@ BUTTON_THRESHOLD = 0.8
 DIALOG_DELAY_S = 2
 # The green loading screen after Enter takes ~8 s
 ENTER_TIMEOUT_S = 30
+# End game: once Beetle Juice (the shop's last station) is MAX, only the
+# best paying station is upgraded, coins are saved for it, until it is
+# MAX (level 1000), then the next one. Spider Silk paid ~6x Frog and ~20x
+# Mushrooms per second (ps_68-71).
+END_GAME_STATION = 'beetle'
+FOCUS_STATIONS = ('spider', 'frog', 'mushrooms')
+POPUP_DELAY_S = 1
 # The rewards list is scrolled to its bottom by this many swipes; a
 # reward's green check fills ~10% of its icon's area (0% without it)
 REWARDS_SWIPES = 4
@@ -297,6 +304,44 @@ def _tap_brew(game, button, name):
   game.device.tap(button.center)
   time.sleep(CAULDRON_DELAY_S)
   return True
+
+
+def station_arrow(game, name, icons):
+  """The upgrade arrow (of stations.find_icons()) of the station on the
+  current view, None when it has none (MAX or too expensive)."""
+  coords = game.coords
+  station = getattr(coords, f'potion_shop_{name}_station')
+  radius = coords.potion_shop_station_arrow_x
+  for icon in icons:
+    if (abs(icon.x - station.x) <= radius
+        and abs(icon.y - station.y) <= radius):
+      return icon
+  return None
+
+
+def is_station_max(game, name):
+  """Whether the station on the current view is MAX (its popup)."""
+  coords = game.coords
+  station = getattr(coords, f'potion_shop_{name}_station')
+  game.device.tap(Point(
+    station.x + coords.station_tap_shift_x,
+    station.y + coords.station_tap_offset_y + coords.station_tap_shift_y))
+  time.sleep(POPUP_DELAY_S)
+  game.screen.capture()
+  popup = Region(0, max(0, station.y - coords.potion_shop_station_popup_y),
+                 game.screen.region.right, station.y)
+  maxed = game.screen.has('potion_shop_max', popup, BUTTON_THRESHOLD)
+  game.device.tap(game.null_spot)
+  time.sleep(POPUP_DELAY_S)
+  return maxed
+
+
+def is_cellar_shown(game):
+  """The map is at the cellar view (last screenshot)."""
+  offset = shop_offset(game)
+  return (offset is not None
+          and abs(offset - game.coords.potion_shop_cellar_view_y)
+          <= game.coords.potion_shop_aligned_y)
 
 
 def show_shop(game):
