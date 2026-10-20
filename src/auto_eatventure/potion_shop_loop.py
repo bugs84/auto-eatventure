@@ -149,8 +149,9 @@ class PotionShopLoop:
     if arrow is not None:
       stations.upgrade(game, [arrow])
       # Near the top of the screen stations.upgrade() closes the popup
-      # by a tap beside the icon, which in the cellar opens it again
-      game.device.tap(game.null_spot)
+      # by a tap beside the icon, which in the cellar opens it again;
+      # the open popup hid the arrow
+      potion_shop.close_cellar_popup(game)
     elif self.station_check_timer.is_due():
       self.station_check_timer.postpone(STATION_CHECK_S)
       if potion_shop.is_station_max(game, name):

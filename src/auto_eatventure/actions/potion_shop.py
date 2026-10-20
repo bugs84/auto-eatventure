@@ -326,7 +326,8 @@ def station_arrow(game, name, icons):
 
 
 def is_station_max(game, name):
-  """Whether the station on the current view is MAX (its popup)."""
+  """Whether the station on the current view (the cellar for one of
+  FOCUS_STATIONS) is MAX (its popup)."""
   coords = game.coords
   station = getattr(coords, f'potion_shop_{name}_station')
   game.device.tap(Point(
@@ -337,9 +338,17 @@ def is_station_max(game, name):
   popup = Region(0, max(0, station.y - coords.potion_shop_station_popup_y),
                  game.screen.region.right, station.y)
   maxed = game.screen.has('potion_shop_max', popup, BUTTON_THRESHOLD)
-  game.device.tap(game.null_spot)
+  if name in FOCUS_STATIONS:
+    close_cellar_popup(game)
+  else:
+    game.device.tap(game.null_spot)
   time.sleep(POPUP_DELAY_S)
   return maxed
+
+
+def close_cellar_popup(game):
+  """Close a station popup on the cellar view."""
+  game.device.tap(game.coords.potion_shop_cellar_floor)
 
 
 def has_last_upgrade(game, name):
