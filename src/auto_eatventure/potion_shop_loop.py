@@ -104,6 +104,9 @@ class PotionShopLoop:
     icons = stations.find_icons(game)
     if icons:
       stations.upgrade(game, icons)
+    else:
+      # The shop's stations are MAX (level 1000) or too expensive
+      self.cellar_timer.reset()
 
   def _handle_dialog(self):
     """Brew in the Cauldron dialog (it also opens by itself) or close
