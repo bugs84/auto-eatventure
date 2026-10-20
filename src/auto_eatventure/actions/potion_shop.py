@@ -180,11 +180,11 @@ def brew(game):
   return brewed
 
 
-def bottle_or_brew(game, name, keep):
-  """Bottle the potion when it is at its max level, else brew its next
-  level; with all slots full an active potion not in keep is bottled
-  first. Returns 'bottled', 'brewed' or None (nothing done, e.g. while
-  brewing)."""
+def bottle_or_brew(game, name, keep, bottle=True):
+  """Bottle the potion when it is at its max level (unless not bottle),
+  else brew its next level; with all slots full an active potion not in
+  keep is bottled first. Returns 'bottled', 'max' (at its max level, not
+  bottled), 'brewed' or None (nothing done, e.g. while brewing)."""
   if not _open_brew_tab(game):
     return None
   both, rows = _read_brew_list(game)
@@ -194,6 +194,8 @@ def bottle_or_brew(game, name, keep):
     # While brewing the list shows only the brewing potion (its icon
     # isn't always found then)
     log.debug('Potion Shop: %s not in the Brew list', name)
+  elif row.maxed and not bottle:
+    result = 'max'
   elif row.maxed:
     if _bottle(game, (name,), 'at its max level'):
       result = 'bottled'
