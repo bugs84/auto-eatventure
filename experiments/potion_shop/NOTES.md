@@ -234,6 +234,10 @@ Learned while automating (2026-10-19/20, Xiaomi):
   (template potion_shop_brew_max; no match on the grey Brew buttons
   of "Slots Full!" rows); bottled effect = x0.5 (Swift 350% -> 175%),
   20 min outside the event; a brew took ~3 min (Swift 9->10).
+- Bottling run 14:43-15:41: Golden 8->10 bottled 14:57, Golden 1->10
+  bottled 15:18 (low levels brew in ~30 s, level 10 ~6 min), Divine
+  7->10 bottled 15:41, then Exit and back in the restaurant. A restart
+  at 14:58 continued from potion_shop_bottles.json (golden 1).
 - After a restart the end game checks took ~4 min (one a minute even
   after a yes) -> they wait only after a "not yet" (not tested live:
   the event was over).
