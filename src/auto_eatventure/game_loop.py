@@ -16,6 +16,7 @@ NEXT_LEVEL_CHECK_LOOPS = 10
 BOX_CHECK_LOOPS = 2
 # The Potion Shop event (weekly) is looked for this often
 POTION_SHOP_CHECK_S = 30 * 60
+POTION_SHOP_DONE_S = 24 * 60 * 60
 
 
 class GameLoop:
@@ -129,7 +130,9 @@ class GameLoop:
     if not (potion_shop.is_inside(game)
             or (potion_shop.is_available(game) and potion_shop.enter(game))):
       return False
-    PotionShopLoop(game).run()
+    if PotionShopLoop(game).run():
+      # All rewards done: not entered again while this event runs
+      self.potion_shop_timer.postpone(POTION_SHOP_DONE_S)
     self.stale.reset()
     self.needs_reposition = True
     return True

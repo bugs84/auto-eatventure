@@ -17,6 +17,11 @@ BUTTON_THRESHOLD = 0.8
 DIALOG_DELAY_S = 2
 # The green loading screen after Enter takes ~8 s
 ENTER_TIMEOUT_S = 30
+# The rewards list is scrolled to its bottom by this many swipes; a
+# reward's green check fills ~10% of its icon's area (0% without it)
+REWARDS_SWIPES = 4
+REWARDS_SWIPE_DELAY_S = 0.8
+CHECK_MIN_RATIO = 0.06
 # The crates (more slots of a station) have a moving shine, which
 # lowers their score to ~0.7
 CRATE_THRESHOLD = 0.7
@@ -94,12 +99,27 @@ def enter(game):
   return False
 
 
-def leave(game):
-  """Back to the main game by Exit. Returns True when left."""
+def leave_if_completed(game):
+  """Leave the event (Exit) when its last reward is done. Returns True
+  when left."""
   if not _open_dialog(game, 'potion_shop_exit'):
     return False
-  log.info('Potion Shop: leaving')
-  game.device.tap(game.coords.potion_shop_enter_exit)
+  coords = game.coords
+  for _ in range(REWARDS_SWIPES):
+    game.device.swipe(coords.potion_shop_rewards_swipe)
+    time.sleep(REWARDS_SWIPE_DELAY_S)
+  time.sleep(REWARDS_SWIPE_DELAY_S)
+  game.screen.capture()
+  done = (game.screen.color_ratio(coords.potion_shop_last_reward_roi,
+                                  GREEN)
+          >= CHECK_MIN_RATIO)
+  if not done:
+    log.info('Potion Shop: rewards not all done yet')
+    game.device.tap(coords.potion_shop_dialog_close)
+    time.sleep(DIALOG_DELAY_S)
+    return False
+  key_log.info('POTION SHOP - All rewards done, leaving the event')
+  game.device.tap(coords.potion_shop_enter_exit)
   time.sleep(ENTER_TIMEOUT_S / 3)
   game.screen.capture()
   return not is_inside(game)
