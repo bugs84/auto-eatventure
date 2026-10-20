@@ -19,9 +19,10 @@ DIALOG_DELAY_S = 2
 ENTER_TIMEOUT_S = 30
 # End game: once Beetle Juice (the shop's last station) is MAX, only the
 # best paying station is upgraded, coins are saved for it, until it is
-# MAX (level 1000), then the next one. Cellar stations from the cheapest
-# (guide; a better station costs more at the same level): Purified
-# Water, Spider Silk, Mystic Mushrooms, Frog Screams.
+# MAX (level 1000), then the next one. Stations by income: Bat Wing,
+# Dragon Scale, Unicorn Horn, Djinn's Breath, Mermaid Tears, Beetle
+# Juice, then the cellar's Purified Water, Spider Silk, Mystic
+# Mushrooms, Frog Screams.
 END_GAME_STATION = 'beetle'
 FOCUS_STATIONS = ('spider', 'mushrooms', 'frog')
 POPUP_DELAY_S = 1

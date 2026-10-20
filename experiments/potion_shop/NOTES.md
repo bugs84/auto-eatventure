@@ -192,6 +192,12 @@ Learned while automating (2026-10-19/20, Xiaomi):
   Frog x75 1.5au; costs agree: Frog 807 = 283ar > Spider 936 = 230ar)
   -> FOCUS_STATIONS spider, mushrooms, frog. Income per second today
   says little (Spider has its x75, the others don't).
+- Ground floor at 09:00, all level 1000 MAX with 3 stars (st_*): Bat
+  Wing 362ak/0.8s, Dragon Scale 289al, Unicorn Horn 231am/2.7s, Djinn's
+  Breath 185an/4s, Mermaid Tears 148ao/5.3s, Beetle Juice 118ap/6.7s.
+  Full order: Bat, Dragon, Unicorn, Djinn, Mermaid, Beetle | cellar
+  Purified Water, Spider Silk, Mystic Mushrooms, Frog. Spider 958 had 2
+  stars, 1.49ar/9.3s, next level 2.79as.
 - 06:32 the phone was taken (Google app in front), the runner stopped
   ("Not inside the event"); not resumed without the user (dad's phone).
 - Night 2 state (01:15): Swift 9, Sizzle 8, Instant 8, Double 8,
