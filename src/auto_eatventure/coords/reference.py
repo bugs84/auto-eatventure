@@ -274,6 +274,9 @@ potion_shop_spider_station = Point(848, 852)
 potion_shop_frog_station = Point(738, 1716)
 potion_shop_mushrooms_station = Point(1071, 1236)
 potion_shop_station_arrow_x = 113
+# Empty floor of the cellar view: closes a station popup there (the
+# null spot is under the popup of Spider Silk at the top)
+potion_shop_cellar_floor = Point(576, 1424)
 # Icons of the Upgrades dialog's rows (potion_shop_upgrade_* templates)
 potion_shop_upgrades_roi = Region(60, 980, 420, 2000)
 potion_shop_station_popup_y = 508

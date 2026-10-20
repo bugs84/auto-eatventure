@@ -208,7 +208,11 @@ Learned while automating (2026-10-19/20, Xiaomi):
   next level 132as, coins ~136as (+~0.6as/s).
 - Bug 10:30: in the cellar the Spider Silk popup stayed open - its icon
   is above station_icon_tooltip_y, so stations.upgrade() closes the
-  popup by a tap beside the icon, which lands on the station again.
+  popup by a tap beside the icon, which lands on the station again;
+  the null spot is inside that popup too. The open popup hid the
+  arrow, so Spider got a level only every few minutes (180as in hand,
+  147as the price). A tap on the empty cellar floor
+  (potion_shop_cellar_floor) closes it.
 - 06:32 the phone was taken (Google app in front), the runner stopped
   ("Not inside the event"); not resumed without the user (dad's phone).
 - Night 2 state (01:15): Swift 9, Sizzle 8, Instant 8, Double 8,
