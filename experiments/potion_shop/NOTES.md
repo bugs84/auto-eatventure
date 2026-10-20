@@ -221,6 +221,13 @@ Learned while automating (2026-10-19/20, Xiaomi):
   frogs, outside all three popups.
 - Spider MAX 11:09, Mushrooms x100 11:21 and MAX 13:05, Frog x175
   13:06 (user's x2 + Boost x12 ad from 12:50: x52.8, coins ~1au/s).
+- Event done 2026-10-20 14:11: the rewards check after a restart saw
+  15/15 (Frog reached 1000 before), "All rewards done, leaving the
+  event", Exit, back in the restaurant (Food Delivery, stations) - the
+  leave path works. The active potions also show in the restaurant.
+- After a restart the end game checks took ~4 min (one a minute even
+  after a yes) -> they wait only after a "not yet" (not tested live:
+  the event was over).
 - 06:32 the phone was taken (Google app in front), the runner stopped
   ("Not inside the event"); not resumed without the user (dad's phone).
 - Night 2 state (01:15): Swift 9, Sizzle 8, Instant 8, Double 8,
