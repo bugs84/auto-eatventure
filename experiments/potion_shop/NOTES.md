@@ -181,6 +181,12 @@ Learned while automating (2026-10-19/20, Xiaomi):
   Spider Silk 1000, all stations 1000); coins ~600ap.
 - Stations stop at level 1000 (popup "MAX"); late in the event the
   shop has no icons -> the loop goes to the cellar (coins limit it).
+- End game (user's advice 2026-10-20): from Beetle Juice MAX only the
+  best paying station gets the coins until level 1000, then the next.
+  Popups 08:42 (ps_68-72): Spider Silk 936, 275aq/9.3s; Frog 807,
+  57.4aq/12s; Mushrooms 876, 14.5aq/10.7s; Purified Water and Beetle
+  MAX. -> FOCUS_STATIONS spider, frog, mushrooms; the bot upgraded only
+  Spider Silk (~1 hold a minute, coins limit it).
 - 06:32 the phone was taken (Google app in front), the runner stopped
   ("Not inside the event"); not resumed without the user (dad's phone).
 - Night 2 state (01:15): Swift 9, Sizzle 8, Instant 8, Double 8,
