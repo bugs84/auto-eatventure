@@ -48,6 +48,8 @@ TEMPLATE_NAMES = (
   'potion_shop_slots_full',
   'potion_shop_swift',
   'potion_shop_telepathic',
+  'potion_shop_upgrade_frog',
+  'potion_shop_upgrade_mushrooms',
   'popup_close_cross',
   'race_claim',
   'race_ended_title',

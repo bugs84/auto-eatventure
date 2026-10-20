@@ -274,6 +274,8 @@ potion_shop_spider_station = Point(848, 852)
 potion_shop_frog_station = Point(738, 1716)
 potion_shop_mushrooms_station = Point(1071, 1236)
 potion_shop_station_arrow_x = 113
+# Icons of the Upgrades dialog's rows (potion_shop_upgrade_* templates)
+potion_shop_upgrades_roi = Region(60, 980, 420, 2000)
 potion_shop_station_popup_y = 508
 potion_shop_aligned_y = 25
 potion_shop_max_swipe_y = 1000

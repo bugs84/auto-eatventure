@@ -63,6 +63,20 @@ Breath lvl 500, 9. Mermaid Tears lvl 500, 10. Purified Water lvl 500,
 11. Spider Silk lvl 500, 12. Unicorn Horn lvl 1000, 13. Beetle Juice
 lvl 1000, 14. Spider Silk lvl 1000, 15. All stations lvl 1000.
 
+## Stations (confirmed by the user)
+
+By income, cheapest first; a better station also costs more at the same
+level. Ground floor (all level 1000 MAX with 3 stars at 09:00, st_*):
+1. Bat Wing Extract 362ak / 0.8 s
+2. Dragon Scale Dust 289al
+3. Unicorn Horn Shavings 231am / 2.7 s
+4. Djinn's Breath 185an / 4 s
+5. Mermaid Tears 148ao / 5.3 s
+6. Beetle Juice 118ap / 6.7 s
+Cellar: 7. Purified Water, 8. Spider Silk, 9. Mystic Mushrooms,
+10. Frog Screams (guide lN8mXr71loA: Purified Water x75 158aq ->
+Spider x75 551ar -> Mushrooms x75 1at -> Frog x75 1.5au).
+
 ## Normal game loop inside the event (test, 5 min)
 
 Unlocked/upgraded stations and bought upgrades, then got stuck: an icon
@@ -181,23 +195,20 @@ Learned while automating (2026-10-19/20, Xiaomi):
   Spider Silk 1000, all stations 1000); coins ~600ap.
 - Stations stop at level 1000 (popup "MAX"); late in the event the
   shop has no icons -> the loop goes to the cellar (coins limit it).
-- End game (user's advice 2026-10-20): from Beetle Juice MAX only the
-  best paying station gets the coins until level 1000, then the next.
-  Popups 08:42 (ps_68-72): Spider Silk 936, 275aq/9.3s; Frog 807,
-  57.4aq/12s; Mushrooms 876, 14.5aq/10.7s; Purified Water and Beetle
-  MAX. -> FOCUS_STATIONS spider, frog, mushrooms; the bot upgraded only
-  Spider Silk (~1 hold a minute, coins limit it).
-- Station order (guide lN8mXr71loA: Mermaid 1000 -> Beetle -> cellar
-  Purified Water x75 158aq -> Spider x75 551ar -> Mushrooms x75 1at ->
-  Frog x75 1.5au; costs agree: Frog 807 = 283ar > Spider 936 = 230ar)
-  -> FOCUS_STATIONS spider, mushrooms, frog. Income per second today
-  says little (Spider has its x75, the others don't).
-- Ground floor at 09:00, all level 1000 MAX with 3 stars (st_*): Bat
-  Wing 362ak/0.8s, Dragon Scale 289al, Unicorn Horn 231am/2.7s, Djinn's
-  Breath 185an/4s, Mermaid Tears 148ao/5.3s, Beetle Juice 118ap/6.7s.
-  Full order: Bat, Dragon, Unicorn, Djinn, Mermaid, Beetle | cellar
-  Purified Water, Spider Silk, Mystic Mushrooms, Frog. Spider 958 had 2
-  stars, 1.49ar/9.3s, next level 2.79as.
+- End game (user's advice 2026-10-20): from Beetle Juice MAX only one
+  station gets the coins, the next one by income, until level 1000; a
+  station whose last upgrade is still in the Upgrades dialog is not
+  worth its levels - coins are saved for that upgrade first (Frog: not
+  before "Layer with tritone" x175). Measured at 08:42 (ps_68-72) the
+  income per second put Frog before Mushrooms, wrongly: Spider had more
+  of its upgrades.
+- Upgrades dialog at 10:30 (upg_*): only "Sell as 'Elixir-Grade'"
+  Mystic Mushrooms profit x100 1.01at and "Layer with tritone" Frog
+  Scream profit x175 1.51au left; Spider Silk 992 (2 stars) 20.5ar/9.3s,
+  next level 132as, coins ~136as (+~0.6as/s).
+- Bug 10:30: in the cellar the Spider Silk popup stayed open - its icon
+  is above station_icon_tooltip_y, so stations.upgrade() closes the
+  popup by a tap beside the icon, which lands on the station again.
 - 06:32 the phone was taken (Google app in front), the runner stopped
   ("Not inside the event"); not resumed without the user (dad's phone).
 - Night 2 state (01:15): Swift 9, Sizzle 8, Instant 8, Double 8,

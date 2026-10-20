@@ -4,7 +4,7 @@ potions and scrolling its map to the shop."""
 import logging
 import time
 
-from auto_eatventure.actions import levels, popups
+from auto_eatventure.actions import levels, popups, upgrades
 from auto_eatventure.coords.geometry import Point, Region, Swipe
 from auto_eatventure.logger import key_log
 from auto_eatventure.vision.colors import GREEN, RED
@@ -25,6 +25,10 @@ ENTER_TIMEOUT_S = 30
 # Mushrooms, Frog Screams.
 END_GAME_STATION = 'beetle'
 FOCUS_STATIONS = ('spider', 'mushrooms', 'frog')
+# Focused stations whose last upgrade (Upgrades dialog: Mushrooms x100,
+# Frog x175) was still to be bought; their levels are upgraded only after
+# it, levels without it are not worth the coins
+LAST_UPGRADES = ('mushrooms', 'frog')
 POPUP_DELAY_S = 1
 # The rewards list is scrolled to its bottom by this many swipes; a
 # reward's green check fills ~10% of its icon's area (0% without it)
@@ -336,6 +340,17 @@ def is_station_max(game, name):
   game.device.tap(game.null_spot)
   time.sleep(POPUP_DELAY_S)
   return maxed
+
+
+def has_last_upgrade(game, name):
+  """Whether the Upgrades dialog still lists the station's upgrade (a
+  name of LAST_UPGRADES); also True when the dialog did not open."""
+  if not upgrades.open_dialog(game):
+    return True
+  listed = game.screen.has(f'potion_shop_upgrade_{name}',
+                           game.coords.potion_shop_upgrades_roi)
+  upgrades.close_dialog(game)
+  return listed
 
 
 def is_cellar_shown(game):
