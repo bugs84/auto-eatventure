@@ -173,6 +173,10 @@ Learned while automating (2026-10-19/20, Xiaomi):
   Perfect then Sizzle bottled when a planned potion needs a slot).
 - Cellar stations (01:27): Purified Water, Spider Silk (lvl 132),
   Mystic Mushrooms, Frog - all unlocked by the normal station loop.
+- Rewards 8/15 at 02:14 (6 unlocks, Dragon Scale 500, Djinn 500);
+  coins ~200-800ah. Station popup: a 3 s hold bought Beetle 361->412,
+  a 10 s hold 412->469 and ran out of coins - so coins, not the hold
+  time, limit the levels (ps_61-63).
 - Night 2 state (01:15): Swift 9, Sizzle 8, Instant 8, Double 8,
   Perfect 3 (active levels); Telepathic shows "Slots Full!". No Divine/
   Golden in the list yet (need cellar ingredients).
