@@ -176,7 +176,11 @@ def _brew_next(game):
     # Not brewing (then only the brewing potion is listed)
     _scroll_brew_list(game, coords.potion_shop_brew_list_swipe)
     rows = _potion_rows(game)
-  both = {**first, **rows}
+  both = dict(first)
+  for name, row in rows.items():
+    # A label at the screen's edge may be unreadable on one page
+    if row[0] is not None or name not in both:
+      both[name] = row
   plan = LATE_PLAN if LATE_POTION in both else BREW_PLAN
   log.debug('Potion Shop: potions %s', {
     name: level for name, (level, _, _) in both.items()})
@@ -184,7 +188,9 @@ def _brew_next(game):
     level, button, _ = both.get(name, (None, None, False))
     if button is None or level is None or level > level_to:
       continue
-    if name not in rows or rows[name][1] is None:
+    if name in rows and rows[name][1] is not None:
+      button = rows[name][1]
+    else:
       # On the first page only
       swipe = coords.potion_shop_brew_list_swipe
       _scroll_brew_list(game, Swipe(swipe.end, swipe.start))
