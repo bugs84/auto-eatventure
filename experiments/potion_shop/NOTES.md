@@ -267,3 +267,33 @@ Next steps (ideas):
    green check at the last reward (ps_67; ratio 0.10 with a check, 0
    without) - the Exit path is untested until 15/15.
 6. Boosts x2/x5 (gems) for speed - only when the user allows it.
+
+## Bottle orders file (design with the user, 2026-10-21, not implemented)
+
+Replaces POTION_SHOP_BOTTLES and potion_shop_bottles.json:
+- `.env` keeps only POTION_SHOP_ENABLED and a comment that the orders
+  are in potion_orders.txt (gitignored; potion_orders-sample.txt
+  tracked). The bot reads the file before each order (edits apply
+  without a restart) and lowers the number after each bottle (rewrites
+  only that line, reads the file just before writing).
+- File: one `name: count` line per potion, all potions listed (0 = done,
+  lines are never removed), `#` comments; count = bottles still wanted.
+- Speed potions (Swift, Instant, Double - faster brewing) are hardcoded:
+  after the rewards always brewed to 10 and kept active, even when every
+  count is 0. Their count = extra bottles; after each bottle they are
+  brewed back to 10 and kept.
+- Other potions: brewed to 10 and bottled `count` times, not kept.
+- Order: 1) Swift, Instant, Double to 10, 2) other potions in file order
+  (full speed), 3) bottles of the speed potions (a bottle resets it to
+  level 1 = slower brewing), 4) Exit.
+
+TODO:
+- Bottle the potions kept at 10 ~1 h before the event ends (they are
+  likely lost with the event). The event is weekly at the same time ->
+  compute the end from the calendar (the bot already knows the
+  Saturday key); find out the exact end hour once (the "Event ends in"
+  countdown on the main screen).
+- Check the list of potions: the code knows swift, sizzle, perfect,
+  instant, double, telepathic, divine, golden; the research mentions
+  also Greedy and Addictive, maybe more. Read the whole brew list in
+  the event (templates of the missing rows).
