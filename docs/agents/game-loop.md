@@ -281,13 +281,14 @@ not entered again for `POTION_SHOP_DONE_S`, 24 h). One loop of
 3. Right after entering and every 15 min:
    `potion_shop.is_completed()` (rewards list scrolled to the bottom,
    green check at the last reward). When done, `PotionBottlesLoop`
-   (`potion_bottles_loop.py`) brews each potion of
-   `POTION_SHOP_BOTTLES` (e.g. `golden:2,divine:1`) to its max level
-   ("MAX" in its Brew row) and bottles it, one order after another
-   (`potion_shop.bottle_or_brew()`, Cauldron every 30 s; counts of the
-   event in `potion_shop_bottles.json`; `name:max` brews to the max
-   level and keeps the potion active), then `potion_shop.leave()`
-   (Exit).
+   (`potion_bottles_loop.py`) brews the speed potions (Swift, Instant,
+   Double) to their max level ("MAX" in the Brew row) and keeps them,
+   then brews and bottles the potions ordered in `potion_orders.txt`
+   (`golden: 2` lines, see `potion_orders-sample.txt`; read before each
+   order, the count lowered after each bottle; speed potion bottles
+   last, each brewed back to the max level;
+   `potion_shop.bottle_or_brew()`, Cauldron every 30 s), then
+   `potion_shop.leave()` (Exit).
 4. Red "!" on the Cauldron button -> `brew()` (retried after 15 s,
    only every 5 min after 3 checks without a brew: the badge also
    shows when the plan is done).

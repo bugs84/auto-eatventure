@@ -268,7 +268,7 @@ Next steps (ideas):
    without) - the Exit path is untested until 15/15.
 6. Boosts x2/x5 (gems) for speed - only when the user allows it.
 
-## Bottle orders file (design with the user, 2026-10-21, not implemented)
+## Bottle orders file (design with the user, 2026-10-21; implemented, tested offline)
 
 Replaces POTION_SHOP_BOTTLES and potion_shop_bottles.json:
 - `.env` keeps only POTION_SHOP_ENABLED and a comment that the orders

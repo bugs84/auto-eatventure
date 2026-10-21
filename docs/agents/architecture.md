@@ -69,7 +69,7 @@ __main__.py --- entry point (python -m auto_eatventure), calls main.run()
 | `actions/popular_dish.py`, `food_delivery.py`, `helper_invite.py`, `adventures.py` | | Optional features (switches in `config.py`). |
 | `actions/potion_shop.py` | `is_available()`, `is_inside()`, `enter()`, `is_completed()`, `leave()`, `open_crates()`, `can_brew()`, `brew()`, `bottle_or_brew()`, `show_shop()`, `show_cellar()` | Potion Shop event (optional). |
 | `potion_shop_loop.py` | `PotionShopLoop` | Plays the Potion Shop event while inside it. |
-| `potion_bottles_loop.py` | `PotionBottlesLoop`, `parse_orders()` | After the event's rewards: brews the `POTION_SHOP_BOTTLES` potions to their max level and bottles them. |
+| `potion_bottles_loop.py` | `PotionBottlesLoop`, `parse_orders()`, `read_orders()`, `lower_order()`, `next_task()` | After the event's rewards: brews the speed potions to their max level and bottles the potions ordered in `potion_orders.txt` (lowers the counts). |
 | `android/device.py` | `Device` | ADB: `tap()`, `long_press()`, `swipe()`, `screenshot()` (BGR), `screen_size()`, `start_app()`, `close_app()`. |
 | `vision/screen.py` | `Screen` | Last screenshot in BGR / gray / HSV; `capture()`, `find()`, `has()`, `find_exact()`, `find_all()`, `color_ratio()`. |
 | `vision/templates.py` | `TEMPLATE_NAMES`, `load_templates()` | Template catalog, loading and resizing to the phone. |

@@ -64,6 +64,7 @@ captured_screenshots_on_the_fly/  # Screenshots saved by the sandbox
 logs/                        # Runtime log files (gitignored, daily rotation)
 experiments/                 # Notes and scripts of feature investigations
 .env-sample                  # Environment variable template
+potion_orders-sample.txt     # Template of potion_orders.txt (bottles)
 .pylintrc                    # Pylint configuration
 start.bat / start.sh         # Launch scripts
 requirements.txt             # Python dependencies
