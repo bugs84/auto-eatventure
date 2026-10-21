@@ -82,6 +82,10 @@ LOG_FILE_LEVEL="DEBUG"
 LOG_MAX_DAYS="7"
 ```
 
+For the Potion Shop event (`POTION_SHOP_ENABLED`), copy
+`potion_orders-sample.txt` to `potion_orders.txt` and set the bottles
+to brew after the rewards (the bot lowers the counts).
+
 ## Dependencies
 
 From `requirements.txt`:

@@ -1,0 +1,20 @@
+# Potion Shop: bottles to brew once all event rewards are done.
+# Copy this file to potion_orders.txt and set the counts.
+#
+# "potion: count" = how many bottles are still wanted (1 bottle =
+# 1 cork; a bottle is used outside the event). The bot brews the potion
+# to its max level (10), bottles it and lowers the count by 1. The file
+# is read before each order: edits apply without a restart.
+#
+# Swift, Instant and Double (faster brewing) are always brewed to 10
+# first and kept active; their count = extra bottles, done last, each
+# brewed back to 10. The other potions are bottled in the order below.
+# When all is done, the bot leaves the event.
+golden: 0
+divine: 0
+sizzle: 0
+perfect: 0
+telepathic: 0
+swift: 0
+instant: 0
+double: 0
