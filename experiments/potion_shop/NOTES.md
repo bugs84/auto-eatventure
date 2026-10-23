@@ -297,3 +297,39 @@ TODO:
   instant, double, telepathic, divine, golden; the research mentions
   also Greedy and Addictive, maybe more. Read the whole brew list in
   the event (templates of the missing rows).
+
+## Video analysis: Rosix, 21m 03s run (2026-10-23)
+
+https://www.youtube.com/watch?v=OQozLoAeDZU ("without buying cash"; no
+commentary, captions or description - read from frames every 8-20 s,
+so times are +-15 s and potion levels approximate). Very strong account:
+profit x480, Boost x12 (+40 min) active the whole run, 1.68M gems -
+money is never the limit there, only the brewing time.
+
+Timeline (video time):
+- 0:00-1:10 Bat Wing only, held up to ~365 (5 stars); Potion Kettle
+  (cauldron) bought at ~0:20; 4 alchemists early.
+- ~1:05 Dragon Scale; 1:12 first brew Swift (Bat + Dragon).
+- ~3:20 Unicorn; 3:45-4:40 Sizzle (red). 5:22 Brew list: Swift Lvl 5,
+  Sizzle Lvl 5 (= both at 4), Perfect Lvl 1 and Double Lvl 1 offered.
+- ~5:00 Mermaid (before the Djinn!); 5:50-6:40 Double (pink), 6:50
+  Swift again, 8:20-9:10 Double again. Perfect never brewed.
+- ~7:00 Djinn; ~8:30 Beetle (bottom of the shop), to 1000 by ~9:20.
+- ~9:35 cellar: Purified Water.
+- 10:00-11:00 Instant (Djinn + Unicorn) 2 -> 4.
+- ~11:40 Spider Silk (center of the cellar, fast to ~750), ~12:00
+  Mystic Mushrooms; 12:30-14:30 Divine (white, Spider + Mushrooms) brewed
+  repeatedly.
+- 15:00-18:20 Golden (orange, Beetle + Mushrooms), 2 at 15:50.
+- ~18:40 cauldron idle: brewing stopped, only stations upgraded.
+- ~20:00 Frog (last cellar station) upgraded to 1000 -> 15/15 at 21:03.
+
+Upgrades dialog: customer upgrades ("Host an alchemy workshop +2
+Customers" 12.5M, "Put up a sign", "Advertise ...") left unbought even
+with far more money (3:10: 602af); bought: "+1 Alchemist", station
+profit (x25/x50/x75) and "collected faster" upgrades.
+
+Differences to our BREW_PLAN: no Perfect at all; Mermaid/Double before
+Djinn/Instant; Sizzle only to ~4-5; Divine then Golden at the end
+without bottling Perfect (never brewed); brewing stops ~2 min before
+the end (Frog upgrades only).
