@@ -333,3 +333,14 @@ Differences to our BREW_PLAN: no Perfect at all; Mermaid/Double before
 Djinn/Instant; Sizzle only to ~4-5; Divine then Golden at the end
 without bottling Perfect (never brewed); brewing stops ~2 min before
 the end (Frog upgrades only).
+
+Detailed transcript (2026-10-23, `video_transcript/PLAN.md`):
+`video_transcript/TRANSCRIPT.md` (stations, all 32 brews, all upgrades
+in order, 15 tasks, full timeline) and the Czech step-by-step guide
+`video_transcript/GUIDE.md` (with proposals for the bot). Corrections to
+the rough timeline above: Kettle 0:17, Dragon 0:58 and the first Swift
+0:59; brews Swift 1-4, Sizzle 1-4, Double 1-4, Swift 5-7, Double 5-6,
+Instant 1-6, Divine 1-4, Golden 1-5, last claim 18:06; Sizzle bottled
+at 14:46 for the 5th slot; the 5 customer upgrades bought at 18:07
+right after the last brew. Potions in the brew list: 9 (+ Greedy Gulp =
+Purified Water + Spider Silk; no Addictive) - answers the TODO above.
