@@ -344,3 +344,10 @@ Instant 1-6, Divine 1-4, Golden 1-5, last claim 18:06; Sizzle bottled
 at 14:46 for the 5th slot; the 5 customer upgrades bought at 18:07
 right after the last brew. Potions in the brew list: 9 (+ Greedy Gulp =
 Purified Water + Spider Silk; no Addictive) - answers the TODO above.
+
+Plans for the bot (user, 2026-10-23): the video's times need the ad
+income multiplier and bought x2/x5 speed boosts, which the bot never
+uses - so the bot needs its own plan(s): probably the same order as the
+video, but brewing the potions a bit higher (slower stations leave more
+time per phase). Printable manual plan for the user:
+`video_transcript/plan_print.pdf` (source `plan_print.html`).
