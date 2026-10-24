@@ -264,19 +264,23 @@ dialog (customers, alchemists, Potion Kettle) and a Cauldron where
 potions are brewed (each brew raises the potion's level; alchemists
 carry the ingredients). Every `POTION_SHOP_CHECK_S` (30 min) the loop
 checks `potion_shop.is_inside()` / `is_available()`, enters it
-(`potion_shop.enter()`: event button, Enter, Open) and hands over to
-`PotionShopLoop.run()` (`potion_shop_loop.py`) until the bot is no
-longer inside (the event ended, or all rewards were done: then it is
-not entered again for `POTION_SHOP_DONE_S`, 24 h). One loop of
-`PotionShopLoop`:
+(`potion_shop.enter()`: event button, Enter, the teal loading screen
+(not inside yet), Open of "Welcome to the Potion Shop!" on a new event)
+and hands over to `PotionShopLoop.run()` (`potion_shop_loop.py`) until
+the bot is no longer inside (the event ended, or all rewards were done:
+then it is entered again only in the event's last hour, see 3). One
+loop of `PotionShopLoop`:
 
 1. Cauldron dialog open (also opens by itself with "Brew Complete!")
    -> `potion_shop.brew()`: Claim the finished potion, read the Brew
    list (both pages; levels by `vision/level_label.py`) and brew the
    first potion of `BREW_PLAN` below its level (only a row with a Brew
-   button). Once Divine is in the list `LATE_PLAN` (the guides' final
-   set) is used; a planned potion with "Slots Full!" makes it bottle
-   Perfect, then Sizzle (Active Potions tab, 1 cork).
+   button; the order of the 21 min run in
+   `experiments/potion_shop/video_transcript/GUIDE.md`, levels a bit
+   higher). Once Divine is in the list `LATE_PLAN` (Divine, Golden) is
+   used; a planned potion with "Slots Full!" makes it bottle Sizzle,
+   then Perfect (Active Potions tab, 1 cork). When all of `LATE_PLAN`
+   is brewed, `brew()` returns 'done': nothing more is brewed.
 2. Dimmed screen -> close the dialog.
 3. Right after entering and every 15 min:
    `potion_shop.is_completed()` (rewards list scrolled to the bottom,
@@ -288,11 +292,18 @@ not entered again for `POTION_SHOP_DONE_S`, 24 h). One loop of
    order, the count lowered after each bottle; speed potion bottles
    last, each brewed back to the max level;
    `potion_shop.bottle_or_brew()`, Cauldron every 30 s), then
-   `potion_shop.leave()` (Exit).
+   `potion_shop.leave()` (Exit). In the event's last hour (it ends on
+   Wednesday 00:00 local time, `seconds_to_final_bottles()`) it bottles
+   all active potions instead (`potion_shop.bottle_all()`; they are
+   lost with the event).
 4. Red "!" on the Cauldron button -> `brew()` (retried after 15 s,
    only every 5 min after 3 checks without a brew: the badge also
    shows when the plan is done).
-5. `upgrades.buy_if_available()` (same button as in the restaurant).
+5. Upgrades badge -> `potion_shop.buy_upgrades()`: the first affordable
+   of the dialog's 4 visible rows, again and again; "+N Customer(s)"
+   rows (template `potion_shop_upgrade_customer`) only the first two,
+   the rest once brewing is done (the video's order: more customers
+   keep the alchemists from carrying the ingredients).
 6. Every 2nd loop `potion_shop.open_crates()`.
 7. End game, once Beetle Juice is MAX (`is_station_max()`, its popup;
    looked at every 5 min): only the first of `FOCUS_STATIONS` (Spider
@@ -312,8 +323,8 @@ not entered again for `POTION_SHOP_DONE_S`, 24 h). One loop of
     stations).
 
 - Never tapped: Boost (ad), Activate / Pass (real money)
-- Not done yet: choosing what to buy (customers vs. alchemists),
-  which station to upgrade before the end game, speed boosts
+- Not done yet: which station to upgrade before the end game, speed
+  boosts
 - Screenshots, flow and the strategy found on the web:
   `experiments/potion_shop/NOTES.md`
 
