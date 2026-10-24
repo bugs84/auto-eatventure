@@ -1,7 +1,9 @@
 """PotionBottlesLoop: after the Potion Shop's rewards, brews the speed
 potions to their max level and bottles the potions ordered in
-ORDERS_FILE (to use them outside the event)."""
+ORDERS_FILE (to use them outside the event); in the event's last hour
+bottles all active potions."""
 
+import datetime
 import logging
 import os
 import re
@@ -27,6 +29,13 @@ CAULDRON_CHECK_S = 30
 LOOP_DELAY_S = 1
 # Screenshots outside the event in a row that end the loop
 OUTSIDE_LOOPS = 3
+# The event runs from Saturday 00:00 to Wednesday 00:00 (local time; the
+# countdown of its button)
+EVENT_START_WEEKDAY = 5
+EVENT_DAYS = 4
+# The active potions are lost with the event: they are bottled this
+# long before its end
+FINAL_BOTTLES_S = 60 * 60
 ORDER_LINE = re.compile(r'^(\s*([A-Za-z]+)\s*:\s*)([^\s#]*)(.*)$')
 
 
@@ -95,6 +104,18 @@ def lower_order(name):
   return None
 
 
+def seconds_to_final_bottles():
+  """Seconds until the active potions are bottled (FINAL_BOTTLES_S
+  before the end of the current event; <= 0: now)."""
+  now = datetime.datetime.now()
+  start = (now - datetime.timedelta(
+    days=(now.weekday() - EVENT_START_WEEKDAY) % 7)).replace(
+      hour=0, minute=0, second=0, microsecond=0)
+  # Local times made aware: a summer time change is counted
+  end = (start + datetime.timedelta(days=EVENT_DAYS)).astimezone()
+  return (end - now.astimezone()).total_seconds() - FINAL_BOTTLES_S
+
+
 def next_task(orders, maxed):
   """(potion, bottle) of the next step: a speed potion not at its max
   level yet (brewed and kept), else the first ordered potion that isn't
@@ -125,9 +146,14 @@ class PotionBottlesLoop:
 
   def run(self):
     """Brew and bottle until all is done (True) or the bot is no longer
-    inside the event (False)."""
+    inside the event (False); in the event's last hour bottle all
+    active potions instead."""
     outside = 0
     while outside < OUTSIDE_LOOPS:
+      if seconds_to_final_bottles() <= 0:
+        key_log.info('POTION SHOP - Event ends soon, bottling all')
+        potion_shop.bottle_all(self.game, 'before the event ends')
+        return True
       self._read_orders()
       task = next_task(self.orders, self.maxed)
       if task is None:

@@ -222,6 +222,9 @@ potion_shop_rewards_swipe = Swipe(Point(452, 1808), Point(452, 1017))
 potion_shop_last_reward_roi = Region.around(Point(810, 1836), 90, 79)
 # Green event coin left of the coin counter: shown only inside
 potion_shop_coin_roi = Region(100, 60, 300, 260)
+# Bottom of the screen: plain teal on the event's loading screen ("Get
+# ready to stir up some trouble!"), the bottom bar inside
+potion_shop_loading_roi = Region(60, 2450, 1160, 2650)
 
 # Cauldron button (2nd from the right in the bottom bar, after a
 # Potion Kettle was bought) and its red "!" badge (a potion can be
@@ -231,8 +234,8 @@ potion_shop_cauldron_badge_roi = Region(793, 2439, 929, 2574)
 # Cauldron dialog: Brew tab, the list of potions (icons on the left,
 # Brew / Claim buttons on the right, level with the icon) and the red X
 potion_shop_brew_tab = Point(184, 625)
-potion_shop_brew_list_roi = Region(900, 900, 1190, 2600)
-potion_shop_potion_icons_roi = Region(30, 900, 260, 2600)
+potion_shop_brew_list_roi = Region(900, 900, 1190, 2712)
+potion_shop_potion_icons_roi = Region(30, 900, 260, 2712)
 # A potion's level label ("Lvl 3") relative to its icon's center; in
 # the Brew list it shows the level the next brew makes
 potion_shop_level_label = Region(-82, 76, 87, 132)
@@ -280,6 +283,10 @@ potion_shop_station_arrow_x = 113
 potion_shop_cellar_floor = Point(339, 1638)
 # Icons of the Upgrades dialog's rows (potion_shop_upgrade_* templates)
 potion_shop_upgrades_roi = Region(60, 980, 420, 2000)
+# Icon of the first row ("+N Customer(s)" rows show a customer) and the
+# distance between the rows (their buy buttons: first_upgrade_buy_roi)
+potion_shop_upgrade_icon_roi = Region(60, 1015, 420, 1215)
+potion_shop_upgrade_row_y = 203
 potion_shop_station_popup_y = 508
 potion_shop_aligned_y = 25
 potion_shop_max_swipe_y = 1000

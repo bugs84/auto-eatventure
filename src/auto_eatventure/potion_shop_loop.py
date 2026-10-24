@@ -29,9 +29,13 @@ BREW_RETRY_S = 15
 # IDLE_BREW_S
 IDLE_BREWS = 3
 IDLE_BREW_S = 5 * 60
-# A red station icon next to the Upgrades button looks like its badge;
-# when nothing could be bought the badge is ignored for this time
+# A red station icon next to the Upgrades button looks like its badge
+# (and skipped customer rows keep it shown); when nothing could be
+# bought the badge is ignored for this time
 UPGRADES_RETRY_S = 60
+# "+N Customer(s)" upgrades bought before brewing is done: the first two
+# (cheap, needed at the start); the rest after the last brew (video)
+EARLY_CUSTOMER_ROWS = 2
 # Every CELLAR_CHECK_S the map is scrolled to the cellar for
 # CELLAR_LOOPS loops of crates and station upgrades there
 CELLAR_CHECK_S = 60
@@ -65,6 +69,9 @@ class PotionShopLoop:
     self.cellar_timer = Timer()
     self.completion_timer = Timer()
     self.completed = False
+    # Customer rows that may still be bought; None (no limit) once all
+    # of potion_shop.LATE_PLAN is brewed
+    self.customer_rows_left = EARLY_CUSTOMER_ROWS
     self.end_game_timer = Timer()
     self.station_check_timer = Timer()
     # Station name -> 'bought' (its last upgrade) or 'max'
@@ -83,9 +90,8 @@ class PotionShopLoop:
       if potion_shop.is_inside(self.game):
         outside = 0
         self.play_once()
-      else:
+      elif not potion_shop.close_outside_dialog(self.game):
         outside += 1
-        popups.close_popup(self.game)
     if (self.completed and PotionBottlesLoop(self.game).run()
         and not potion_shop.leave(self.game)):
       log.warning('Potion Shop: Exit did not leave the event')
@@ -101,9 +107,8 @@ class PotionShopLoop:
     if potion_shop.can_brew(game) and self.brew_timer.is_due():
       self._brew()
       return
-    if (upgrades.has_badge(game) and self.upgrades_timer.is_due()
-        and not upgrades.buy_if_available(game)):
-      self.upgrades_timer.postpone(UPGRADES_RETRY_S)
+    if upgrades.has_badge(game) and self.upgrades_timer.is_due():
+      self._buy_upgrades()
     if (self.loops % CRATE_CHECK_LOOPS == 0
         and potion_shop.open_crates(game)):
       return
@@ -204,7 +209,7 @@ class PotionShopLoop:
     another dialog. Returns True when one was open."""
     game = self.game
     if potion_shop.is_cauldron_open(game):
-      if potion_shop.brew(game):
+      if self._brewed(potion_shop.brew(game)):
         self.brew_timer.postpone(BREW_PAUSE_S)
       return True
     if popups.is_screen_dimmed(game):
@@ -215,13 +220,32 @@ class PotionShopLoop:
 
   def _brew(self):
     """Claim and brew; looked at again sooner after a brew."""
-    if potion_shop.brew(self.game):
+    if self._brewed(potion_shop.brew(self.game)):
       self.idle_brews = 0
       self.brew_timer.postpone(BREW_PAUSE_S)
       return
     self.idle_brews += 1
     self.brew_timer.postpone(
       IDLE_BREW_S if self.idle_brews >= IDLE_BREWS else BREW_RETRY_S)
+
+  def _brewed(self, result):
+    """Note a 'done' of potion_shop.brew(). Returns True when a potion
+    was brewed."""
+    if result == 'done' and self.customer_rows_left is not None:
+      self.customer_rows_left = None
+      key_log.info('POTION SHOP - Brewing done, buying customers')
+    return result == 'brewed'
+
+  def _buy_upgrades(self):
+    """Buy the affordable upgrades; customer rows only the first
+    EARLY_CUSTOMER_ROWS until brewing is done."""
+    left = self.customer_rows_left
+    bought, customer_rows = potion_shop.buy_upgrades(
+      self.game, potion_shop.MAX_UPGRADE_BUYS if left is None else left)
+    if left is not None:
+      self.customer_rows_left = left - customer_rows
+    if not bought:
+      self.upgrades_timer.postpone(UPGRADES_RETRY_S)
 
   def _play_cellar(self):
     """Open the crates and upgrade the stations of the cellar, then

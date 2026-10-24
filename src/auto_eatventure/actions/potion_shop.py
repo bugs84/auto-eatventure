@@ -42,31 +42,44 @@ CHECK_MIN_RATIO = 0.06
 CRATE_THRESHOLD = 0.7
 # The green coin covers ~17% of its search area, 0% on the main screen
 COIN_MIN_RATIO = 0.08
+# The event's loading screen is all teal (its coin area too)
+LOADING_TEAL = [((80, 200, 100), (90, 255, 180))]
+LOADING_MIN_RATIO = 0.9
 # The red "!" badge fills ~20-30% of its area (like the Upgrades one)
 BADGE_MIN_RATIO = 0.12
 # The red X of the Cauldron dialog fills most of its area
 CLOSE_MIN_RATIO = 0.4
 CAULDRON_DELAY_S = 1.5
+# Rows of the Upgrades dialog looked at (the 5th is cut off), upgrades
+# bought in one visit at most (a bought row leaves the list, the rows
+# below move up)
+UPGRADE_ROWS = 4
+MAX_UPGRADE_BUYS = 30
+UPGRADE_BUY_DELAY_S = 0.6
 # Potions (template potion_shop_<name>) and the level each is brewed
-# to, in this order; each brew raises the level by one. The levels
-# follow the fastest runs found on the web (experiments/potion_shop/
-# NOTES.md): Swift (walk) and Sizzle (food) first, then Instant and
-# Double food. A potion stays active (5 slots) until bottled.
+# to: the first one of the plan below its level that can be brewed;
+# each brew raises the level by one. The order of the 21 min run
+# (experiments/potion_shop/video_transcript/GUIDE.md): Swift, Sizzle
+# (Unicorn), Double (Mermaid, before the Djinn), Swift, Double, Instant
+# (Djinn); no Perfect. The bot's stations are slower (no boosts): the
+# levels are a bit higher and the last three keep the Cauldron busy
+# until the cellar's potions. A potion stays active (5 slots) until
+# bottled.
 BREW_PLAN = (
-  ('swift', 4), ('sizzle', 4), ('instant', 4), ('double', 4),
-  ('perfect', 3), ('swift', 8), ('instant', 6), ('double', 6),
-  ('sizzle', 6), ('sizzle', 7), ('instant', 7), ('double', 7),
-  ('perfect', 5))
-# Once the cellar's ingredients show Divine and Golden in the list, the
-# guides' final set: Perfect and Sizzle are bottled for them (bottling
-# sets a potion's level back to 1, so they are not brewed again);
-# Golden to 7 (user's advice: worth it near the end)
+  ('swift', 4), ('sizzle', 4), ('double', 4), ('swift', 7),
+  ('double', 6), ('instant', 6), ('swift', 8), ('double', 7),
+  ('instant', 7))
+# Once the cellar's ingredients show Divine in the list: Divine, then
+# Golden (Sizzle is bottled for its slot; bottling sets a potion's level
+# back to 1, so it is not brewed again); Golden to 7 (user's advice:
+# worth it near the end). After it nothing more is brewed (the video
+# stops brewing and buys the customers).
 LATE_PLAN = (
-  ('swift', 8), ('instant', 6), ('double', 6), ('divine', 6),
+  ('swift', 7), ('double', 6), ('instant', 6), ('divine', 5),
   ('golden', 7))
 LATE_POTION = 'divine'
 POTIONS = ('swift', 'sizzle', 'perfect', 'instant', 'double',
-           'telepathic', 'divine', 'golden')
+           'telepathic', 'divine', 'golden', 'greedy', 'addictive')
 # A row of the Brew list: "Lvl N" (the next brew's level; None when
 # unreadable), the Brew button (None while brewing or at the max level),
 # "Slots Full!" (5 potions active, the potion isn't) and "MAX" (the
@@ -74,7 +87,7 @@ POTIONS = ('swift', 'sizzle', 'perfect', 'instant', 'double',
 PotionRow = namedtuple('PotionRow', 'level button slots_full maxed')
 # When a planned potion can't be brewed because all slots are full,
 # the first active of these is bottled (1 cork)
-BOTTLE_ORDER = ('perfect', 'sizzle')
+BOTTLE_ORDER = ('sizzle', 'perfect')
 POTION_THRESHOLD = 0.8
 # Landmarks of the map (template potion_shop_<name>, coords
 # potion_shop_<name>_roi and _y); one is sometimes partly hidden by an
@@ -97,9 +110,13 @@ def is_available(game):
 
 def is_inside(game):
   """The green event coin is shown left of the coin counter (the
-  main game's coin is gold; a dialog dimming the top bar hides it)."""
-  return (game.screen.color_ratio(game.coords.potion_shop_coin_roi, GREEN)
-          >= COIN_MIN_RATIO)
+  main game's coin is gold; a dialog dimming the top bar hides it), not
+  the teal loading screen."""
+  screen = game.screen
+  return (screen.color_ratio(game.coords.potion_shop_coin_roi, GREEN)
+          >= COIN_MIN_RATIO
+          and screen.color_ratio(game.coords.potion_shop_loading_roi,
+                                 LOADING_TEAL) < LOADING_MIN_RATIO)
 
 
 def enter(game):
@@ -114,14 +131,22 @@ def enter(game):
     if is_inside(game):
       key_log.info('POTION SHOP - Entered the event')
       return True
-    # Never tapped blindly: entered again, "Offline Earnings" shows
-    # instead, with its Collect x2 (an ad) next to the Open spot
-    if levels.is_open_button_shown(game):
-      game.device.tap(game.coords.first_stand_open_button)
-    else:
-      popups.close_popup(game)
+    close_outside_dialog(game)
     time.sleep(1)
   log.warning('Potion Shop: not inside after Enter')
+  return False
+
+
+def close_outside_dialog(game):
+  """Tap Open of "Welcome to the Potion Shop!" (a new event) or close a
+  red X dialog. Returns True when Open was tapped (the event loads)."""
+  # Never tapped blindly: entered again, "Offline Earnings" shows
+  # instead, with its Collect x2 (an ad) next to the Open spot
+  if levels.is_open_button_shown(game):
+    log.info('Potion Shop: Open of the welcome dialog')
+    game.device.tap(game.coords.first_stand_open_button)
+    return True
+  popups.close_popup(game)
   return False
 
 
@@ -178,12 +203,13 @@ def can_brew(game):
 
 def brew(game):
   """Open the Cauldron, claim a finished potion and brew the next one
-  by BREW_ORDER. Returns True when a potion was brewed."""
+  of the plan. Returns 'brewed', 'done' (LATE_PLAN complete: nothing
+  more to brew) or None."""
   if not _open_brew_tab(game):
-    return False
-  brewed = _brew_next(game)
+    return None
+  result = _brew_next(game)
   _close_cauldron(game)
-  return brewed
+  return result
 
 
 def bottle_or_brew(game, name, keep, bottle=True):
@@ -213,6 +239,18 @@ def bottle_or_brew(game, name, keep, bottle=True):
             'to free a slot')
   _close_cauldron(game)
   return result
+
+
+def bottle_all(game, reason):
+  """Bottle every active potion (1 cork each). Returns the number
+  bottled."""
+  if not _open_brew_tab(game):
+    return 0
+  bottled = 0
+  while bottled < len(POTIONS) and _bottle(game, POTIONS, reason):
+    bottled += 1
+  _close_cauldron(game)
+  return bottled
 
 
 def _open_brew_tab(game):
@@ -262,7 +300,8 @@ def _claim(game):
 def _brew_next(game):
   """Brew the first potion of the plan below its level that has a
   Brew button (while a potion is brewing the list shows only it,
-  without a Brew button). Returns True when one was brewed."""
+  without a Brew button). Returns 'brewed', 'done' (LATE_PLAN
+  complete) or None."""
   both, rows = _read_brew_list(game)
   plan = LATE_PLAN if LATE_POTION in both else BREW_PLAN
   log.debug('Potion Shop: potions %s', {
@@ -272,11 +311,22 @@ def _brew_next(game):
     if (row is None or row.button is None or row.level is None
         or row.level > level_to):
       continue
-    return _brew_listed(game, name, row.level, rows)
+    return 'brewed' if _brew_listed(game, name, row.level, rows) else None
   if _needs_slot(plan, both):
     _bottle(game, BOTTLE_ORDER, 'to free a slot')
   log.info('Potion Shop: nothing to brew')
-  return False
+  return 'done' if _is_plan_done(LATE_PLAN, both) else None
+
+
+def _is_plan_done(plan, rows):
+  """Every potion of the plan is listed and brewed to its level (the
+  list shows the next brew's level) or MAX."""
+  for name, level_to in plan:
+    row = rows.get(name)
+    if row is None or not (
+        row.maxed or row.level is not None and row.level > level_to):
+      return False
+  return True
 
 
 def _read_brew_list(game):
@@ -425,6 +475,49 @@ def is_station_max(game, name):
 def close_cellar_popup(game):
   """Close a station popup on the cellar view."""
   game.device.tap(game.coords.potion_shop_cellar_floor)
+
+
+def buy_upgrades(game, customers):
+  """Buy the affordable upgrades of the Upgrades dialog, the top row
+  first, but at most `customers` "+N Customer(s)" rows (the guides buy
+  them only after brewing: more customers keep the alchemists from
+  carrying the ingredients). Returns (upgrades, customer rows) bought."""
+  if not upgrades.open_dialog(game):
+    return 0, 0
+  bought = customer_rows = 0
+  while bought < MAX_UPGRADE_BUYS:
+    row = _affordable_row(game, customer_rows < customers)
+    if row is None:
+      break
+    button, customer = row
+    log.info('Potion Shop: buying an upgrade%s',
+             ' (customers)' if customer else '')
+    game.device.tap(button)
+    bought += 1
+    customer_rows += customer
+    time.sleep(UPGRADE_BUY_DELAY_S)
+    game.screen.capture()
+  upgrades.close_dialog(game)
+  game.screen.capture()
+  return bought, customer_rows
+
+
+def _affordable_row(game, customers):
+  """(buy button, is a customer row) of the first visible row that can
+  be bought (customer rows only when customers); None when none."""
+  coords = game.coords
+  for index in range(UPGRADE_ROWS):
+    dy = index * coords.potion_shop_upgrade_row_y
+    button = coords.first_upgrade_buy_roi.moved(0, dy)
+    if not upgrades.is_affordable(game, button):
+      continue
+    customer = game.screen.has(
+      'potion_shop_upgrade_customer',
+      coords.potion_shop_upgrade_icon_roi.moved(0, dy))
+    if customer and not customers:
+      continue
+    return button.center, customer
+  return None
 
 
 def has_last_upgrade(game, name):
