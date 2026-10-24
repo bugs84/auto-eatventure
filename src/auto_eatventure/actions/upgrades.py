@@ -110,6 +110,9 @@ def _is_dialog_open(game):
 
 def _is_first_affordable(game):
   """Blue buy button of the first row."""
-  return (game.screen.color_ratio(
-            game.coords.first_upgrade_buy_roi, BUY_BLUE)
-          >= BUY_MIN_RATIO)
+  return is_affordable(game, game.coords.first_upgrade_buy_roi)
+
+
+def is_affordable(game, button):
+  """Blue buy button in the region of a row's button."""
+  return game.screen.color_ratio(button, BUY_BLUE) >= BUY_MIN_RATIO

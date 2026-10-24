@@ -1,6 +1,6 @@
 """GameLoop: the endless loop deciding what the bot does next."""
 
-from auto_eatventure import config
+from auto_eatventure import config, potion_bottles_loop
 from auto_eatventure.actions import (
   adventures, boxes, food_delivery, helper_invite, levels, popular_dish,
   popups, potion_shop, stations, upgrades)
@@ -131,8 +131,11 @@ class GameLoop:
             or (potion_shop.is_available(game) and potion_shop.enter(game))):
       return False
     if PotionShopLoop(game).run():
-      # All rewards done: not entered again while this event runs
-      self.potion_shop_timer.postpone(POTION_SHOP_DONE_S)
+      # All rewards done: entered again only in the event's last hour
+      # (all active potions bottled)
+      final = potion_bottles_loop.seconds_to_final_bottles()
+      self.potion_shop_timer.postpone(
+        final if final > 0 else POTION_SHOP_DONE_S)
     self.stale.reset()
     self.needs_reposition = True
     return True
