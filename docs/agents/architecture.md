@@ -67,9 +67,9 @@ __main__.py --- entry point (python -m auto_eatventure), calls main.run()
 | `actions/race_reward.py` | `claim()` | "Restaurant Race ended!" reward. |
 | `actions/stale.py` | `StaleWatch` | Recovery and search swipes when nothing can be upgraded. |
 | `actions/popular_dish.py`, `food_delivery.py`, `helper_invite.py`, `adventures.py` | | Optional features (switches in `config.py`). |
-| `actions/potion_shop.py` | `is_available()`, `is_inside()`, `enter()`, `is_completed()`, `leave()`, `open_crates()`, `can_brew()`, `brew()`, `bottle_or_brew()`, `show_shop()`, `show_cellar()` | Potion Shop event (optional). |
+| `actions/potion_shop.py` | `is_available()`, `is_inside()`, `enter()`, `is_completed()`, `leave()`, `open_crates()`, `can_brew()`, `brew()`, `bottle_or_brew()`, `bottle_all()`, `buy_upgrades()`, `show_shop()`, `show_cellar()` | Potion Shop event (optional). |
 | `potion_shop_loop.py` | `PotionShopLoop` | Plays the Potion Shop event while inside it. |
-| `potion_bottles_loop.py` | `PotionBottlesLoop`, `parse_orders()`, `read_orders()`, `lower_order()`, `next_task()` | After the event's rewards: brews the speed potions to their max level and bottles the potions ordered in `potion_orders.txt` (lowers the counts). |
+| `potion_bottles_loop.py` | `PotionBottlesLoop`, `parse_orders()`, `read_orders()`, `lower_order()`, `next_task()`, `seconds_to_final_bottles()` | After the event's rewards: brews the speed potions to their max level and bottles the potions ordered in `potion_orders.txt` (lowers the counts); in the event's last hour bottles all active potions. |
 | `android/device.py` | `Device` | ADB: `tap()`, `long_press()`, `swipe()`, `screenshot()` (BGR), `screen_size()`, `start_app()`, `close_app()`. |
 | `vision/screen.py` | `Screen` | Last screenshot in BGR / gray / HSV; `capture()`, `find()`, `has()`, `find_exact()`, `find_all()`, `color_ratio()`. |
 | `vision/templates.py` | `TEMPLATE_NAMES`, `load_templates()` | Template catalog, loading and resizing to the phone. |

@@ -287,7 +287,7 @@ Replaces POTION_SHOP_BOTTLES and potion_shop_bottles.json:
   (full speed), 3) bottles of the speed potions (a bottle resets it to
   level 1 = slower brewing), 4) Exit.
 
-TODO:
+TODO (both done 2026-10-24, see below):
 - Bottle the potions kept at 10 ~1 h before the event ends (they are
   likely lost with the event). The event is weekly at the same time ->
   compute the end from the calendar (the bot already knows the
@@ -351,3 +351,25 @@ uses - so the bot needs its own plan(s): probably the same order as the
 video, but brewing the potions a bit higher (slower stations leave more
 time per phase). Printable manual plan for the user:
 `video_transcript/plan_print.pdf` (source `plan_print.html`).
+
+## Live 2026-10-24 (new event) and the video proposals
+
+- The event started Saturday 00:00; the bot entered at 00:10, but the
+  teal loading screen ("Get ready to stir up some trouble!") counted as
+  inside (green coin area), so `enter()` returned before "Welcome to the
+  Potion Shop!" with Open; the loop saw "outside" 3x and left. The game
+  stayed on the Welcome dialog until ~08:10 (8 h lost). Fixed: loading
+  screen = not inside (`potion_shop_loading_roi` all teal), Open tapped
+  in `enter()` and in the event loop (`close_outside_dialog()`).
+- Countdown: "3d 13h" at Sat 11:35 and "1d 1h" at Mon 22:18 (last
+  week) -> the event ends Wednesday 00:00 local time (Tuesday 22:00 UTC
+  in summer time, 23:00 UTC in winter time).
+- Brew list has 10 potions: + Greedy Gulp (Purified Water + Spider
+  Silk) and Addictive Aether (Mermaid + Frog), templates from
+  live_1024/l03. The last row was below potion_shop_potion_icons_roi
+  (bottom 2600 -> 2712).
+- Implemented from GUIDE.md section 7: plans in the video's order (a
+  bit higher levels, Golden 7 kept), BOTTLE_ORDER Sizzle first,
+  customer rows skipped until brewing is done (first two allowed), and
+  the TODO "bottle 1 h before the end" (all active potions; after the
+  rewards the bot re-enters only then).
