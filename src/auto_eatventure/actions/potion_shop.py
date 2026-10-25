@@ -37,6 +37,12 @@ LOADING_MIN_RATIO = 0.9
 UPGRADE_ROWS = 4
 MAX_UPGRADE_BUYS = 30
 UPGRADE_BUY_DELAY_S = 0.6
+# Stations, by income (template potion_shop_upgrade_<name>: the icon of
+# their "profit xN" rows, with a price tag; their "made faster" rows show
+# a clock instead: difference ~0.01-0.02 vs >= 0.038)
+STATIONS = ('bat', 'dragon', 'unicorn', 'djinn', 'mermaid', 'beetle',
+            'water', 'spider', 'mushrooms', 'frog')
+PROFIT_ROW_DIFFERENCE = 0.03
 
 
 def is_available(game):
@@ -123,42 +129,51 @@ def buy_upgrades(game, customers):
   """Buy the affordable upgrades of the Upgrades dialog, the top row
   first, but at most `customers` "+N Customer(s)" rows (the guides buy
   them only after brewing: more customers keep the alchemists from
-  carrying the ingredients). Returns (upgrades, customer rows) bought."""
+  carrying the ingredients). Returns the kinds of the bought rows
+  (_row_kind())."""
   if not upgrades.open_dialog(game):
-    return 0, 0
-  bought = customer_rows = 0
-  while bought < MAX_UPGRADE_BUYS:
-    row = _affordable_row(game, customer_rows < customers)
+    return []
+  kinds = []
+  while len(kinds) < MAX_UPGRADE_BUYS:
+    row = _affordable_row(game, kinds.count('customer') < customers)
     if row is None:
       break
-    button, customer = row
-    log.info('Potion Shop: buying an upgrade%s',
-             ' (customers)' if customer else '')
+    button, kind = row
+    log.info('Potion Shop: buying an upgrade (%s)', kind or 'other')
     game.device.tap(button)
-    bought += 1
-    customer_rows += customer
+    kinds.append(kind)
     time.sleep(UPGRADE_BUY_DELAY_S)
     game.screen.capture()
   upgrades.close_dialog(game)
   game.screen.capture()
-  return bought, customer_rows
+  return kinds
 
 
 def _affordable_row(game, customers):
-  """(buy button, is a customer row) of the first visible row that can
-  be bought (customer rows only when customers); None when none."""
+  """(buy button, _row_kind()) of the first visible row that can be
+  bought (customer rows only when customers); None when none."""
   coords = game.coords
   for index in range(UPGRADE_ROWS):
     dy = index * coords.potion_shop_upgrade_row_y
     button = coords.first_upgrade_buy_roi.moved(0, dy)
     if not upgrades.is_affordable(game, button):
       continue
-    customer = game.screen.has(
-      'potion_shop_upgrade_customer',
-      coords.potion_shop_upgrade_icon_roi.moved(0, dy))
-    if customer and not customers:
+    kind = _row_kind(game, coords.potion_shop_upgrade_icon_roi.moved(0, dy))
+    if kind == 'customer' and not customers:
       continue
-    return button.center, customer
+    return button.center, kind
+  return None
+
+
+def _row_kind(game, icon_roi):
+  """'customer' for a "+N Customer(s)" row, the station's name for a
+  "<station> profit xN" row, else None."""
+  if game.screen.has('potion_shop_upgrade_customer', icon_roi):
+    return 'customer'
+  for name in STATIONS:
+    if game.screen.find_exact(f'potion_shop_upgrade_{name}', icon_roi,
+                              PROFIT_ROW_DIFFERENCE):
+      return name
   return None
 
 
