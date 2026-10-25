@@ -137,9 +137,11 @@ Times: casual 2-7.5 h, good runs 27-40 min, best ~13-21 min.
 
 ## Automation status (branch potion-shop)
 
-Code: `actions/potion_shop.py` (actions), `potion_shop_loop.py`
-(PotionShopLoop), wired in `game_loop.py` (`POTION_SHOP_ENABLED`, off by
-default, checked every 30 min). Overnight test runner (not in the repo):
+Code: `actions/potion_shop.py`, `potion_shop_cauldron.py`,
+`potion_shop_map.py` (actions), `potion_shop_loop.py` (PotionShopWatch,
+PotionShopLoop, EndGame), `potion_bottles_loop.py`, `potion_orders.py`;
+wired in `game_loop.py` by `PotionShopWatch.play_if_due()`
+(`POTION_SHOP_ENABLED`, off by default, checked every 30 min). Overnight test runner (not in the repo):
 runs PotionShopLoop directly, saves every Cauldron list to
 `brew_log/` and the map every 10 min to `progress/`.
 
@@ -396,3 +398,12 @@ time per phase). Printable manual plan for the user:
   on uiScaling (align first, then close the dialogs) and the coin area
   starting above the screen (Region.crop). From 18:50 the LG plays:
   brews, opens crates, upgrades, visits the (not yet dug) cellar.
+- LG 19:27-21:15: brewing stalled - "Lvl 5" was unreadable on the LG
+  (its 5 is 0.14 from the Xiaomi sample, MAX_DIFFERENCE 0.1), so every
+  potion due for level 5 was skipped (Sizzle, Swift, Double, Instant).
+  Fixed with an extra sample `level_digits/5_lg.png` (several samples
+  per digit: `<digit>_<phone>.png`). LG digits 1-6 read; 7, 8, 9, 0 not
+  seen on the LG yet - watch the DEBUG "potions {...}" line for None.
+- Max potion levels depend on the account's permanent upgrades: on
+  Jenik's LG Swift is MAX at level 6 (Xiaomi: 10). Plan steps above the
+  max are skipped (MAX row, no Brew button), so the same plans work.
