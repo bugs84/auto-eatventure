@@ -64,6 +64,11 @@ FOCUS_STATIONS = ('spider', 'mushrooms', 'frog')
 # Frog x175) was still to be bought; their levels are upgraded only after
 # it, levels without it are not worth the coins
 LAST_UPGRADES = ('mushrooms', 'frog')
+# The station whose profit was multiplied last (Upgrades row "<station>
+# profit xN") earns the most per level: only its arrow is tapped, the
+# coins are saved for it, until it had no arrow for FOCUS_WAIT_S (MAX,
+# or its levels cost more than a few minutes of income)
+FOCUS_WAIT_S = 3 * 60
 # In the end game (END_GAME_STATION MAX, looked at every
 # END_GAME_CHECK_S) the focused station's last upgrade (bought yet?)
 # and, without an arrow, its MAX are looked at again STATION_CHECK_S
@@ -116,6 +121,7 @@ class PotionShopLoop:
     # of potion_shop_cauldron.LATE_PLAN is brewed
     self.customer_rows_left = EARLY_CUSTOMER_ROWS
     self.end_game = EndGame(game)
+    self.focus = StationFocus(game)
 
   def run(self):
     """Play until the bot is no longer inside the event or all rewards
@@ -157,11 +163,10 @@ class PotionShopLoop:
     if self._shop_misplaced():
       potion_shop_map.show_shop(game)
       return
-    icons = stations.find_icons(game)
-    if icons:
-      stations.upgrade(game, icons)
-    else:
-      # The shop's stations are MAX (level 1000) or too expensive
+    if not self.focus.upgrade(potion_shop_map.shop_icons(game),
+                              cellar=False):
+      # Nothing to wait for here (the shop's stations are MAX or too
+      # expensive, or the focused station is in the cellar)
       self.cellar_timer.reset()
 
   def _play_occasional(self):
@@ -215,12 +220,15 @@ class PotionShopLoop:
     """Buy the affordable upgrades; customer rows only the first
     EARLY_CUSTOMER_ROWS until brewing is done."""
     left = self.customer_rows_left
-    bought, customer_rows = potion_shop.buy_upgrades(
+    kinds = potion_shop.buy_upgrades(
       self.game, potion_shop.MAX_UPGRADE_BUYS if left is None else left)
     if left is not None:
-      self.customer_rows_left = left - customer_rows
-    if not bought:
+      self.customer_rows_left = left - kinds.count('customer')
+    if not kinds:
       self.upgrades_timer.postpone(UPGRADES_RETRY_S)
+    for kind in kinds:
+      if kind in potion_shop.STATIONS:
+        self.focus.set(kind)
 
   def _play_cellar(self):
     """Open the crates and upgrade the stations of the cellar, then
@@ -230,10 +238,8 @@ class PotionShopLoop:
       for _ in range(CELLAR_LOOPS):
         game.screen.capture()
         potion_shop_map.open_crates(game)
-        icons = stations.find_icons(game)
-        if not icons:
+        if not self.focus.upgrade(stations.find_icons(game), cellar=True):
           break
-        stations.upgrade(game, icons)
     potion_shop_map.show_shop(game)
 
   def _shop_misplaced(self):
@@ -329,3 +335,43 @@ class EndGame:
                  ', '.join(FOCUS_STATIONS))
     self.station_states[station] = 'max'
     return True
+
+
+class StationFocus:
+  """Station upgrades: only the focused station's arrow while it had
+  one within FOCUS_WAIT_S, else (and without a focus) all arrows."""
+
+  def __init__(self, game):
+    self.game = game
+    self.station = None
+    self.timer = Timer()
+
+  def set(self, station):
+    """Focus on the station (its profit was just multiplied)."""
+    if station != self.station:
+      log.info('Potion Shop: focus on %s', station)
+    self.station = station
+    self.timer.postpone(FOCUS_WAIT_S)
+
+  def upgrade(self, icons, cellar):
+    """Tap the arrows (icons) of the cellar or the shop view. Returns
+    False when there is nothing to wait for on this view (no arrow, the
+    focused station is on the other one)."""
+    game = self.game
+    name = self.station
+    here = name is not None and (
+      name in potion_shop_map.CELLAR_STATIONS) == cellar
+    if here:
+      arrow = potion_shop_map.station_arrow(game, name, icons)
+      if arrow is not None:
+        stations.upgrade(game, [arrow])
+        if cellar:
+          potion_shop_map.close_cellar_popup(game)
+        self.timer.postpone(FOCUS_WAIT_S)
+        return True
+    if name is not None and not self.timer.is_due():
+      # Coins saved for the focused station
+      return here
+    if icons:
+      stations.upgrade(game, icons)
+    return bool(icons)
