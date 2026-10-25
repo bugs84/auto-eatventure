@@ -15,7 +15,8 @@ log = logging.getLogger(__name__)
 
 GAME_PACKAGE = 'com.hwqgrhhjfd.idlefastfood'
 # A failed screenshot (the phone was shortly disconnected, adb exit
-# status 255) is retried this many times before the bot crashes
+# status 255; a broken PNG) is retried this many times before the bot
+# crashes
 SCREENSHOT_TRIES = 5
 SCREENSHOT_RETRY_DELAY_S = 5
 
@@ -56,7 +57,7 @@ class Device:
     for _ in range(SCREENSHOT_TRIES - 1):
       try:
         return self._screenshot()
-      except subprocess.CalledProcessError as error:
+      except (subprocess.CalledProcessError, OSError) as error:
         log.warning('Screenshot failed (%s), retrying in %d s',
                     error, SCREENSHOT_RETRY_DELAY_S)
         time.sleep(SCREENSHOT_RETRY_DELAY_S)
