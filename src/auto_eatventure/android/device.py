@@ -14,9 +14,11 @@ from PIL import Image
 log = logging.getLogger(__name__)
 
 GAME_PACKAGE = 'com.hwqgrhhjfd.idlefastfood'
-# A screenshot sometimes fails (broken PNG, adb hiccup): try again
+# A failed screenshot (the phone was shortly disconnected, adb exit
+# status 255; a broken PNG) is retried this many times before the bot
+# crashes
 SCREENSHOT_TRIES = 5
-SCREENSHOT_RETRY_S = 2
+SCREENSHOT_RETRY_DELAY_S = 5
 
 
 class Device:
@@ -51,21 +53,17 @@ class Device:
     return int(match.group(1)), int(match.group(2))
 
   def screenshot(self):
-    """Return the screen as a BGR image (numpy array).
-
-    Tries again a few times when adb fails or the PNG is broken;
-    raises the last error when all tries fail.
-    """
-    for attempt in range(1, SCREENSHOT_TRIES):
+    """Return the screen as a BGR image (numpy array)."""
+    for _ in range(SCREENSHOT_TRIES - 1):
       try:
-        return self._screenshot_once()
+        return self._screenshot()
       except (subprocess.CalledProcessError, OSError) as error:
-        log.warning('Screenshot failed (%s), try %d of %d',
-                    error, attempt, SCREENSHOT_TRIES)
-        time.sleep(SCREENSHOT_RETRY_S)
-    return self._screenshot_once()
+        log.warning('Screenshot failed (%s), retrying in %d s',
+                    error, SCREENSHOT_RETRY_DELAY_S)
+        time.sleep(SCREENSHOT_RETRY_DELAY_S)
+    return self._screenshot()
 
-  def _screenshot_once(self):
+  def _screenshot(self):
     if sys.platform == 'win32':
       # Kept from the original code: older adb versions on Windows
       # turned \n into \r\n (untested with current adb)
@@ -95,7 +93,11 @@ class Device:
     """Launch the game, or bring it to the foreground.
 
     It does not restart a running game (that needs close_app()).
+    The screen is woken first and the lock screen dismissed (without a
+    PIN): after the game crashes, the phone goes to sleep.
     """
+    self._adb.shell('input keyevent KEYCODE_WAKEUP')
+    self._adb.shell('wm dismiss-keyguard')
     self._adb.shell(f'monkey -p {GAME_PACKAGE} '
                     '-c android.intent.category.LAUNCHER 1')
 

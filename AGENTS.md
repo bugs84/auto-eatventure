@@ -90,6 +90,7 @@ requirements.txt             # Python dependencies
 - All screen positions are defined in `coords/reference.py` at reference resolution 1220x2712.
 - Tap targets are `Point`, search areas `Region`, swipes `Swipe` (`coords/geometry.py`).
 - Plain numbers must use the `_x` suffix for horizontal and `_y` for vertical pixel values.
+- The game scales its UI by the screen width; positions at the top (top bar, side button columns) are wrapped in `Top(...)`, at the bottom (bottom button bar) in `Bottom(...)`, plain ones (dialogs, restaurant) stay centered. A plain `_y` number is a size; a y position as a number is wrapped in `Top` / `Bottom` / `Center`; a Point/Region relative to a found position in `Offset`.
 - `ScaledCoords` auto-scales them (read as `game.coords.<name>`); no manual scaling elsewhere.
 - Non-pixel values (counts, ratios, thresholds) belong in the module that uses them, not in `coords/`.
 

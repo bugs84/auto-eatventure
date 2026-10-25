@@ -76,34 +76,34 @@ class Template(NamedTuple):
     return self.bgr.shape[1]
 
 
-def load_templates(x_scale, y_scale):
-  """Load all templates of TEMPLATE_NAMES, resized by the scales.
+def load_templates(scale):
+  """Load all templates of TEMPLATE_NAMES, resized by the scale.
 
   The templates were cut from screenshots at the reference
   resolution. Returns {name: Template}.
   """
   return {
     name: load_template(
-      os.path.join(TEMPLATES_DIR, f'{name}.png'), x_scale, y_scale)
+      os.path.join(TEMPLATES_DIR, f'{name}.png'), scale)
     for name in TEMPLATE_NAMES}
 
 
-def load_template(path, x_scale, y_scale):
-  """Load one template image, resized by the scales."""
+def load_template(path, scale):
+  """Load one template image, resized by the scale (the game scales
+  its UI by the screen width, in both directions)."""
   bgr = cv2.imread(path)
   if bgr is None:
     raise FileNotFoundError(f'Template not found or unreadable: {path}')
-  bgr = _resize(bgr, x_scale, y_scale)
+  bgr = _resize(bgr, scale)
   return Template(bgr, cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV))
 
 
-def _resize(image, x_scale, y_scale):
+def _resize(image, scale):
   height, width = image.shape[:2]
-  target_width = max(1, round(width * x_scale))
-  target_height = max(1, round(height * y_scale))
+  target_width = max(1, round(width * scale))
+  target_height = max(1, round(height * scale))
   if (target_width, target_height) == (width, height):
     return image
-  shrinks = target_width < width or target_height < height
-  interpolation = cv2.INTER_AREA if shrinks else cv2.INTER_LINEAR
+  interpolation = cv2.INTER_AREA if scale < 1 else cv2.INTER_LINEAR
   return cv2.resize(image, (target_width, target_height),
                     interpolation=interpolation)
