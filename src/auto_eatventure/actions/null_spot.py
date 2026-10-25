@@ -12,12 +12,13 @@ log = logging.getLogger(__name__)
 
 
 def place_below_top_bar(game):
-  """Place the null spot just below the top bar's black line.
+  """Place the null spot just below the top bar's black line and align
+  the positions of coords/reference.py to the line.
 
   Called once at start. The status bar height differs between phones,
   so the spot can't be derived from the resolution. If the line is not
-  found, the fallback from coords/reference.py stays and an ERROR is
-  logged.
+  found, the fallback from coords/reference.py stays, the positions
+  stay as at the reference and an ERROR is logged.
   """
   # On a dimmed screen the line comes out wrong
   if not start_dialogs.close_dimming_dialogs(game):
@@ -28,10 +29,12 @@ def place_below_top_bar(game):
   if line_y is None:
     _log_fallback(game, 'no black line in the top band')
     return
+  game.coords.align_to_top_bar(line_y)
   game.null_spot = Point(
     game.null_spot.x, line_y + game.coords.null_spot_below_top_bar_y)
-  log.info('Null spot below the top bar (y=%d): (%d, %d)',
-           line_y, *game.null_spot)
+  log.info('Null spot below the top bar (y=%d): (%d, %d), top '
+           'positions moved by %+.0f px', line_y, *game.null_spot,
+           game.coords.top_offset)
 
 
 def _log_fallback(game, reason):
@@ -39,7 +42,8 @@ def _log_fallback(game, reason):
     'Top bar not found (%s), the null spot stays at the fallback '
     '(%d, %d) from coords/reference.py. Risky: if the top bar covers '
     'it, station popups stay open; if it is too low, it can hit a '
-    'customer bubble, open the Investor dialog and start an ad. Fix: '
+    'customer bubble, open the Investor dialog and start an ad. The '
+    'top positions are not aligned to the status bar either. Fix: '
     'check a screenshot of this phone and adjust actions/null_spot.py.',
     reason, *game.null_spot)
   key_log.error(
