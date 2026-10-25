@@ -373,3 +373,26 @@ time per phase). Printable manual plan for the user:
   customer rows skipped until brewing is done (first two allowed), and
   the TODO "bottle 1 h before the end" (all active potions; after the
   rewards the bot re-enters only then).
+
+## Live 2026-10-25 (Xiaomi finished, LG started)
+
+- Xiaomi: rewards 15/15 at 15:20 (end game spider -> mushrooms -> frog
+  MAX), then with the orders file all 0 it brewed Swift, Instant and
+  Double to their max level, logged "All ordered potions done" and left
+  the event at 15:52 - the orders flow works live.
+- The Xiaomi bot crashed at 00:18 on a broken screencap PNG
+  (UnidentifiedImageError) and stood still 12 h: now retried
+  (uiScaling, PR #25).
+- LG G6 (Jenik's phone, 1440x2880): branch `potion-shop-lg` = this
+  branch + uiScaling (PR #25). The potion coords got anchors: event
+  button column and coin `Top`, cauldron button and loading bar
+  `Bottom`, the full screen Cauldron dialog `Top`, map landmarks
+  `Center`, level label and Bottle row `Offset`. Xiaomi screenshots give
+  the same detections as before (map offsets +-1 px).
+- First LG run (18:40) closed an "unknown dialog" every 3 s: the bot
+  started on a dimmed screen, the dimming check (settings gear, a Top
+  position) ran before the alignment to the top bar, 100 px too low on
+  the LG, and in the dark event the screen always seemed dimmed. Fixed
+  on uiScaling (align first, then close the dialogs) and the coin area
+  starting above the screen (Region.crop). From 18:50 the LG plays:
+  brews, opens crates, upgrades, visits the (not yet dug) cellar.
