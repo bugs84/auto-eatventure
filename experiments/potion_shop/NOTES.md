@@ -137,9 +137,11 @@ Times: casual 2-7.5 h, good runs 27-40 min, best ~13-21 min.
 
 ## Automation status (branch potion-shop)
 
-Code: `actions/potion_shop.py` (actions), `potion_shop_loop.py`
-(PotionShopLoop), wired in `game_loop.py` (`POTION_SHOP_ENABLED`, off by
-default, checked every 30 min). Overnight test runner (not in the repo):
+Code: `actions/potion_shop.py`, `potion_shop_cauldron.py`,
+`potion_shop_map.py` (actions), `potion_shop_loop.py` (PotionShopWatch,
+PotionShopLoop, EndGame), `potion_bottles_loop.py`, `potion_orders.py`;
+wired in `game_loop.py` by `PotionShopWatch.play_if_due()`
+(`POTION_SHOP_ENABLED`, off by default, checked every 30 min). Overnight test runner (not in the repo):
 runs PotionShopLoop directly, saves every Cauldron list to
 `brew_log/` and the map every 10 min to `progress/`.
 
