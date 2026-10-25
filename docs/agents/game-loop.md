@@ -308,8 +308,12 @@ loop of `PotionShopLoop`:
    of the dialog's 4 visible rows, again and again; "+N Customer(s)"
    rows (template `potion_shop_upgrade_customer`) only the first two,
    the rest once brewing is done (the video's order: more customers
-   keep the alchemists from carrying the ingredients).
-6. Every 2nd loop `potion_shop_map.open_crates()`.
+   keep the alchemists from carrying the ingredients). A bought
+   "<station> profit xN" row (`potion_shop_upgrade_<station>`, the
+   icon with a price tag; an exact match tells it from the "made
+   faster" clock) puts the focus (`StationFocus`) on that station.
+6. Every 2nd loop `potion_shop_map.open_crates()` (crates in a shadow by
+   `potion_shop_crate_shadow` when no lit one is found).
 7. End game (`EndGame`), once Beetle Juice is MAX
    (`potion_shop_map.is_station_max()`, its popup; looked at every
    5 min): only the first of `FOCUS_STATIONS` (Spider Silk, Mystic
@@ -325,12 +329,16 @@ loop of `PotionShopLoop`:
    the counter, cellar entrance; each with its place on the shop view)
    is at the view's offset, measuring after every swipe; the shop view
    is restored when it was out of place in 2 loops in a row.
-10. `stations.find_icons()` / `upgrade()` (also unlocks new
-    stations).
+10. `StationFocus.upgrade()` on the shop and cellar views: only the
+    focused station's arrow (`potion_shop_map.station_arrow()`, coords
+    `potion_shop_<station>_station`), the coins are saved for it until
+    it had no arrow for 3 min (MAX, expensive levels); without a focus
+    or after that all arrows (`stations.upgrade()`, also unlocks new
+    stations). On the shop view `potion_shop_map.shop_icons()` adds
+    Beetle Juice's arrow, below `station_icon_max_y` on the LG G6.
 
 - Never tapped: Boost (ad), Activate / Pass (real money)
-- Not done yet: which station to upgrade before the end game, speed
-  boosts
+- Not done yet: speed boosts
 - Screenshots, flow and the strategy found on the web:
   `experiments/potion_shop/NOTES.md`
 
