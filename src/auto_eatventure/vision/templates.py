@@ -36,6 +36,7 @@ TEMPLATE_NAMES = (
   'potion_shop_cellar',
   'potion_shop_claim',
   'potion_shop_crate',
+  'potion_shop_crate_shadow',
   'potion_shop_divine',
   'potion_shop_double',
   'potion_shop_enter',
