@@ -45,6 +45,8 @@ TEMPLATE_NAMES = (
   'potion_shop_greedy',
   'potion_shop_instant',
   'potion_shop_landmark',
+  'potion_shop_locked',
+  'potion_shop_locked_cellar',
   'potion_shop_max',
   'potion_shop_perfect',
   'potion_shop_sizzle',

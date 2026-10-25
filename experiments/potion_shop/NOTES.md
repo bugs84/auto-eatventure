@@ -407,3 +407,23 @@ time per phase). Printable manual plan for the user:
 - Max potion levels depend on the account's permanent upgrades: on
   Jenik's LG Swift is MAX at level 6 (Xiaomi: 10). Plan steps above the
   max are skipped (MAX row, no Brew button), so the same plans work.
+
+## Live 2026-10-25 night (LG): shadowed crate, Beetle, station focus
+
+- The cellar crate of Spider Silk lies in a dark corner on the LG: the
+  crate template (bright planks) scored < 0.45 there. A second template
+  of the crate's lower part (`potion_shop_crate_shadow`) scores 0.89-0.99
+  on every crate and <= 0.77 elsewhere (threshold 0.8); it is used only
+  when no lit crate is found. Opened live at 23:51.
+- Golden never showed in the LG's brew list: Beetle Juice was not
+  unlocked. Its unlock arrow (y 2321 on the 1440x2880 screen) is below
+  `station_icon_max_y` (2276 there), so it was always skipped. The shop
+  view now adds Beetle's arrow by its coords.
+- Station focus (the user's idea): after "Djinn's Breath profit x25"
+  Djinn earns the most per level, so only its arrow is tapped and the
+  coins are saved for it, until the next profit upgrade moves the focus
+  or it had no arrow for 3 min. Upgrades rows: profit rows show the
+  station icon with a price tag (difference to the template <= 0.022),
+  "made faster" rows a clock (>= 0.038), customers/alchemists/kettle
+  other icons. LG Upgrades at 23:50: Djinn x25 76.9ai, Spider x4 243ai,
+  Beetle x10 246ai (locked), Water x5 315ai.

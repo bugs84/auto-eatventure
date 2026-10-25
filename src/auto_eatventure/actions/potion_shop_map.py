@@ -17,6 +17,9 @@ CRATE_THRESHOLD = 0.7
 # is found by its lower, less bright part (~0.9, other spots <= 0.77);
 # looked for only without a lit crate, which it would find again
 SHADOW_CRATE_THRESHOLD = 0.8
+# The dashed tile of a locked station (on wood, in the cellar on stone):
+# ~0.82-0.99, elsewhere <= 0.72
+LOCKED_THRESHOLD = 0.8
 # "MAX" in a station's popup
 MAX_THRESHOLD = 0.8
 POPUP_DELAY_S = 1
@@ -151,6 +154,17 @@ def station_arrow(game, name, icons):
         and abs(icon.y - station.y) <= radius):
       return icon
   return None
+
+
+def is_locked(game, arrow):
+  """Whether the arrow is over a dashed tile: it unlocks a station."""
+  coords = game.coords
+  region = Region(max(0, arrow.x - coords.potion_shop_locked_left_x),
+                  arrow.y,
+                  arrow.x + coords.potion_shop_locked_right_x,
+                  arrow.y + coords.potion_shop_locked_below_y)
+  return any(game.screen.has(name, region, LOCKED_THRESHOLD)
+             for name in ('potion_shop_locked', 'potion_shop_locked_cellar'))
 
 
 def is_station_max(game, name):
