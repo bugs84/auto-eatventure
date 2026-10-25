@@ -138,7 +138,7 @@ their `Timer` (`timer.py`) is due.
 | `HELPER_INVITE_ENABLED` and helper available | Invite the first helper | `helper_invite.is_available()`, `invite()` |
 | `COLLECT_ADVENTURES_ENABLED` and its timer due (first loop, then every 5 h) | Collect the free Adventures rewards | `adventures.collect()` |
 | `POPULAR_DISH_ENABLED` and its timer due | Select first dish as Popular Dish, Start + Stop at once | `popular_dish.select()` |
-| `POTION_SHOP_ENABLED` and its timer due (first loop, then every 30 min) | Enter the Potion Shop event and play it until it ends | `potion_shop.enter()`, `PotionShopLoop.run()` |
+| `POTION_SHOP_ENABLED` and its timer due (first loop, then every 30 min) | Enter the Potion Shop event and play it until it ends | `PotionShopWatch.play_if_due()` |
 
 ### Popular Dish (Masterchef quest farming, optional)
 
@@ -262,20 +262,25 @@ Enable with `POTION_SHOP_ENABLED="1"` in `.env`. The weekly event
 ingredient stations, crates (more slots of a station), an Upgrades
 dialog (customers, alchemists, Potion Kettle) and a Cauldron where
 potions are brewed (each brew raises the potion's level; alchemists
-carry the ingredients). Every `POTION_SHOP_CHECK_S` (30 min) the loop
-checks `potion_shop.is_inside()` / `is_available()`, enters it
-(`potion_shop.enter()`: event button, Enter, the teal loading screen
-(not inside yet), Open of "Welcome to the Potion Shop!" on a new event)
-and hands over to `PotionShopLoop.run()` (`potion_shop_loop.py`) until
-the bot is no longer inside (the event ended, or all rewards were done:
-then it is entered again only in the event's last hour, see 3). One
+carry the ingredients). The game loop's only hook is
+`PotionShopWatch.play_if_due()` (`potion_shop_loop.py`): every
+`EVENT_CHECK_S` (30 min) it checks `potion_shop.is_inside()` /
+`is_available()`, enters it (`potion_shop.enter()`: event button,
+Enter, the teal loading screen (not inside yet), Open of "Welcome to
+the Potion Shop!" on a new event) and hands over to
+`PotionShopLoop.run()` until the bot is no longer inside (the event
+ended, or all rewards were done: then it is entered again only in the
+event's last hour, see 3); then `GameLoop` repositions the restaurant.
+The actions are split by screen: `actions/potion_shop.py` (event
+dialog, Upgrades dialog), `actions/potion_shop_cauldron.py` (Cauldron)
+and `actions/potion_shop_map.py` (map views, crates, stations). One
 loop of `PotionShopLoop`:
 
 1. Cauldron dialog open (also opens by itself with "Brew Complete!")
-   -> `potion_shop.brew()`: Claim the finished potion, read the Brew
-   list (both pages; levels by `vision/level_label.py`) and brew the
-   first potion of `BREW_PLAN` below its level (only a row with a Brew
-   button; the order of the 21 min run in
+   -> `potion_shop_cauldron.brew()`: Claim the finished potion, read
+   the Brew list (both pages; levels by `vision/level_label.py`) and
+   brew the first potion of `BREW_PLAN` below its level (only a row
+   with a Brew button; the order of the 21 min run in
    `experiments/potion_shop/video_transcript/GUIDE.md`, levels a bit
    higher). Once Divine is in the list `LATE_PLAN` (Divine, Golden) is
    used; a planned potion with "Slots Full!" makes it bottle Sizzle,
@@ -291,11 +296,11 @@ loop of `PotionShopLoop`:
    (`golden: 2` lines, see `potion_orders-sample.txt`; read before each
    order, the count lowered after each bottle; speed potion bottles
    last, each brewed back to the max level;
-   `potion_shop.bottle_or_brew()`, Cauldron every 30 s), then
+   `potion_shop_cauldron.bottle_or_brew()`, Cauldron every 30 s), then
    `potion_shop.leave()` (Exit). In the event's last hour (it ends on
    Wednesday 00:00 local time, `seconds_to_final_bottles()`) it bottles
-   all active potions instead (`potion_shop.bottle_all()`; they are
-   lost with the event).
+   all active potions instead (`potion_shop_cauldron.bottle_all()`;
+   they are lost with the event).
 4. Red "!" on the Cauldron button -> `brew()` (retried after 15 s,
    only every 5 min after 3 checks without a brew: the badge also
    shows when the plan is done).
@@ -304,16 +309,17 @@ loop of `PotionShopLoop`:
    rows (template `potion_shop_upgrade_customer`) only the first two,
    the rest once brewing is done (the video's order: more customers
    keep the alchemists from carrying the ingredients).
-6. Every 2nd loop `potion_shop.open_crates()`.
-7. End game, once Beetle Juice is MAX (`is_station_max()`, its popup;
-   looked at every 5 min): only the first of `FOCUS_STATIONS` (Spider
-   Silk, Mystic Mushrooms, Frog) that isn't MAX is upgraded, in the
-   cellar; for one of `LAST_UPGRADES` only after its last upgrade has
+6. Every 2nd loop `potion_shop_map.open_crates()`.
+7. End game (`EndGame`), once Beetle Juice is MAX
+   (`potion_shop_map.is_station_max()`, its popup; looked at every
+   5 min): only the first of `FOCUS_STATIONS` (Spider Silk, Mystic
+   Mushrooms, Frog) that isn't MAX is upgraded, in the cellar; for one
+   of `LAST_UPGRADES` only after its last upgrade has
    left the Upgrades dialog (`has_last_upgrade()`), coins are saved
    meanwhile. When all are MAX the loop goes on as below.
-8. Every minute the cellar below the shop: `potion_shop.show_cellar()`,
-   then its crates and stations for up to 3 loops, back by
-   `show_shop()`.
+8. Every minute the cellar below the shop:
+   `potion_shop_map.show_cellar()`, then its crates and stations for up
+   to 3 loops, back by `show_shop()`.
 9. The map is taller than the screen. `show_shop()` / `show_cellar()`
    scroll it until a landmark (counter decoration, barrel, skull above
    the counter, cellar entrance; each with its place on the shop view)

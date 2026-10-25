@@ -5,7 +5,7 @@ import logging
 from auto_eatventure.actions import null_spot, start_dialogs
 from auto_eatventure.actions.game import Game
 from auto_eatventure.android.device import Device
-from auto_eatventure import config, potion_bottles_loop
+from auto_eatventure import config, potion_orders
 from auto_eatventure.game_loop import GameLoop
 from auto_eatventure.logger import key_log, setup_logging
 from auto_eatventure.coords import reference
@@ -73,5 +73,5 @@ def _log_features():
     log.info('%s: %s', name, 'enabled' if enabled else 'disabled')
   if config.POTION_SHOP_ENABLED:
     log.info('Potion Shop bottles (%s): %s',
-             potion_bottles_loop.ORDERS_FILE,
-             potion_bottles_loop.read_orders() or 'none')
+             potion_orders.ORDERS_FILE,
+             potion_orders.read_orders() or 'none')

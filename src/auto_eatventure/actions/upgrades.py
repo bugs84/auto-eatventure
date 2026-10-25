@@ -39,21 +39,20 @@ def buy_if_available(game):
   """Buy upgrades when the upgrade button shows its badge.
 
   Checked on every loop screenshot, so upgrades are bought soon after
-  they become affordable. Returns True when something was bought.
+  they become affordable.
   """
   if not has_badge(game):
-    return False
+    return
   log.info('Upgrades available — attempting to upgrade')
-  taps = _buy_upgrades(game)
+  _buy_upgrades(game)
   game.screen.capture()
-  return taps > 0
 
 
 def _buy_upgrades(game):
   """Open the dialog and buy the first row's upgrade while it is
-  affordable, in rounds of TAPS_PER_CHECK taps. Returns the taps."""
+  affordable, in rounds of TAPS_PER_CHECK taps."""
   if not open_dialog(game):
-    return 0
+    return
   taps = 0
   while taps < MAX_TAPS:
     if taps:
@@ -66,7 +65,6 @@ def _buy_upgrades(game):
     taps += TAPS_PER_CHECK
   log.info('Upgrade taps: %d', taps)
   close_dialog(game)
-  return taps
 
 
 def open_dialog(game):
