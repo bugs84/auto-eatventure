@@ -7,7 +7,7 @@ import logging
 import os
 import re
 
-from auto_eatventure.actions import potion_shop
+from auto_eatventure.actions import potion_shop_cauldron
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ def parse_orders(text):
     match = ORDER_LINE.match(line)
     name = match.group(2).lower() if match else ''
     count = match.group(3) if match else ''
-    if (name not in potion_shop.POTIONS or name in orders
+    if (name not in potion_shop_cauldron.POTIONS or name in orders
         or not count.isdigit()
         or match.group(4).strip()[:1] not in ('', '#')):
       log.warning('%s: %r ignored', ORDERS_FILE, line.strip())
