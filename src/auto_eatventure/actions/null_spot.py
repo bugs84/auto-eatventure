@@ -20,12 +20,15 @@ def place_below_top_bar(game):
   found, the fallback from coords/reference.py stays, the positions
   stay as at the reference and an ERROR is logged.
   """
-  # On a dimmed screen the line comes out wrong
-  if not start_dialogs.close_dimming_dialogs(game):
-    _log_fallback(game, 'screen stays dimmed by a dialog')
-    return
-  line_y = find_top_bar_line(
-    game.screen.bgr, game.coords.top_bar_line_min_rows_y)
+  # The dimming check looks at the settings gear, a Top position: align
+  # to the line first, else the gear is looked for too low (LG G6: 100
+  # px) and the screen always seems dimmed (in a dark place). A dimmed
+  # screen keeps the line black: it is found or not, never misplaced.
+  line_y = _find_line(game)
+  if line_y is not None:
+    game.coords.align_to_top_bar(line_y)
+  if start_dialogs.close_dimming_dialogs(game):
+    line_y = _find_line(game) or line_y
   if line_y is None:
     _log_fallback(game, 'no black line in the top band')
     return
@@ -35,6 +38,11 @@ def place_below_top_bar(game):
   log.info('Null spot below the top bar (y=%d): (%d, %d), top '
            'positions moved by %+.0f px', line_y, *game.null_spot,
            game.coords.top_offset)
+
+
+def _find_line(game):
+  return find_top_bar_line(
+    game.screen.bgr, game.coords.top_bar_line_min_rows_y)
 
 
 def _log_fallback(game, reason):
