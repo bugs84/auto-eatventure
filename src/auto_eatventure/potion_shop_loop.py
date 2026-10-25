@@ -1,9 +1,11 @@
-"""PotionShopLoop: plays the Potion Shop event while the bot is inside
-it."""
+"""The Potion Shop event, apart from the city's GameLoop:
+PotionShopWatch (GameLoop's hook) looks for it and enters it,
+PotionShopLoop plays it while the bot is inside it."""
 
 import logging
 import time
 
+from auto_eatventure import potion_bottles_loop
 from auto_eatventure.actions import popups, potion_shop, stations, upgrades
 from auto_eatventure.logger import key_log
 from auto_eatventure.potion_bottles_loop import PotionBottlesLoop
@@ -11,6 +13,11 @@ from auto_eatventure.timer import Timer
 
 log = logging.getLogger(__name__)
 
+# The event (weekly) is looked for this often; once all its rewards are
+# done it is entered again only in its last hour (all active potions
+# bottled), or after EVENT_DONE_S when that hour has begun
+EVENT_CHECK_S = 30 * 60
+EVENT_DONE_S = 24 * 60 * 60
 # Crates are looked for every this many loops
 CRATE_CHECK_LOOPS = 2
 # The map is scrolled back to the shop when its landmark was out of
@@ -53,6 +60,28 @@ STATION_CHECK_S = 60
 # Screenshots outside the event in a row that end the loop (the event
 # ended or the game left it)
 OUTSIDE_LOOPS = 3
+
+
+class PotionShopWatch:
+  """GameLoop's hook: looks for the event every EVENT_CHECK_S, enters
+  it and plays it (PotionShopLoop)."""
+
+  def __init__(self):
+    self._timer = Timer()
+
+  def play_if_due(self, game):
+    """When due, enter the event (unless inside) and play it until the
+    bot is no longer inside. Returns True when the bot was inside."""
+    if not self._timer.is_due():
+      return False
+    self._timer.postpone(EVENT_CHECK_S)
+    if not (potion_shop.is_inside(game)
+            or (potion_shop.is_available(game) and potion_shop.enter(game))):
+      return False
+    if PotionShopLoop(game).run():
+      final = potion_bottles_loop.seconds_to_final_bottles()
+      self._timer.postpone(final if final > 0 else EVENT_DONE_S)
+    return True
 
 
 # One timer or counter per occasional action
