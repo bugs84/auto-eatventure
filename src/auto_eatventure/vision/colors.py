@@ -7,6 +7,8 @@ import numpy as np
 # around hue 180, hence two ranges.
 RED = [((0, 120, 150), (8, 255, 255)),
        ((172, 120, 150), (180, 255, 255))]
+# Green of the Potion Shop event coin and of its rewards' checks
+GREEN = [((35, 120, 120), (85, 255, 255))]
 
 
 def color_ratio(image_hsv, ranges):
@@ -16,6 +18,3 @@ def color_ratio(image_hsv, ranges):
   for lower, upper in ranges:
     mask |= cv2.inRange(image_hsv, np.array(lower), np.array(upper))
   return np.count_nonzero(mask) / mask.size
-
-# Green of the Potion Shop event coin
-GREEN = [((35, 120, 120), (85, 255, 255))]
