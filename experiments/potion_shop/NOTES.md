@@ -396,3 +396,12 @@ time per phase). Printable manual plan for the user:
   on uiScaling (align first, then close the dialogs) and the coin area
   starting above the screen (Region.crop). From 18:50 the LG plays:
   brews, opens crates, upgrades, visits the (not yet dug) cellar.
+- LG 19:27-21:15: brewing stalled - "Lvl 5" was unreadable on the LG
+  (its 5 is 0.14 from the Xiaomi sample, MAX_DIFFERENCE 0.1), so every
+  potion due for level 5 was skipped (Sizzle, Swift, Double, Instant).
+  Fixed with an extra sample `level_digits/5_lg.png` (several samples
+  per digit: `<digit>_<phone>.png`). LG digits 1-6 read; 7, 8, 9, 0 not
+  seen on the LG yet - watch the DEBUG "potions {...}" line for None.
+- Max potion levels depend on the account's permanent upgrades: on
+  Jenik's LG Swift is MAX at level 6 (Xiaomi: 10). Plan steps above the
+  max are skipped (MAX row, no Brew button), so the same plans work.
