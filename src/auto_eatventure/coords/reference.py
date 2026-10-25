@@ -302,6 +302,12 @@ potion_shop_spider_station = Point(848, 852)
 potion_shop_frog_station = Point(738, 1716)
 potion_shop_mushrooms_station = Point(1071, 1236)
 potion_shop_station_arrow_x = 113
+# A locked station (or slot) is a dashed tile below its arrow: its top
+# left corner (templates potion_shop_locked, _cellar) is looked for
+# this far left, right and below of the arrow
+potion_shop_locked_left_x = 70
+potion_shop_locked_right_x = 90
+potion_shop_locked_below_y = 130
 # Empty floor of the cellar view left of the frogs, outside the popups
 # of Spider Silk (top, over the null spot), Mushrooms (right) and Frog
 # (middle): a tap there closes them

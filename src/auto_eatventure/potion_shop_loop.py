@@ -338,8 +338,9 @@ class EndGame:
 
 
 class StationFocus:
-  """Station upgrades: only the focused station's arrow while it had
-  one within FOCUS_WAIT_S, else (and without a focus) all arrows."""
+  """Station upgrades: only the focused station's arrow (and unlocks of
+  new stations) while it had one within FOCUS_WAIT_S, else (and without
+  a focus) all arrows."""
 
   def __init__(self, game):
     self.game = game
@@ -359,6 +360,12 @@ class StationFocus:
     focused station is on the other one)."""
     game = self.game
     name = self.station
+    locked = [icon for icon in icons
+              if potion_shop_map.is_locked(game, icon)]
+    if name is not None and locked:
+      # New stations are unlocked whatever the focus
+      stations.upgrade(game, locked)
+      return True
     here = name is not None and (
       name in potion_shop_map.CELLAR_STATIONS) == cellar
     if here:
