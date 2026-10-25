@@ -8,7 +8,8 @@ import logging
 import time
 
 from auto_eatventure import potion_orders
-from auto_eatventure.actions import popups, potion_shop
+from auto_eatventure.actions import (
+  popups, potion_shop, potion_shop_cauldron)
 from auto_eatventure.logger import key_log
 from auto_eatventure.timer import Timer
 
@@ -81,7 +82,8 @@ class PotionBottlesLoop:
     while outside < OUTSIDE_LOOPS:
       if seconds_to_final_bottles() <= 0:
         key_log.info('POTION SHOP - Event ends soon, bottling all')
-        potion_shop.bottle_all(self.game, 'before the event ends')
+        potion_shop_cauldron.bottle_all(
+          self.game, 'before the event ends')
         return True
       self._read_orders()
       task = next_task(self.orders, self.maxed)
@@ -100,7 +102,7 @@ class PotionBottlesLoop:
   def play_once(self, name, bottle):
     """Brew or bottle the potion when the Cauldron is open or due."""
     game = self.game
-    if not (potion_shop.is_cauldron_open(game)
+    if not (potion_shop_cauldron.is_cauldron_open(game)
             or self.cauldron_timer.is_due()):
       if popups.is_screen_dimmed(game):
         popups.close_popup(game)
@@ -109,7 +111,8 @@ class PotionBottlesLoop:
     self.cauldron_timer.postpone(CAULDRON_CHECK_S)
     keep = SPEED_POTIONS + tuple(
       order for order, count in self.orders.items() if count > 0)
-    result = potion_shop.bottle_or_brew(game, name, keep, bottle=bottle)
+    result = potion_shop_cauldron.bottle_or_brew(
+      game, name, keep, bottle=bottle)
     if result == 'max':
       self.maxed.add(name)
       key_log.info('POTION SHOP - %s at its max level, kept', name)
