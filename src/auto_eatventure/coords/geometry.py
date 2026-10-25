@@ -28,8 +28,15 @@ class Region(NamedTuple):
                  (self.top + self.bottom) // 2)
 
   def crop(self, image):
-    """The part of an image (numpy array) inside this region."""
-    return image[self.top:self.bottom, self.left:self.right]
+    """The part of an image (numpy array) inside this region.
+
+    A region reaching over the top or left edge (a Top position on a
+    phone with a lower status bar than the reference, e.g. the LG G6)
+    is cut at the edge; a negative index would count from the other
+    side and the part would be empty.
+    """
+    return image[max(self.top, 0):self.bottom,
+                 max(self.left, 0):self.right]
 
   def moved(self, dx, dy):
     """The same region moved by (dx, dy)."""
