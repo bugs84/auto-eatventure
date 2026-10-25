@@ -11,6 +11,10 @@ log = logging.getLogger(__name__)
 # The crates (more slots of a station) have a moving shine, which
 # lowers their score to ~0.7
 CRATE_THRESHOLD = 0.7
+# A crate in a shadow (e.g. the cellar's Spider Silk, in a dark corner)
+# is found by its lower, less bright part (~0.9, other spots <= 0.77);
+# looked for only without a lit crate, which it would find again
+SHADOW_CRATE_THRESHOLD = 0.8
 # "MAX" in a station's popup
 MAX_THRESHOLD = 0.8
 POPUP_DELAY_S = 1
@@ -33,7 +37,9 @@ SWIPE_SHARE = 0.8
 
 def open_crates(game):
   """Tap the visible crates (each one adds a slot to its station)."""
-  crates = game.screen.find_all('potion_shop_crate', CRATE_THRESHOLD)
+  crates = (game.screen.find_all('potion_shop_crate', CRATE_THRESHOLD)
+            or game.screen.find_all('potion_shop_crate_shadow',
+                                    SHADOW_CRATE_THRESHOLD))
   for crate in crates:
     log.info('Potion Shop: opening crate at (%d, %d)', *crate)
     game.device.tap(crate)
