@@ -55,6 +55,8 @@ STATION_CHECK_S = 60
 OUTSIDE_LOOPS = 3
 
 
+# One timer or counter per occasional action
+# pylint: disable-next=too-many-instance-attributes
 class PotionShopLoop:
   """Plays the event: one screenshot per loop, then the first thing to
   do on it. The map stays scrolled to the shop with its stations."""
