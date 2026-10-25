@@ -19,6 +19,8 @@ DIALOG_DELAY_S = 2
 # The green loading screen after Enter takes ~8 s, the "Open" of the
 # first stand (first entry only) shows up later
 ENTER_TIMEOUT_S = 60
+# Time for the main screen to load after Exit
+LEAVE_DELAY_S = 20
 # The rewards list is scrolled to its bottom by this many swipes; a
 # reward's green check fills ~10% of its icon's area (0% without it)
 REWARDS_SWIPES = 4
@@ -112,7 +114,7 @@ def leave(game):
   if not _open_dialog(game, 'potion_shop_exit'):
     return False
   game.device.tap(game.coords.potion_shop_enter_exit)
-  time.sleep(ENTER_TIMEOUT_S / 3)
+  time.sleep(LEAVE_DELAY_S)
   game.screen.capture()
   return not is_inside(game)
 

@@ -218,7 +218,10 @@ def _brew_listed(game, name, level, rows):
     if row is None or row.button is None:
       return False
     button = row.button
-  return _tap_brew(game, button, f'{name} (level {level})')
+  log.info('Potion Shop: brewing %s (level %s)', name, level)
+  game.device.tap(button.center)
+  time.sleep(CAULDRON_DELAY_S)
+  return True
 
 
 def _scroll_brew_list(game, swipe):
@@ -289,10 +292,3 @@ def _find_potion(game, name):
   return game.screen.find(f'potion_shop_{name}',
                           game.coords.potion_shop_potion_icons_roi,
                           POTION_THRESHOLD)
-
-
-def _tap_brew(game, button, name):
-  log.info('Potion Shop: brewing %s', name)
-  game.device.tap(button.center)
-  time.sleep(CAULDRON_DELAY_S)
-  return True
