@@ -1,24 +1,19 @@
 """PotionBottlesLoop: after the Potion Shop's rewards, brews the speed
 potions to their max level and bottles the potions ordered in
-ORDERS_FILE (to use them outside the event); in the event's last hour
-bottles all active potions."""
+potion_orders.txt (to use them outside the event); in the event's last
+hour bottles all active potions."""
 
 import datetime
 import logging
-import os
-import re
 import time
 
+from auto_eatventure import potion_orders
 from auto_eatventure.actions import popups, potion_shop
 from auto_eatventure.logger import key_log
 from auto_eatventure.timer import Timer
 
 log = logging.getLogger(__name__)
 
-# "potion: count" lines of the bottles still wanted; the bot lowers a
-# count after each bottle. Read before each order (edits apply without
-# a restart).
-ORDERS_FILE = 'potion_orders.txt'
 # Potions that make brewing faster: always brewed to their max level and
 # kept active; their bottles are done last (a bottle sets the level back
 # to 1), each followed by a brew back to the max level
@@ -36,72 +31,6 @@ EVENT_DAYS = 4
 # The active potions are lost with the event: they are bottled this
 # long before its end
 FINAL_BOTTLES_S = 60 * 60
-ORDER_LINE = re.compile(r'^(\s*([A-Za-z]+)\s*:\s*)([^\s#]*)(.*)$')
-
-
-def parse_orders(text):
-  """{potion: count} of the "potion: count" lines (file order; a "#"
-  comment may follow). Lines starting with "#" and empty lines are
-  skipped; unknown potions, bad counts and repeated potions with a
-  warning."""
-  orders = {}
-  for line in text.splitlines():
-    if not line.strip() or line.lstrip().startswith('#'):
-      continue
-    match = ORDER_LINE.match(line)
-    name = match.group(2).lower() if match else ''
-    count = match.group(3) if match else ''
-    if (name not in potion_shop.POTIONS or name in orders
-        or not count.isdigit()
-        or match.group(4).strip()[:1] not in ('', '#')):
-      log.warning('%s: %r ignored', ORDERS_FILE, line.strip())
-      continue
-    orders[name] = int(count)
-  return orders
-
-
-def _read_text():
-  """The text of ORDERS_FILE; '' when it is missing."""
-  try:
-    with open(ORDERS_FILE, encoding='utf-8') as file:
-      return file.read()
-  except OSError:
-    return ''
-
-
-def read_orders():
-  """{potion: count > 0} of ORDERS_FILE."""
-  return {name: count for name, count in parse_orders(_read_text()).items()
-          if count > 0}
-
-
-def lower_order(name):
-  """Lower the count of the potion in ORDERS_FILE by 1 (only the
-  number of its line changes). Returns the new count, None when the
-  potion has no count above 0 there."""
-  try:
-    with open(ORDERS_FILE, encoding='utf-8') as file:
-      lines = file.read().splitlines(keepends=True)
-  except OSError:
-    return None
-  for index, line in enumerate(lines):
-    match = ORDER_LINE.match(line.rstrip('\r\n'))
-    if (line.lstrip().startswith('#') or not match
-        or match.group(2).lower() != name or not match.group(3).isdigit()):
-      continue
-    count = int(match.group(3))
-    if count < 1:
-      return None
-    ending = line[len(line.rstrip('\r\n')):]
-    lines[index] = (f'{match.group(1)}{count - 1}{match.group(4)}'
-                    f'{ending}')
-    # Written aside and moved over: a crash never leaves half a file
-    with open(f'{ORDERS_FILE}.tmp', 'w', encoding='utf-8',
-              newline='') as file:
-      file.writelines(lines)
-    os.replace(f'{ORDERS_FILE}.tmp', ORDERS_FILE)
-    return count - 1
-  return None
 
 
 def seconds_to_final_bottles():
@@ -186,17 +115,18 @@ class PotionBottlesLoop:
       key_log.info('POTION SHOP - %s at its max level, kept', name)
     elif result == 'bottled':
       self.maxed.discard(name)
-      left = lower_order(name)
+      left = potion_orders.lower_order(name)
       key_log.info('POTION SHOP - %s bottled, %s left', name,
                    0 if left is None else left)
 
   def _read_orders(self):
-    """Read ORDERS_FILE (parsed and logged when its text changed)."""
-    text = _read_text()
+    """Read the orders file (parsed and logged when its text
+    changed)."""
+    text = potion_orders.read_text()
     if text == self.orders_text:
       return
     self.orders_text = text
-    self.orders = parse_orders(text)
+    self.orders = potion_orders.parse_orders(text)
     log.info('Potion Shop orders: %s', {
       name: count for name, count in self.orders.items() if count > 0}
       or 'none')
