@@ -57,6 +57,10 @@ def swipe(self, swipe):
 - **Windows**: `adb shell screencap -p` with `\r\n` -> `\n` fix
 - **Linux/macOS**: `adb exec-out screencap -p` (raw binary)
 
+When adb fails or the PNG is broken (it happens rarely, e.g. at night),
+it logs a warning and tries again, up to `SCREENSHOT_TRIES` times
+`SCREENSHOT_RETRY_S` seconds apart; then it raises the last error.
+
 `Screen.capture()` (`vision/screen.py`) calls it and keeps three representations:
 - `screen.bgr` -- BGR numpy array
 - `screen.gray` -- grayscale numpy array
