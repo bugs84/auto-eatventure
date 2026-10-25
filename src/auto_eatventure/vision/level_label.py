@@ -21,13 +21,16 @@ PREFIX_CHARS = 3
 
 
 def load_digit_samples():
-  """{digit: binary sample} of the samples in DIGITS_DIR (<digit>.png;
-  digits without a sample can't be read)."""
-  samples = {}
-  for digit in range(10):
-    path = os.path.join(DIGITS_DIR, f'{digit}.png')
-    if os.path.exists(path):
-      samples[digit] = cv2.imread(path, cv2.IMREAD_GRAYSCALE) > 127
+  """[(digit, binary sample)] of the samples in DIGITS_DIR: <digit>.png
+  and more per digit as <digit>_<phone>.png (another resolution draws
+  it a bit differently, e.g. the LG G6's 5 is 0.14 from the Xiaomi's);
+  digits without a sample can't be read."""
+  samples = []
+  for name in sorted(os.listdir(DIGITS_DIR)):
+    if name[0].isdigit() and name.endswith('.png'):
+      image = cv2.imread(os.path.join(DIGITS_DIR, name),
+                         cv2.IMREAD_GRAYSCALE)
+      samples.append((int(name[0]), image > 127))
   return samples
 
 
@@ -68,7 +71,7 @@ def characters(label):
 
 def _closest_digit(char, samples):
   best, best_difference = None, MAX_DIFFERENCE
-  for digit, sample in samples.items():
+  for digit, sample in samples:
     difference = np.count_nonzero(char != sample) / char.size
     if difference < best_difference:
       best, best_difference = digit, difference
