@@ -4,5 +4,6 @@
 *.AppImage
 .venv
 /.idea/
+logs/
 potion_orders.txt
 potion_orders.txt.tmp
