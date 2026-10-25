@@ -27,8 +27,10 @@ src/auto_eatventure/         # The only package (src layout)
   __main__.py                # Entry point: python -m auto_eatventure
   main.py                    # run(): connect, wait for the game, play
   game_loop.py               # GameLoop: the endless loop (play_once)
-  potion_shop_loop.py        # PotionShopLoop: plays the Potion Shop event
+  potion_shop_loop.py        # Potion Shop event: PotionShopWatch (the
+                             # GameLoop hook), PotionShopLoop, EndGame
   potion_bottles_loop.py     # PotionBottlesLoop: bottles potions after it
+  potion_orders.py           # potion_orders.txt: the bottles wanted
   config.py                  # Settings from .env (feature switches, logs)
   timer.py                   # Timer: when an occasional action is due
   logger.py                  # setup_logging(), key_log (daily rotation)
@@ -46,7 +48,9 @@ src/auto_eatventure/         # The only package (src layout)
     stale.py                 # StaleWatch: recovery + search swipes
     popular_dish.py, food_delivery.py, helper_invite.py, adventures.py
                              # Optional features (see .env-sample)
-    potion_shop.py           # Potion Shop event: enter, crates, brewing
+    potion_shop.py           # Potion Shop: enter, leave, rewards, upgrades
+    potion_shop_cauldron.py  # Potion Shop Cauldron: brewing, bottling
+    potion_shop_map.py       # Potion Shop map: views, crates, stations
   android/device.py          # Device: ADB taps, swipes, screenshots, app
   vision/                    # Detection on screenshots
     screen.py                # Screen: last screenshot + find/has/...
@@ -54,6 +58,7 @@ src/auto_eatventure/         # The only package (src layout)
     matching.py              # OpenCV template matching + DBSCAN
     colors.py                # HSV color ranges, color_ratio()
     upgrade_icons.py         # Station upgrade icons by shape + color
+    level_label.py           # "Lvl N" labels: digits read by samples
     top_bar.py               # Black line at the bottom of the top bar
   coords/                    # Screen positions
     reference.py             # Positions at the reference 1220x2712

@@ -67,16 +67,20 @@ __main__.py --- entry point (python -m auto_eatventure), calls main.run()
 | `actions/race_reward.py` | `claim()` | "Restaurant Race ended!" reward. |
 | `actions/stale.py` | `StaleWatch` | Recovery and search swipes when nothing can be upgraded. |
 | `actions/popular_dish.py`, `food_delivery.py`, `helper_invite.py`, `adventures.py` | | Optional features (switches in `config.py`). |
-| `actions/potion_shop.py` | `is_available()`, `is_inside()`, `enter()`, `is_completed()`, `leave()`, `open_crates()`, `can_brew()`, `brew()`, `bottle_or_brew()`, `bottle_all()`, `buy_upgrades()`, `show_shop()`, `show_cellar()` | Potion Shop event (optional). |
-| `potion_shop_loop.py` | `PotionShopLoop` | Plays the Potion Shop event while inside it. |
-| `potion_bottles_loop.py` | `PotionBottlesLoop`, `parse_orders()`, `read_orders()`, `lower_order()`, `next_task()`, `seconds_to_final_bottles()` | After the event's rewards: brews the speed potions to their max level and bottles the potions ordered in `potion_orders.txt` (lowers the counts); in the event's last hour bottles all active potions. |
+| `actions/potion_shop.py` | `is_available()`, `is_inside()`, `enter()`, `close_outside_dialog()`, `is_completed()`, `leave()`, `buy_upgrades()`, `has_last_upgrade()` | Potion Shop event (optional): its button and dialog (Enter / Exit, rewards) and its Upgrades dialog. |
+| `actions/potion_shop_cauldron.py` | `can_brew()`, `is_cauldron_open()`, `brew()`, `bottle_or_brew()`, `bottle_all()`, `BREW_PLAN`, `LATE_PLAN`, `POTIONS` | Potion Shop Cauldron: claiming, brewing by plan, bottling. |
+| `actions/potion_shop_map.py` | `show_shop()`, `show_cellar()`, `is_cellar_shown()`, `shop_offset()`, `open_crates()`, `station_arrow()`, `is_station_max()`, `close_cellar_popup()` | Potion Shop map: scrolling to the shop / cellar view by landmarks, crates, stations. |
+| `potion_shop_loop.py` | `PotionShopWatch`, `PotionShopLoop`, `EndGame` | `PotionShopWatch.play_if_due()` is GameLoop's only Potion Shop hook: looks for the event every 30 min, enters it and runs `PotionShopLoop` (plays it while inside; `EndGame` once Beetle Juice is MAX). |
+| `potion_bottles_loop.py` | `PotionBottlesLoop`, `next_task()`, `seconds_to_final_bottles()` | After the event's rewards: brews the speed potions to their max level and bottles the potions ordered in `potion_orders.txt`; in the event's last hour bottles all active potions. |
+| `potion_orders.py` | `parse_orders()`, `read_orders()`, `lower_order()` | `potion_orders.txt`: the bottles still wanted (the bot lowers the counts). |
 | `android/device.py` | `Device` | ADB: `tap()`, `long_press()`, `swipe()`, `screenshot()` (BGR), `screen_size()`, `start_app()`, `close_app()`. |
-| `vision/screen.py` | `Screen` | Last screenshot in BGR / gray / HSV; `capture()`, `find()`, `has()`, `find_exact()`, `find_all()`, `color_ratio()`. |
+| `vision/screen.py` | `Screen` | Last screenshot in BGR / gray / HSV; `capture()`, `find()`, `has()`, `find_exact()`, `find_all()`, `color_ratio()`, `read_level()`. |
 | `vision/templates.py` | `TEMPLATE_NAMES`, `load_templates()` | Template catalog, loading and resizing to the phone. |
 | `vision/matching.py` | `best_match()`, `closest_match()`, `all_matches()` | OpenCV template matching, DBSCAN clustering. |
 | `vision/colors.py` | `RED`, `GREEN`, `color_ratio()` | HSV color ranges and their share of an image. |
 | `vision/upgrade_icons.py` | `find_upgrade_icons()` | Station upgrade icons by shape and color. |
 | `vision/top_bar.py` | `find_top_bar_line()` | Black line at the bottom of the top bar. |
+| `vision/level_label.py` | `read_level()`, `load_digit_samples()` | Number of a "Lvl N" label, its digits compared with `matching_screenshots/level_digits/` (Potion Shop Brew list). |
 | `coords/reference.py` | positions | All screen positions at 1220x2712. Pure data, no logic. |
 | `coords/geometry.py` | `Point`, `Region`, `Swipe` | Shapes positions are made of. |
 | `coords/scaled.py` | `ScaledCoords` | Scales `reference.py` to the phone's resolution. |
@@ -99,6 +103,7 @@ State is purely **in-memory** in `GameLoop` and its helpers:
 - `needs_reposition` -- the first station icons of a level reposition the restaurant
 - `popular_dish_waits_for_upgrade` -- after a level change Popular Dish waits for the first station upgrade
 - `Timer`s of the optional features, `LateDialogWatch` for the first minute
+- `PotionShopWatch` -- when the Potion Shop event is looked for again; the event's own state lives in `PotionShopLoop` / `EndGame` / `PotionBottlesLoop`, created for each visit
 - `game.null_spot` -- placed once at start
 
 There is **no persistent state**, no database, no save files. The bot is purely reactive.
@@ -106,7 +111,8 @@ There is **no persistent state**, no database, no save files. The bot is purely 
 ## Key Design Decisions
 
 - **Separation of concerns**: orchestration in `game_loop.py`, device I/O in `android/`, detection in `vision/`, positions in `coords/`, game logic in `actions/`.
-- **Plain functions**: game actions are functions taking a `Game`; classes only where state is kept (`GameLoop`, `StaleWatch`, `LateDialogWatch`, `Timer`, `Screen`, `Device`).
+- **Plain functions**: game actions are functions taking a `Game`; classes only where state is kept (`GameLoop`, `StaleWatch`, `LateDialogWatch`, `Timer`, `Screen`, `Device`, the Potion Shop loops).
+- **Events apart from the city loop**: the Potion Shop event has its own loop (`potion_shop_loop.py`) and actions (`actions/potion_shop*.py`); `GameLoop` only calls `PotionShopWatch.play_if_due()` and finds the restaurant again afterwards. City actions don't know the event; it reuses some of them (`stations`, `upgrades.open_dialog()`, `levels.is_open_button_shown()`, `popups`).
 - **KISS principle**: Each module has a single clear purpose. No inheritance hierarchies or complex patterns.
 - **Resolution scaling**: One set of reference coordinates scales to any device resolution via `ScaledCoords`.
 - **Template matching over OCR**: More reliable for Unity game UI where text rendering varies.
