@@ -4,7 +4,9 @@ landmarks), its crates and stations."""
 import logging
 import time
 
+from auto_eatventure.actions import stations
 from auto_eatventure.coords.geometry import Point, Region, Swipe
+from auto_eatventure.vision.upgrade_icons import find_upgrade_icons
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +22,7 @@ MAX_THRESHOLD = 0.8
 POPUP_DELAY_S = 1
 # Stations of the cellar view (coords potion_shop_<name>_station); the
 # others are on the shop view
-CELLAR_STATIONS = ('spider', 'mushrooms', 'frog')
+CELLAR_STATIONS = ('water', 'spider', 'mushrooms', 'frog')
 # Landmarks of the map (template potion_shop_<name>, coords
 # potion_shop_<name>_roi and _y); one is sometimes partly hidden by an
 # alchemist or a price. The map is aligned when one is this close to
@@ -122,6 +124,20 @@ def shop_offset(game):
     if mark is not None:
       return mark.center.y - getattr(coords, f'potion_shop_{name}_y')
   return None
+
+
+def shop_icons(game):
+  """stations.find_icons() of the shop view and the arrow of Beetle
+  Juice, which on a tall screen (LG G6) is below their limit (kept off
+  the bottom buttons; the station is right of them)."""
+  icons = stations.find_icons(game)
+  coords = game.coords
+  beetle = station_arrow(game, 'beetle', find_upgrade_icons(
+    game.screen.hsv, coords.upgrade_arrow_min_height_y,
+    coords.upgrade_arrow_max_height_y))
+  if beetle is not None and beetle not in icons:
+    icons.append(beetle)
+  return icons
 
 
 def station_arrow(game, name, icons):
