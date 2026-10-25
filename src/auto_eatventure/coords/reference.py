@@ -269,10 +269,16 @@ potion_shop_skull_y = 6
 potion_shop_cellar_roi = Region(150, 230, 700, 2450)
 potion_shop_cellar_y = 2754
 potion_shop_cellar_view_y = -1970
-# Stations by their upgrade arrow: Beetle Juice on the shop view, the
-# cellar's best ones on the cellar view. Tapped like an arrow, a station
-# shows a popup above it (up to _popup_y), "MAX" at level 1000.
+# Stations by their upgrade arrow: the shop's on the shop view, the
+# cellar's on the cellar view. Tapped like an arrow, a station shows a
+# popup above it (up to _popup_y), "MAX" at level 1000.
+potion_shop_bat_station = Point(72, 757)
+potion_shop_dragon_station = Point(1070, 1142)
+potion_shop_unicorn_station = Point(72, 1334)
+potion_shop_djinn_station = Point(1070, 1334)
+potion_shop_mermaid_station = Point(627, 1718)
 potion_shop_beetle_station = Point(959, 2122)
+potion_shop_water_station = Point(183, 1040)
 potion_shop_spider_station = Point(848, 852)
 potion_shop_frog_station = Point(738, 1716)
 potion_shop_mushrooms_station = Point(1071, 1236)
