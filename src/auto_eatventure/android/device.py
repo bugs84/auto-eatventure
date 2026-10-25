@@ -5,6 +5,7 @@ import logging
 import re
 import subprocess
 import sys
+import time
 
 import numpy as np
 from adbutils import adb
@@ -13,6 +14,9 @@ from PIL import Image
 log = logging.getLogger(__name__)
 
 GAME_PACKAGE = 'com.hwqgrhhjfd.idlefastfood'
+# A screenshot sometimes fails (broken PNG, adb hiccup): try again
+SCREENSHOT_TRIES = 5
+SCREENSHOT_RETRY_S = 2
 
 
 class Device:
@@ -47,7 +51,21 @@ class Device:
     return int(match.group(1)), int(match.group(2))
 
   def screenshot(self):
-    """Return the screen as a BGR image (numpy array)."""
+    """Return the screen as a BGR image (numpy array).
+
+    Tries again a few times when adb fails or the PNG is broken;
+    raises the last error when all tries fail.
+    """
+    for attempt in range(1, SCREENSHOT_TRIES):
+      try:
+        return self._screenshot_once()
+      except (subprocess.CalledProcessError, OSError) as error:
+        log.warning('Screenshot failed (%s), try %d of %d',
+                    error, attempt, SCREENSHOT_TRIES)
+        time.sleep(SCREENSHOT_RETRY_S)
+    return self._screenshot_once()
+
+  def _screenshot_once(self):
     if sys.platform == 'win32':
       # Kept from the original code: older adb versions on Windows
       # turned \n into \r\n (untested with current adb)
