@@ -462,3 +462,8 @@ time per phase). Printable manual plan for the user:
   top) and a number covered left of its end is not read (20.9ak read
   as 0.9ak). An unreadable popup keeps the station's last value (only
   MAX drops it). The Bat's profit is always covered on the shop view.
+- A popup whose price is more than the coins has a grey button
+  (bordered darker) with a red price: right after the focused
+  station's upgrade it is always so. Read too now; before, the
+  station's old (pre-upgrade) value stayed and the bot kept buying it
+  (beetle 0.19 for 2 min, really 0.034).
