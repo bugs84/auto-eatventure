@@ -88,6 +88,22 @@ class Screen:
     None when there is none or they can't be read."""
     return station_popup.read_popup(self.bgr, coords, self._char_samples)
 
+  def station_popup_button(self, coords):
+    """Center (Point) of the open station popup's button, None when
+    there is none."""
+    return station_popup.popup_button(self.bgr, coords)
+
+  def read_coins(self, coords):
+    """The event's coins (its counter), None when unreadable."""
+    return station_popup.read_coins(self.bgr, coords.potion_shop_coins_roi,
+                                    coords, self._char_samples)
+
+  def read_price_buttons(self, region, coords):
+    """The Upgrades dialog's buttons in the region
+    (station_popup.PriceButton), top to bottom."""
+    return station_popup.read_price_buttons(self.bgr, region, coords,
+                                            self._char_samples)
+
   def read_level(self, region):
     """The number of a level label ("Lvl 7") in the region, None when
     it can't be read."""
