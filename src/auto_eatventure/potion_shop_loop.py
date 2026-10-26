@@ -385,8 +385,10 @@ class StationFocus:
     self.timer = Timer()
     # {station: profit of an item per coin of its next level}
     self.returns = {}
-    # Stations whose popup is to be read (on their view)
+    # Stations whose popup is to be read (on their view), of them those
+    # upgraded since (their last value is too high)
     self.stale = set()
+    self.upgraded = set()
     self.survey_timer = Timer()
 
   def profit_changed(self, station):
@@ -406,17 +408,20 @@ class StationFocus:
       return False
     for name in names:
       self.stale.discard(name)
+      upgraded = name in self.upgraded
+      self.upgraded.discard(name)
       popup = potion_shop_map.read_station(self.game, name)
-      if popup == 'max':
-        self.returns.pop(name, None)
-        continue
       if popup is None:
-        # Often covered by the event's buttons or an alchemist: the
-        # last value is kept
         log.debug('Potion Shop: %s popup unreadable', name)
+      if popup is None and not upgraded:
+        # Often covered by the event's buttons or an alchemist: the
+        # last value is kept (unless upgraded since: it is too high)
         continue
-      self.returns[name] = popup.profit / popup.price
-      log.debug('Potion Shop: %s %s', name, popup)
+      if popup in ('max', None):
+        self.returns.pop(name, None)
+      else:
+        self.returns[name] = popup.profit / popup.price
+        log.debug('Potion Shop: %s %s', name, popup)
     self._focus_best()
     return True
 
@@ -464,6 +469,7 @@ class StationFocus:
             popups.close_popup(game)
         # Its next level costs more: read again
         self.stale.add(name)
+        self.upgraded.add(name)
         self.timer.postpone(FOCUS_WAIT_S)
         return True
     if name is not None and not self.timer.is_due():
