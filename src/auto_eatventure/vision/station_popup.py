@@ -90,7 +90,7 @@ def read_popup(image, coords, samples):
   price = _popup_price(image, button, button_covered, coords, samples)
   if price is None:
     return None
-  profit = (_uncovered_coins(groups[0], row_covered, samples)
+  profit = (_uncovered_coins(groups[0], row_covered, coords, samples)
             if groups else None)
   # The time is often under the event's buttons at the screen's edge
   seconds = (_seconds(_text(_after_clock(groups[1]), samples))
@@ -107,7 +107,8 @@ def _popup_price(image, button, covered, coords, samples):
                    & ~covered, coords)
   if not groups:
     return None
-  return _uncovered_coins(max(groups, key=len), covered, samples)
+  return _uncovered_coins(max(groups, key=len), covered, coords,
+                          samples)
 
 
 def popup_button(image, coords):
@@ -221,10 +222,13 @@ def _widened(covered, coords):
                     np.ones((1, size), np.uint8))[0] > 0
 
 
-def _uncovered_coins(group, covered, samples):
-  """parse_coins() of the group, None when covered left of its end (a
-  leading digit may be hidden: 20.9ak read as 0.9ak)."""
-  if covered[:_right(group[-1])].any():
+def _uncovered_coins(group, covered, coords, samples):
+  """parse_coins() of the group, None when covered up to its end from
+  just left of its start (a leading digit may be hidden: 20.9ak read
+  as 0.9ak; a cover further left, e.g. of the button's corner, hides
+  none)."""
+  start = max(0, group[0][0] - 2 * coords.station_popup_gap_x)
+  if covered[start:_right(group[-1])].any():
     return None
   return parse_coins(_text(group, samples))
 
