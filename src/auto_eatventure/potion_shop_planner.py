@@ -25,6 +25,9 @@ FASTER_GAIN = 1.0
 # Anything costing at most this share of the coins is bought anyway
 # (finishes stations towards MAX)
 CHEAP_SHARE = 0.001
+# ... a cheap station's levels then while they cost at most this many
+# times more (a few levels per popup opened)
+CHEAP_BATCH = 4
 # Levels bought in one go at most (taps on the open popup)
 MAX_LEVELS = 30
 # Scrolling to the other view (shop, cellar) takes a while: a choice
@@ -192,8 +195,8 @@ class Planner:
     levels = []
     for name, station in self.stations.items():
       if station.price <= limit:
-        count = min(MAX_LEVELS, 1 + int(_log(limit / station.price,
-                                             LEVEL_PRICE)))
+        count = min(MAX_LEVELS, 1 + int(_log(
+          limit * CHEAP_BATCH / station.price, LEVEL_PRICE)))
         if station.level is not None:
           count = min(count, MAX_LEVEL - station.level)
         levels.append(Choice('level', name, count, None,
