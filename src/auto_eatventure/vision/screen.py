@@ -5,7 +5,8 @@ import logging
 import cv2
 
 from auto_eatventure.coords.geometry import Region
-from auto_eatventure.vision import colors, level_label, matching
+from auto_eatventure.vision import (
+  colors, level_label, matching, station_popup)
 
 log = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ class Screen:
     self._templates = templates
     self._debug = debug
     self._digit_samples = level_label.load_digit_samples()
+    self._char_samples = station_popup.load_char_samples()
     self.bgr = None
     self.gray = None
     self.hsv = None
@@ -80,6 +82,11 @@ class Screen:
     """Centers (Points) of all matches (BGR) above the threshold."""
     return matching.all_matches(
       self.bgr, self._templates[name].bgr, threshold)
+
+  def read_station_popup(self, coords):
+    """The open station popup's numbers (station_popup.StationPopup),
+    None when there is none or they can't be read."""
+    return station_popup.read_popup(self.bgr, coords, self._char_samples)
 
   def read_level(self, region):
     """The number of a level label ("Lvl 7") in the region, None when

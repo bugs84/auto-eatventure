@@ -293,6 +293,8 @@ potion_shop_locked_below_y = 130
 # of Spider Silk (top, over the null spot), Mushrooms (right) and Frog
 # (middle): a tap there closes them
 potion_shop_cellar_floor = Point(339, 1638)
+# Floor right of the Cauldron: tapped to close a station popup
+potion_shop_floor = Point(881, 1329)
 # Icons of the Upgrades dialog's rows (potion_shop_upgrade_* templates)
 potion_shop_upgrades_roi = Region(60, 980, 420, 2000)
 # Icon of the first row ("+N Customer(s)" rows show a customer) and the
@@ -304,3 +306,13 @@ potion_shop_aligned_y = 25
 potion_shop_max_swipe_y = 1000
 potion_shop_swipe_x = 830
 potion_shop_swipe_from_y = 1469
+
+# Station popups (vision/station_popup.py): the Upgrade button's least
+# width and its height range, the profit row above it and the widest
+# gap inside a number
+station_popup_button_min_x = 350
+station_popup_button_min_y = 90
+station_popup_button_max_y = 220
+station_popup_row_above_y = 150
+station_popup_row_gap_y = 10
+station_popup_gap_x = 25
