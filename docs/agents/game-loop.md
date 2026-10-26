@@ -339,6 +339,8 @@ loop of `PotionShopLoop`:
     or after that all arrows (`stations.upgrade()`, also unlocks new
     stations). On the shop view `potion_shop_map.shop_icons()` adds
     Beetle Juice's arrow, below `station_icon_max_y` on the LG G6.
+    The focus is kept in `logs/potion_shop_focus.txt` over restarts
+    (ignored after 24 h); a station name may be written there by hand.
 
 - Never tapped: Boost (ad), Activate / Pass (real money)
 - Not done yet: speed boosts
