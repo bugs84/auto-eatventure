@@ -144,9 +144,11 @@ def buy_upgrade(game, upgrade):
   upgrades.close_dialog(game)
   game.screen.capture()
   if bought:
-    key_log.info('POTION SHOP - Bought %s (%s %s x%s, %s)', upgrade.title,
-                 upgrade.station or '', upgrade.kind,
-                 upgrade.multiplier, upgrade.price)
+    what = ' '.join(filter(None, (
+      upgrade.station, upgrade.kind,
+      upgrade.multiplier and f'x{upgrade.multiplier:g}')))
+    key_log.info('POTION SHOP - Bought %s (%s, %s)', upgrade.title, what,
+                 upgrade.price)
   return bool(bought)
 
 

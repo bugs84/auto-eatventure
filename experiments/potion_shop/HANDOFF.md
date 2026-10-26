@@ -15,64 +15,35 @@ Read this first when continuing the Potion Shop work, then `NOTES.md`
 | LG watchdog | `auto-eatventurelg/watchdog/lg_watchdog.sh` (restarts the bot within ~60 s, pauses below 30 % battery, resumes at 70 %: the user's choice, don't change) |
 | All dev tools, test screenshots, pylint | `/home/vondr/programs/auto-eatventure/potion-shop-dev/scratchpad/` (copy of the old session scratchpad, paths already rewritten); called `$S` below |
 
-## State when stopped (2026-10-26 ~12:45)
+## State (2026-10-27 ~00:00): resumed, new strategy
 
-- The user stopped the event work: "the bot drives around and doesn't
-  work much". The LG bot was switched to normal restaurants
-  (`POTION_SHOP_ENABLED="0"` in `auto-eatventurelg/.env`) after the
-  bot left the event by hand (`potion_shop.leave()`).
-- The Xiaomi had finished the event 15/15 before (2026-10-25) and plays
-  normal cities.
-- LG event: Cauldron fine (LG potions max out at level 6; all kept
-  potions MAX, "Brewing done, buying customers" reached), customers
-  bought. The weak part is the station upgrades (below).
+- 2026-10-26 23:10 the user asked to continue: play the event on the LG
+  with a real strategy (which upgrades exist and are bought, which
+  station to upgrade, a list of where the stations are, less
+  scrolling). LG `.env` has `POTION_SHOP_ENABLED="1"` again.
+- New: `STATIONS_UPGRADES.md` (stations + positions, all 131 upgrade
+  rows with prices, the level rules, the strategy). Code:
+  `potion_shop_planner.py` (the choice: payback time),
+  `potion_shop_upgrades.py` (catalog), `StationPlan` in
+  `potion_shop_loop.py` (replaced StationFocus and EndGame),
+  `vision/station_popup.py` reads the coin counter, the popup's level
+  and the dialog's prices too. Offline test of the planner:
+  `$S/tools/plantest.py`; live tests `$S/tools/plan_lg.py [steps]`,
+  `stations_lg.py`, `upg_lg.py`, `levelup_lg.py`, `enter_lg.py`.
+- First live run 23:52: Bat and Dragon MAX (cheap levels), Djinn x75
+  bought by the planner, then Unicorn/Djinn/Mermaid levels.
+- Battery of the LG logged every 5 min (`battery_lg.sh` in the dev kit
+  dir, log `battery_lg.log`): the user moved the LG to a USB hub at
+  ~23:00 and wants a comparison of the drain in the morning (before:
+  see the watchdog log's pause/resume times).
 
-## What works
+## Open points
 
-- Entering/leaving, crates, Upgrades dialog, Cauldron (brewing plan,
-  `CauldronWatch` every 5 min, brewing past the plan, done without a
-  free slot), bottling orders (Xiaomi), shop/cellar views by landmarks,
-  scroll-aware station arrows (`station_place()`).
-- Station popup reading (`vision/station_popup.py`): profit, time,
-  price by character samples in `matching_screenshots/station_popup_chars/`;
-  blue and grey (unaffordable, red price) buttons; columns covered by
-  the event's edge buttons are detected and such numbers not read.
-
-## What does not work well (why the user stopped it)
-
-1. **Station focus (`StationFocus` in `potion_shop_loop.py`)** -
-   focus = max profit/price of the station popups. In practice:
-   - The focus thrashes between stations: each upgrade buys many
-     levels (long press) and drops its ratio, so the survey re-reads
-     and switches focus every minute, with many shop<->cellar scrolls.
-   - Popups are often unreadable: the Bat's profit is always covered by
-     the "1485" chest (left), the Dragon's right part by the "1d 11h"
-     chest, the Spider's (cellar) top by the round button at the top
-     of the screen; alchemists walk over popups.
-   - Every new suffix letter needs a sample: "an" was added at 12:37,
-     "ao", "ap", ... will be missing. Unreadable popups are saved to
-     `logs/station_popup_<station>.png` (cut the sample from there:
-     `$S/tools/popsamples.py <img> <profit|-> <time|-> <price>`).
-   - Survey taps (open popup, read, close) cost ~5 s per station.
-2. The user's idea of the strategy: upgrade the station that gives the
-   most (they expected Bat, then Dragon Scale); "Neni upgrade jako
-   upgrade" = compare the real profit gained per coin, not the last
-   "profit x2" row.
-
-## Ideas for next time
-
-- Read the popups less often and buy fewer levels per focus (short
-  taps instead of the long press), or compute the focus once per
-  survey and stick to it until the next survey (no re-read after each
-  upgrade), to stop the thrash and the scrolling.
-- Read covered popups at another scroll position (move the map so the
-  station is mid-screen) instead of failing.
-- Generate letter samples for all of a-z at once (from the game's font
-  or by collecting them over a run) instead of one per new suffix.
-- Maybe consider the time (profit per second per coin); customers are
-  probably the bottleneck, so profit/price was used.
-- Separate strategies: the fastest one vs Jenik's account (fewer
-  upgrades, potions max at 6).
+- Below level 300 the level rules are not measured (next event).
+- "Faster" rows are counted like a profit x2 (effect unknown).
+- Popups covered: Bat's profit (only cheap levels then), Spider's
+  level; Mushrooms/Dragon sometimes (read again after 10 min).
+- Coin counter on the Xiaomi: no sample of "T" yet (reads None).
 
 ## Tools (`$S` = `/home/vondr/programs/auto-eatventure/potion-shop-dev/scratchpad`)
 
