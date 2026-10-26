@@ -26,8 +26,11 @@ MIN_WHITE_ABOVE = 0.5
 # The profit and time are black, the price white; the coin icons are
 # green (neither)
 TEXT_MAX_GRAY = 80
-# The price is in the upper part of the button (below it its shadow)
+# The price is in the upper part of the button (below it its shadow);
+# above it (this share of the button's height) the button is plain blue
+# where not covered by an event button at the screen's edge
 BUTTON_TEXT_SHARE = 0.75
+BUTTON_TOP_SHARE = 0.12
 # A dot is lower than this share of the text's height, the clock icon
 # higher than CLOCK_MIN_HEIGHT of it
 DOT_MAX_HEIGHT = 0.4
@@ -60,7 +63,7 @@ def load_char_samples():
 def read_popup(image, coords, samples):
   """The StationPopup open on the screenshot (BGR; its seconds None
   when unreadable), None when there is none or the profit or price
-  can't be read."""
+  can't be read (also when partly covered)."""
   button = _find_button(image, coords)
   if button is None:
     return None
@@ -69,12 +72,15 @@ def read_popup(image, coords, samples):
   row = gray[max(0, y - coords.station_popup_row_above_y):
              y - coords.station_popup_row_gap_y, x:x + width]
   groups = _groups(row < TEXT_MAX_GRAY, coords)
+  row_covered, button_covered = _covered(image, button, coords)
   price_groups = _groups(_white(
-    image[y:y + int(height * BUTTON_TEXT_SHARE), x:x + width]), coords)
+    image[y:y + int(height * BUTTON_TEXT_SHARE), x:x + width])
+                         & ~button_covered, coords)
   if not groups or not price_groups:
     return None
-  profit = _coins(_text(groups[0], samples))
-  price = _coins(_text(max(price_groups, key=len), samples))
+  profit = _uncovered_coins(groups[0], row_covered, samples)
+  price = _uncovered_coins(max(price_groups, key=len), button_covered,
+                           samples)
   if profit is None or price is None:
     return None
   # The time is often under the event's buttons at the screen's edge
@@ -83,11 +89,37 @@ def read_popup(image, coords, samples):
   return StationPopup(profit, seconds, price)
 
 
+def _covered(image, button, coords):
+  """The button's columns covered by the event's buttons at the
+  screen's edge: of the profit row (not white between it and the
+  button) and of the button (not blue at its top)."""
+  x, y, width, height = button
+  gap = coords.station_popup_row_gap_y
+  row = ~_white(image[y - gap:y - gap // 2, x:x + width]).all(axis=0)
+  top = image[y:y + int(height * BUTTON_TOP_SHARE), x:x + width]
+  return row, _widened(~_blue(top).any(axis=0), coords)
+
+
+def _widened(covered, coords):
+  """The covered columns and their neighbours (a white label of an
+  event button reaches further than its glow over the blue)."""
+  size = 2 * coords.station_popup_cover_margin_x + 1
+  return cv2.dilate(covered.astype(np.uint8)[np.newaxis],
+                    np.ones((1, size), np.uint8))[0] > 0
+
+
+def _uncovered_coins(group, covered, samples):
+  """_coins() of the group, None when covered left of its end (a
+  leading digit may be hidden: 20.9ak read as 0.9ak)."""
+  if covered[:_right(group[-1])].any():
+    return None
+  return _coins(_text(group, samples))
+
+
 def _find_button(image, coords):
   """(x, y, width, height) of the popup's blue button (the largest
   below white), None when none."""
-  hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-  mask = cv2.inRange(hsv, BUTTON_LOW, BUTTON_HIGH)
+  mask = _blue(image).astype(np.uint8)
   count, _, stats, _ = cv2.connectedComponentsWithStats(mask)
   best, best_area = None, 0
   for x, y, width, height, area in stats[1:count]:
@@ -99,6 +131,11 @@ def _find_button(image, coords):
       if above.size and _white(above).mean() >= MIN_WHITE_ABOVE:
         best, best_area = (x, y, width, height), area
   return best
+
+
+def _blue(image):
+  hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+  return cv2.inRange(hsv, BUTTON_LOW, BUTTON_HIGH) > 0
 
 
 def _white(image):

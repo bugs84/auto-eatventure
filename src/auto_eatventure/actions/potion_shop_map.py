@@ -159,8 +159,8 @@ def station_place(game, name):
 
 def read_station(game, name):
   """The station's popup numbers (StationPopup of
-  vision/station_popup.py; tapped open and closed), None when they
-  can't be read (e.g. MAX, not unlocked, covered)."""
+  vision/station_popup.py; tapped open and closed), 'max' when it is
+  MAX, None when they can't be read (e.g. not unlocked, covered)."""
   coords = game.coords
   place = station_place(game, name)
   game.device.tap(Point(
@@ -169,6 +169,8 @@ def read_station(game, name):
   time.sleep(POPUP_DELAY_S)
   game.screen.capture()
   popup = game.screen.read_station_popup(coords)
+  if popup is None and is_max_shown(game, place):
+    popup = 'max'
   if name in CELLAR_STATIONS:
     close_cellar_popup(game)
   else:
@@ -212,15 +214,21 @@ def is_station_max(game, name):
     station.y + coords.station_tap_offset_y + coords.station_tap_shift_y))
   time.sleep(POPUP_DELAY_S)
   game.screen.capture()
-  popup = Region(0, max(0, station.y - coords.potion_shop_station_popup_y),
-                 game.screen.region.right, station.y)
-  maxed = game.screen.has('potion_shop_max', popup, MAX_THRESHOLD)
+  maxed = is_max_shown(game, station)
   if name in CELLAR_STATIONS:
     close_cellar_popup(game)
   else:
     game.device.tap(game.null_spot)
   time.sleep(POPUP_DELAY_S)
   return maxed
+
+
+def is_max_shown(game, place):
+  """Whether the popup of the station at place shows MAX (last
+  screenshot)."""
+  popup = Region(0, max(0, place.y - game.coords.potion_shop_station_popup_y),
+                 game.screen.region.right, place.y)
+  return game.screen.has('potion_shop_max', popup, MAX_THRESHOLD)
 
 
 def close_cellar_popup(game):

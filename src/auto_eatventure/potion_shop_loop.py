@@ -407,8 +407,13 @@ class StationFocus:
     for name in names:
       self.stale.discard(name)
       popup = potion_shop_map.read_station(self.game, name)
-      if popup is None:
+      if popup == 'max':
         self.returns.pop(name, None)
+        continue
+      if popup is None:
+        # Often covered by the event's buttons or an alchemist: the
+        # last value is kept
+        log.debug('Potion Shop: %s popup unreadable', name)
         continue
       self.returns[name] = popup.profit / popup.price
       log.debug('Potion Shop: %s %s', name, popup)
