@@ -17,9 +17,14 @@ CHAR_SIZE = (16, 24)
 MAX_DIFFERENCE = 0.15
 MAX_RATIO_DIFFERENCE = 0.25
 # The button (HSV light blue, also the bottom bar's buttons: the
-# popup's is below white)
+# popup's is below white; light grey while its price is more than the
+# coins, the price then red)
 BUTTON_LOW = (95, 120, 200)
 BUTTON_HIGH = (110, 255, 255)
+GREY_BUTTON_LOW = (0, 0, 190)
+GREY_BUTTON_HIGH = (180, 25, 218)
+RED_PRICE_LOW = (0, 150, 150)
+RED_PRICE_HIGH = (10, 255, 255)
 WHITE_MIN_GRAY = 225
 WHITE_MAX_SATURATION = 50
 MIN_WHITE_ABOVE = 0.5
@@ -73,7 +78,7 @@ def read_popup(image, coords, samples):
              y - coords.station_popup_row_gap_y, x:x + width]
   groups = _groups(row < TEXT_MAX_GRAY, coords)
   row_covered, button_covered = _covered(image, button, coords)
-  price_groups = _groups(_white(
+  price_groups = _groups(_price_text(
     image[y:y + int(height * BUTTON_TEXT_SHARE), x:x + width])
                          & ~button_covered, coords)
   if not groups or not price_groups:
@@ -95,9 +100,10 @@ def _covered(image, button, coords):
   button) and of the button (not blue at its top)."""
   x, y, width, height = button
   gap = coords.station_popup_row_gap_y
-  row = ~_white(image[y - gap:y - gap // 2, x:x + width]).all(axis=0)
+  # (a grey button has a grey border)
+  row = ~_white(image[y - 2 * gap:y - gap, x:x + width]).all(axis=0)
   top = image[y:y + int(height * BUTTON_TOP_SHARE), x:x + width]
-  return row, _widened(~_blue(top).any(axis=0), coords)
+  return row, _widened(~_button_color(top).any(axis=0), coords)
 
 
 def _widened(covered, coords):
@@ -119,7 +125,7 @@ def _uncovered_coins(group, covered, samples):
 def _find_button(image, coords):
   """(x, y, width, height) of the popup's blue button (the largest
   below white), None when none."""
-  mask = _blue(image).astype(np.uint8)
+  mask = _button_color(image).astype(np.uint8)
   count, _, stats, _ = cv2.connectedComponentsWithStats(mask)
   best, best_area = None, 0
   for x, y, width, height, area in stats[1:count]:
@@ -133,9 +139,17 @@ def _find_button(image, coords):
   return best
 
 
-def _blue(image):
+def _button_color(image):
   hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-  return cv2.inRange(hsv, BUTTON_LOW, BUTTON_HIGH) > 0
+  return ((cv2.inRange(hsv, BUTTON_LOW, BUTTON_HIGH) > 0)
+          | (cv2.inRange(hsv, GREY_BUTTON_LOW, GREY_BUTTON_HIGH) > 0))
+
+
+def _price_text(image):
+  """White or red (a grey button's) text."""
+  hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+  return _white(image) | (cv2.inRange(hsv, RED_PRICE_LOW, RED_PRICE_HIGH)
+                          > 0)
 
 
 def _white(image):
