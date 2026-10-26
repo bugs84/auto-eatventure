@@ -427,3 +427,12 @@ time per phase). Printable manual plan for the user:
   "made faster" rows a clock (>= 0.038), customers/alchemists/kettle
   other icons. LG Upgrades at 23:50: Djinn x25 76.9ai, Spider x4 243ai,
   Beetle x10 246ai (locked), Water x5 315ai.
+- Locked stations: the focus never blocks an arrow over a dashed tile
+  (`potion_shop_locked`, `potion_shop_locked_cellar` corner templates,
+  ~0.82-0.99 there, <= 0.72 elsewhere). Beetle Juice unlocked live
+  00:27 under the Dragon focus.
+- The LG's Cauldron "!" badge is smaller: red ratio 0.118 against the
+  old 0.12 limit, so no potion was claimed or brewed 00:28-01:05.
+  `BADGE_MIN_RATIO` is now 0.08 (no badge ~0-4%).
+- 01:27 the LG watchdog paused the bot at 19 % battery (USB charging
+  is slower than the game drains it); it resumes above 80 %.
