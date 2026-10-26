@@ -182,7 +182,12 @@ def _brew_next(game):
         and row.level is not None and row.level > 1):
       return 'brewed' if _brew_listed(game, name, row.level, rows) else None
   if _needs_slot(plan, both):
-    _bottle(game, BOTTLE_ORDER, 'to free a slot')
+    if _bottle(game, BOTTLE_ORDER, 'to free a slot'):
+      return None
+    # No slot can be freed (the active potions are all kept): the
+    # potions waiting for one count as done
+    both = {name: row._replace(maxed=row.maxed or row.slots_full)
+            for name, row in both.items()}
   log.info('Potion Shop: nothing to brew')
   return 'done' if _is_plan_done(LATE_PLAN, both) else None
 

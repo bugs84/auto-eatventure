@@ -436,3 +436,10 @@ time per phase). Printable manual plan for the user:
   `BADGE_MIN_RATIO` is now 0.08 (no badge ~0-4%).
 - 01:27 the LG watchdog paused the bot at 19 % battery (USB charging
   is slower than the game drains it); it resumes above 80 %.
+- 2026-10-26 morning: on the LG account potions max out at level 6
+  (Swift, Instant, Double MAX at 6, Divine 6 still brewable) and the
+  slots were full, so Golden never got one and the plan had nothing
+  to brew. The Cauldron's badge was also gone while it idled. Now the
+  plan's active potions are raised further and `CauldronWatch` opens
+  the Cauldron every 5 min anyway: Divine brewed again 10:35.
+- The LG watchdog pauses at 30 % and resumes at 70 % (user's choice).
