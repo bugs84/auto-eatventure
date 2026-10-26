@@ -467,3 +467,7 @@ time per phase). Printable manual plan for the user:
   station's upgrade it is always so. Read too now; before, the
   station's old (pre-upgrade) value stayed and the bot kept buying it
   (beetle 0.19 for 2 min, really 0.034).
+- The Spider's popup on the cellar view is sometimes covered by the
+  round button at the top of the screen. A station whose popup can't be
+  read right after its own upgrade loses its value (it would be too
+  high and keep the focus) until the next survey reads it.
