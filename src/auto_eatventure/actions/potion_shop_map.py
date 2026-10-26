@@ -2,10 +2,14 @@
 landmarks), its crates and stations."""
 
 import logging
+import os
 import time
+
+import cv2
 
 from auto_eatventure.actions import stations
 from auto_eatventure.coords.geometry import Point, Region, Swipe
+from auto_eatventure.logger import LOG_DIR
 from auto_eatventure.vision.upgrade_icons import find_upgrade_icons
 
 log = logging.getLogger(__name__)
@@ -160,7 +164,8 @@ def station_place(game, name):
 def read_station(game, name):
   """The station's popup numbers (StationPopup of
   vision/station_popup.py; tapped open and closed), 'max' when it is
-  MAX, None when they can't be read (e.g. not unlocked, covered)."""
+  MAX, None when they can't be read (e.g. not unlocked, covered; the
+  screenshot is saved to logs/)."""
   coords = game.coords
   place = station_place(game, name)
   game.device.tap(Point(
@@ -171,6 +176,10 @@ def read_station(game, name):
   popup = game.screen.read_station_popup(coords)
   if popup is None and is_max_shown(game, place):
     popup = 'max'
+  elif popup is None:
+    # To see why (e.g. a new suffix letter without its sample)
+    cv2.imwrite(os.path.join(LOG_DIR, f'station_popup_{name}.png'),
+                game.screen.bgr)
   if name in CELLAR_STATIONS:
     close_cellar_popup(game)
   else:
