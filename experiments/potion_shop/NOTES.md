@@ -471,3 +471,7 @@ time per phase). Printable manual plan for the user:
   round button at the top of the screen. A station whose popup can't be
   read right after its own upgrade loses its value (it would be too
   high and keep the focus) until the next survey reads it.
+- Each new suffix letter needs its sample (`station_popup_chars/`):
+  the LG reached "an" at 12:37 and the Water popup was unreadable. An
+  unreadable popup's screenshot is saved to
+  `logs/station_popup_<station>.png` to cut the missing sample from.
