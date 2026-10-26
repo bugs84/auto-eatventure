@@ -54,6 +54,9 @@ EARLY_CUSTOMER_ROWS = 2
 # CELLAR_LOOPS loops of crates and station upgrades there
 CELLAR_CHECK_S = 60
 CELLAR_LOOPS = 3
+# ... only every CELLAR_FOCUS_CHECK_S while the coins are saved for a
+# station of the shop (StationFocus.in_shop())
+CELLAR_FOCUS_CHECK_S = 5 * 60
 # The rewards are looked at (when all are done: bottling, then Exit)
 # right away and then every COMPLETION_CHECK_S
 COMPLETION_CHECK_S = 15 * 60
@@ -190,7 +193,8 @@ class PotionShopLoop:
     if self.end_game.play():
       return True
     if self.cellar_timer.is_due():
-      self.cellar_timer.postpone(CELLAR_CHECK_S)
+      self.cellar_timer.postpone(
+        CELLAR_FOCUS_CHECK_S if self.focus.in_shop() else CELLAR_CHECK_S)
       self._play_cellar()
       return True
     return False
@@ -388,6 +392,12 @@ class StationFocus:
     self.station = station
     self.timer.postpone(FOCUS_WAIT_S)
 
+  def in_shop(self):
+    """Whether the coins are saved for a station of the shop."""
+    return (self.station is not None
+            and self.station not in potion_shop_map.CELLAR_STATIONS
+            and not self.timer.is_due())
+
   def upgrade(self, icons, cellar):
     """Tap the arrows (icons) of the cellar or the shop view. Returns
     False when there is nothing to wait for on this view (no arrow, the
@@ -408,6 +418,11 @@ class StationFocus:
         stations.upgrade(game, [arrow])
         if cellar:
           potion_shop_map.close_cellar_popup(game)
+        else:
+          # Its popup may stay open over the shop
+          game.screen.capture()
+          if popups.is_screen_dimmed(game):
+            popups.close_popup(game)
         self.timer.postpone(FOCUS_WAIT_S)
         return True
     if name is not None and not self.timer.is_due():
