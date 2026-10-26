@@ -39,9 +39,9 @@ BREW_RETRY_S = 15
 IDLE_BREWS = 3
 IDLE_BREW_S = 5 * 60
 # The badge may be gone while the Cauldron is idle and could brew (e.g.
-# after the dialog was seen once): it is opened every this many loops
-# (a few minutes) anyway
-CAULDRON_CHECK_LOOPS = 40
+# after the dialog was seen once): it is opened after this time without
+# a look anyway
+CAULDRON_CHECK_S = 5 * 60
 # A red station icon next to the Upgrades button looks like its badge
 # (and skipped customer rows keep it shown); when nothing could be
 # bought the badge is ignored for this time
@@ -115,8 +115,7 @@ class PotionShopLoop:
     self.game = game
     self.loops = 0
     self.misplaced_loops = 0
-    self.idle_brews = 0
-    self.brew_timer = Timer()
+    self.cauldron = CauldronWatch()
     self.upgrades_timer = Timer()
     self.cellar_timer = Timer()
     self.completion_timer = Timer()
@@ -154,13 +153,10 @@ class PotionShopLoop:
     self.loops += 1
     if self._handle_dialog():
       return
-    if potion_shop_cauldron.can_brew(game) and self.brew_timer.is_due():
-      self._brew()
-      return
-    if self.loops % CAULDRON_CHECK_LOOPS == 0:
-      if self._brewed(potion_shop_cauldron.brew(game)):
-        self.idle_brews = 0
-        self.brew_timer.postpone(BREW_PAUSE_S)
+    reason = self.cauldron.reason(game)
+    if reason is not None:
+      self.cauldron.note(self._brewed(potion_shop_cauldron.brew(game)),
+                         reason == 'badge')
       return
     if upgrades.has_badge(game) and self.upgrades_timer.is_due():
       self._buy_upgrades()
@@ -198,24 +194,14 @@ class PotionShopLoop:
     another dialog. Returns True when one was open."""
     game = self.game
     if potion_shop_cauldron.is_cauldron_open(game):
-      if self._brewed(potion_shop_cauldron.brew(game)):
-        self.brew_timer.postpone(BREW_PAUSE_S)
+      self.cauldron.note(self._brewed(potion_shop_cauldron.brew(game)),
+                         False)
       return True
     if popups.is_screen_dimmed(game):
       if not popups.close_popup(game):
         self._close_unknown_dialog()
       return True
     return False
-
-  def _brew(self):
-    """Claim and brew; looked at again sooner after a brew."""
-    if self._brewed(potion_shop_cauldron.brew(self.game)):
-      self.idle_brews = 0
-      self.brew_timer.postpone(BREW_PAUSE_S)
-      return
-    self.idle_brews += 1
-    self.brew_timer.postpone(
-      IDLE_BREW_S if self.idle_brews >= IDLE_BREWS else BREW_RETRY_S)
 
   def _brewed(self, result):
     """Note a 'done' of potion_shop_cauldron.brew(). Returns True when
@@ -267,6 +253,35 @@ class PotionShopLoop:
     log.info('Potion Shop: closing an unknown dialog')
     self.game.device.tap(self.game.coords.potion_shop_dialog_close)
     time.sleep(1)
+
+
+class CauldronWatch:
+  """When to open the Cauldron: on its badge (see BREW_PAUSE_S and
+  IDLE_BREWS) and after CAULDRON_CHECK_S without a look."""
+
+  def __init__(self):
+    self.idle_brews = 0
+    self.badge_timer = Timer()
+    self.check_timer = Timer()
+
+  def reason(self, game):
+    """'badge', 'check' or None (not now)."""
+    if (potion_shop_cauldron.can_brew(game)
+        and self.badge_timer.is_due()):
+      return 'badge'
+    return 'check' if self.check_timer.is_due() else None
+
+  def note(self, brewed, badge):
+    """Note a look into the Cauldron (badge: for its badge); looked at
+    again sooner after a brew."""
+    self.check_timer.postpone(CAULDRON_CHECK_S)
+    if brewed:
+      self.idle_brews = 0
+      self.badge_timer.postpone(BREW_PAUSE_S)
+    elif badge:
+      self.idle_brews += 1
+      self.badge_timer.postpone(
+        IDLE_BREW_S if self.idle_brews >= IDLE_BREWS else BREW_RETRY_S)
 
 
 class EndGame:
