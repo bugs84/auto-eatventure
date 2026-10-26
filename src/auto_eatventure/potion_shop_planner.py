@@ -170,11 +170,11 @@ class Planner:
     while count < MAX_LEVELS and name in planner.stations:
       station = planner.stations[name]
       times = planner._times(coins, customers)
+      # Its next level, or the levels up to its star
       level = [time for time, choice in times
-               if choice.kind == 'level' and choice.station == name
-               and choice.count == 1]
+               if choice.kind == 'level' and choice.station == name]
       if (not level or station.price > coins
-          or level[0] > OPEN_POPUP_FACTOR * min(t for t, _ in times)):
+          or min(level) > OPEN_POPUP_FACTOR * min(t for t, _ in times)):
         break
       coins -= station.price
       planner.levels_bought(name, 1)
