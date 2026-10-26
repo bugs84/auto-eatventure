@@ -38,6 +38,10 @@ BREW_RETRY_S = 15
 # IDLE_BREW_S
 IDLE_BREWS = 3
 IDLE_BREW_S = 5 * 60
+# The badge may be gone while the Cauldron is idle and could brew (e.g.
+# after the dialog was seen once): it is opened every this many loops
+# (a few minutes) anyway
+CAULDRON_CHECK_LOOPS = 40
 # A red station icon next to the Upgrades button looks like its badge
 # (and skipped customer rows keep it shown); when nothing could be
 # bought the badge is ignored for this time
@@ -152,6 +156,11 @@ class PotionShopLoop:
       return
     if potion_shop_cauldron.can_brew(game) and self.brew_timer.is_due():
       self._brew()
+      return
+    if self.loops % CAULDRON_CHECK_LOOPS == 0:
+      if self._brewed(potion_shop_cauldron.brew(game)):
+        self.idle_brews = 0
+        self.brew_timer.postpone(BREW_PAUSE_S)
       return
     if upgrades.has_badge(game) and self.upgrades_timer.is_due():
       self._buy_upgrades()
