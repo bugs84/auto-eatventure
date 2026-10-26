@@ -161,8 +161,8 @@ def _claim(game):
 def _brew_next(game):
   """Brew the first potion of the plan below its level that has a
   Brew button (while a potion is brewing the list shows only it,
-  without a Brew button). Returns 'brewed', 'done' (LATE_PLAN
-  complete) or None."""
+  without a Brew button), else raise an active potion of the plan
+  further. Returns 'brewed', 'done' (LATE_PLAN complete) or None."""
   both, rows = _read_brew_list(game)
   plan = LATE_PLAN if LATE_POTION in both else BREW_PLAN
   log.debug('Potion Shop: potions %s', {
@@ -173,6 +173,14 @@ def _brew_next(game):
         or row.level > level_to):
       continue
     return 'brewed' if _brew_listed(game, name, row.level, rows) else None
+  # Past the plan: raise its active potions further (they keep their
+  # slots anyway). With a lower max level (6 on the LG account) the
+  # slots fill up and the plan's next potion may never get one.
+  for name, _ in plan:
+    row = both.get(name)
+    if (row is not None and row.button is not None
+        and row.level is not None and row.level > 1):
+      return 'brewed' if _brew_listed(game, name, row.level, rows) else None
   if _needs_slot(plan, both):
     _bottle(game, BOTTLE_ORDER, 'to free a slot')
   log.info('Potion Shop: nothing to brew')
