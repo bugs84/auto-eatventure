@@ -34,6 +34,11 @@ MAX_LEVELS = 30
 # here is taken while it pays for itself at most this many times later
 # than the best one there
 OTHER_VIEW_FACTOR = 1.5
+# Its popup open, a station's next level is bought while it pays for
+# itself at most this many times later than the best choice (else one
+# level per popup: the best choice flips to saving for another one and
+# back as soon as the coins grow)
+OPEN_POPUP_FACTOR = 1.5
 
 # kind: 'level' (station: levels of it, count: how many it pays to buy
 # at once, cost: their price) or 'upgrade' (upgrade: the Upgrade)
@@ -138,17 +143,7 @@ class Planner:
     cheap = self._cheap(coins, customers, here)
     if cheap is not None:
       return cheap
-    total = sum(station.profit for station in self.stations.values()
-                if station.profit is not None)
-    times = []
-    for choice, gain in self._candidates(customers):
-      if gain is None:
-        # Alchemists, the Kettle, the cellar: first, as soon as they
-        # can be paid
-        times.append((max(0.0, choice.cost - coins), choice))
-      elif gain > 0:
-        times.append((max(0.0, choice.cost - coins)
-                      + choice.cost * total / gain, choice))
+    times = self._times(coins, customers)
     if not times:
       return None
     best_time, best = min(times, key=lambda item: item[0])
@@ -174,14 +169,32 @@ class Planner:
     count = 0
     while count < MAX_LEVELS and name in planner.stations:
       station = planner.stations[name]
-      choice = planner.choice(coins, customers, here)
-      if (choice is None or choice.kind != 'level'
-          or choice.station != name or station.price > coins):
+      times = planner._times(coins, customers)
+      level = [time for time, choice in times
+               if choice.kind == 'level' and choice.station == name
+               and choice.count == 1]
+      if (not level or station.price > coins
+          or level[0] > OPEN_POPUP_FACTOR * min(t for t, _ in times)):
         break
       coins -= station.price
       planner.levels_bought(name, 1)
       count += 1
     return count
+
+  def _times(self, coins, customers):
+    """(Time to pay for itself, Choice) of the candidates."""
+    total = sum(station.profit for station in self.stations.values()
+                if station.profit is not None)
+    times = []
+    for choice, gain in self._candidates(customers):
+      if gain is None:
+        # Alchemists, the Kettle, the cellar: first, as soon as they
+        # can be paid
+        times.append((max(0.0, choice.cost - coins), choice))
+      elif gain > 0:
+        times.append((max(0.0, choice.cost - coins)
+                      + choice.cost * total / gain, choice))
+    return times
 
   def _cheap(self, coins, customers, here):
     """A Choice costing at most CHEAP_SHARE of the coins (the cheapest
