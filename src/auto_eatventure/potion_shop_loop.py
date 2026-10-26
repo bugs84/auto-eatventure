@@ -3,7 +3,6 @@ PotionShopWatch (GameLoop's hook) looks for it and enters it,
 PotionShopLoop plays it while the bot is inside it."""
 
 import logging
-import os
 import time
 
 from auto_eatventure import potion_bottles_loop
@@ -72,16 +71,16 @@ FOCUS_STATIONS = ('spider', 'mushrooms', 'frog')
 # Frog x175) was still to be bought; their levels are upgraded only after
 # it, levels without it are not worth the coins
 LAST_UPGRADES = ('mushrooms', 'frog')
-# The station whose profit was multiplied last (Upgrades row "<station>
-# profit xN") earns the most per level: only its arrow is tapped, the
-# coins are saved for it, until it had no arrow for FOCUS_WAIT_S (MAX,
-# or its levels cost more than a few minutes of income)
+# Station focus: the coins go to the station whose next level returns
+# the most per coin (its popup: profit / price; the times, often
+# covered, differ far less). Only its arrow is tapped and the coins are
+# saved for it, until it had no arrow for FOCUS_WAIT_S (its levels cost
+# more than a few minutes of income). The popups are read every
+# SURVEY_S, after a profit upgrade of the station (Upgrades dialog) and
+# after its own upgrade. (LG 2026-10-26: Water 67.5ak for 1.91al, Frog
+# 670ak for 2.11am: Water returns ~100x more per coin.)
 FOCUS_WAIT_S = 3 * 60
-# The focus survives restarts (watchdog, low battery pause) in this
-# file; one older than FOCUS_MAX_AGE_S is from an earlier event. The
-# station's name may also be written there by hand (e.g. "bat").
-FOCUS_FILE = 'logs/potion_shop_focus.txt'
-FOCUS_MAX_AGE_S = 24 * 60 * 60
+SURVEY_S = 10 * 60
 # In the end game (END_GAME_STATION MAX, looked at every
 # END_GAME_CHECK_S) the focused station's last upgrade (bought yet?)
 # and, without an arrow, its MAX are looked at again STATION_CHECK_S
@@ -177,6 +176,8 @@ class PotionShopLoop:
     if self._shop_misplaced():
       potion_shop_map.show_shop(game)
       return
+    if self.focus.survey(cellar=False):
+      return
     if not self.focus.upgrade(potion_shop_map.shop_icons(game),
                               cellar=False):
       # Nothing to wait for here (the shop's stations are MAX or too
@@ -233,7 +234,7 @@ class PotionShopLoop:
       self.upgrades_timer.postpone(UPGRADES_RETRY_S)
     for kind in kinds:
       if kind in potion_shop.STATIONS:
-        self.focus.set(kind)
+        self.focus.profit_changed(kind)
 
   def _play_cellar(self):
     """Open the crates and upgrade the stations of the cellar, then
@@ -243,6 +244,8 @@ class PotionShopLoop:
       for _ in range(CELLAR_LOOPS):
         game.screen.capture()
         potion_shop_map.open_crates(game)
+        if self.focus.survey(cellar=True):
+          game.screen.capture()
         if not self.focus.upgrade(stations.find_icons(game), cellar=True):
           break
     potion_shop_map.show_shop(game)
@@ -378,19 +381,50 @@ class StationFocus:
 
   def __init__(self, game):
     self.game = game
-    self.station = _read_focus()
+    self.station = None
     self.timer = Timer()
-    if self.station is not None:
-      log.info('Potion Shop: focus on %s (%s)', self.station, FOCUS_FILE)
-      self.timer.postpone(FOCUS_WAIT_S)
+    # {station: profit of an item per coin of its next level}
+    self.returns = {}
+    # Stations whose popup is to be read (on their view)
+    self.stale = set()
+    self.survey_timer = Timer()
 
-  def set(self, station):
-    """Focus on the station (its profit was just multiplied)."""
-    if station != self.station:
-      log.info('Potion Shop: focus on %s', station)
-      _write_focus(station)
-    self.station = station
-    self.timer.postpone(FOCUS_WAIT_S)
+  def profit_changed(self, station):
+    """The station's profit was multiplied (Upgrades dialog)."""
+    self.stale.add(station)
+
+  def survey(self, cellar):
+    """Read the popups of the stale stations of the cellar or the shop
+    view (all of them every SURVEY_S) and focus on the best. Returns
+    True when a popup was read (the screen changed)."""
+    if self.survey_timer.is_due():
+      self.survey_timer.postpone(SURVEY_S)
+      self.stale.update(potion_shop.STATIONS)
+    names = [name for name in potion_shop.STATIONS if name in self.stale
+             and (name in potion_shop_map.CELLAR_STATIONS) == cellar]
+    if not names or potion_shop_map.shop_offset(self.game) is None:
+      return False
+    for name in names:
+      self.stale.discard(name)
+      popup = potion_shop_map.read_station(self.game, name)
+      if popup is None:
+        self.returns.pop(name, None)
+        continue
+      self.returns[name] = popup.profit / popup.price
+      log.debug('Potion Shop: %s %s', name, popup)
+    self._focus_best()
+    return True
+
+  def _focus_best(self):
+    if not self.returns:
+      return
+    best = max(self.returns, key=self.returns.get)
+    if best != self.station:
+      log.info('Potion Shop: focus on %s (returns %s)', best, ', '.join(
+        f'{name} {value:.2g}' for name, value in sorted(
+          self.returns.items(), key=lambda item: -item[1])))
+      self.station = best
+      self.timer.postpone(FOCUS_WAIT_S)
 
   def in_shop(self):
     """Whether the coins are saved for a station of the shop."""
@@ -423,6 +457,8 @@ class StationFocus:
           game.screen.capture()
           if popups.is_screen_dimmed(game):
             popups.close_popup(game)
+        # Its next level costs more: read again
+        self.stale.add(name)
         self.timer.postpone(FOCUS_WAIT_S)
         return True
     if name is not None and not self.timer.is_due():
@@ -431,23 +467,3 @@ class StationFocus:
     if icons:
       stations.upgrade(game, icons)
     return bool(icons)
-
-
-def _read_focus():
-  """The station in FOCUS_FILE; None when missing, old or unknown."""
-  try:
-    if time.time() - os.path.getmtime(FOCUS_FILE) > FOCUS_MAX_AGE_S:
-      return None
-    with open(FOCUS_FILE, encoding='utf-8') as file:
-      station = file.read().strip()
-  except OSError:
-    return None
-  return station if station in potion_shop.STATIONS else None
-
-
-def _write_focus(station):
-  try:
-    with open(FOCUS_FILE, 'w', encoding='utf-8') as file:
-      file.write(f'{station}\n')
-  except OSError as error:
-    log.warning('Potion Shop: focus not saved: %s', error)
