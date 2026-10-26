@@ -345,5 +345,5 @@ upgrade_row_button_min_x = 200
 potion_shop_upgrade_buttons_roi = Region(780, 750, 1130, 1900)
 potion_shop_upgrades_swipe = Swipe(Point(610, 1590), Point(610, 1100))
 # The event's coin counter (light, right of the coin) and its border
-potion_shop_coins_roi = Region(220, 0, 640, 260)
+potion_shop_coins_roi = Top(Region(220, 0, 640, 260))
 coin_counter_margin_y = 7
