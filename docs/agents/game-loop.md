@@ -284,8 +284,10 @@ loop of `PotionShopLoop`:
    `experiments/potion_shop/video_transcript/GUIDE.md`, levels a bit
    higher). Once Divine is in the list `LATE_PLAN` (Divine, Golden) is
    used; a planned potion with "Slots Full!" makes it bottle Sizzle,
-   then Perfect (Active Potions tab, 1 cork). When all of `LATE_PLAN`
-   is brewed, `brew()` returns 'done': nothing more is brewed.
+   then Perfect (Active Potions tab, 1 cork). Past the plan the plan's
+   active potions (level > 1) are raised further: with a lower max
+   level (6 on the LG account) the slots fill up before Golden. When
+   all of `LATE_PLAN` is brewed, `brew()` returns 'done'.
 2. Dimmed screen -> close the dialog.
 3. Right after entering and every 15 min:
    `potion_shop.is_completed()` (rewards list scrolled to the bottom,
@@ -303,7 +305,8 @@ loop of `PotionShopLoop`:
    they are lost with the event).
 4. Red "!" on the Cauldron button -> `brew()` (retried after 15 s,
    only every 5 min after 3 checks without a brew: the badge also
-   shows when the plan is done).
+   shows when the plan is done); also every 5 min without a look, as
+   the badge may be gone while the Cauldron idles (`CauldronWatch`).
 5. Upgrades badge -> `potion_shop.buy_upgrades()`: the first affordable
    of the dialog's 4 visible rows, again and again; "+N Customer(s)"
    rows (template `potion_shop_upgrade_customer`) only the first two,
