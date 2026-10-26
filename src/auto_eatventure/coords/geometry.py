@@ -28,8 +28,15 @@ class Region(NamedTuple):
                  (self.top + self.bottom) // 2)
 
   def crop(self, image):
-    """The part of an image (numpy array) inside this region."""
-    return image[self.top:self.bottom, self.left:self.right]
+    """The part of an image (numpy array) inside this region.
+
+    A region reaching over the top or left edge (a Top position on a
+    phone with a lower status bar than the reference, e.g. the LG G6)
+    is cut at the edge; a negative index would count from the other
+    side and the part would be empty.
+    """
+    return image[max(self.top, 0):self.bottom,
+                 max(self.left, 0):self.right]
 
   def moved(self, dx, dy):
     """The same region moved by (dx, dy)."""
@@ -41,3 +48,15 @@ class Swipe(NamedTuple):
   """A swipe gesture from start to end."""
   start: Point
   end: Point
+
+
+class Top(NamedTuple):
+  """A position in coords/reference.py that stays at the top of the
+  screen, below the status bar (top bar, side button columns)."""
+  value: object
+
+
+class Bottom(NamedTuple):
+  """A position in coords/reference.py that stays at the bottom of the
+  screen (bottom button bar)."""
+  value: object

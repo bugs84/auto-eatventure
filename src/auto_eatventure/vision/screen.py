@@ -81,8 +81,13 @@ class Screen:
       self.bgr, self._templates[name].bgr, threshold)
 
   def color_ratio(self, region, ranges):
-    """Share (0-1) of the region's pixels in the HSV ranges."""
-    return colors.color_ratio(region.crop(self.hsv), ranges)
+    """Share (0-1) of the region's pixels in the HSV ranges, 0 when
+    the region is off the screen (e.g. an ad in landscape; the bot
+    crashed on its screenshot)."""
+    image = region.crop(self.hsv)
+    if not image.size:
+      return 0.0
+    return colors.color_ratio(image, ranges)
 
   def _log_score(self, name, score):
     if self._debug:
