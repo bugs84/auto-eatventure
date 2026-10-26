@@ -3,6 +3,7 @@ PotionShopWatch (GameLoop's hook) looks for it and enters it,
 PotionShopLoop plays it while the bot is inside it."""
 
 import logging
+import os
 import time
 
 from auto_eatventure import potion_bottles_loop
@@ -73,6 +74,11 @@ LAST_UPGRADES = ('mushrooms', 'frog')
 # coins are saved for it, until it had no arrow for FOCUS_WAIT_S (MAX,
 # or its levels cost more than a few minutes of income)
 FOCUS_WAIT_S = 3 * 60
+# The focus survives restarts (watchdog, low battery pause) in this
+# file; one older than FOCUS_MAX_AGE_S is from an earlier event. The
+# station's name may also be written there by hand (e.g. "bat").
+FOCUS_FILE = 'logs/potion_shop_focus.txt'
+FOCUS_MAX_AGE_S = 24 * 60 * 60
 # In the end game (END_GAME_STATION MAX, looked at every
 # END_GAME_CHECK_S) the focused station's last upgrade (bought yet?)
 # and, without an arrow, its MAX are looked at again STATION_CHECK_S
@@ -368,13 +374,17 @@ class StationFocus:
 
   def __init__(self, game):
     self.game = game
-    self.station = None
+    self.station = _read_focus()
     self.timer = Timer()
+    if self.station is not None:
+      log.info('Potion Shop: focus on %s (%s)', self.station, FOCUS_FILE)
+      self.timer.postpone(FOCUS_WAIT_S)
 
   def set(self, station):
     """Focus on the station (its profit was just multiplied)."""
     if station != self.station:
       log.info('Potion Shop: focus on %s', station)
+      _write_focus(station)
     self.station = station
     self.timer.postpone(FOCUS_WAIT_S)
 
@@ -406,3 +416,23 @@ class StationFocus:
     if icons:
       stations.upgrade(game, icons)
     return bool(icons)
+
+
+def _read_focus():
+  """The station in FOCUS_FILE; None when missing, old or unknown."""
+  try:
+    if time.time() - os.path.getmtime(FOCUS_FILE) > FOCUS_MAX_AGE_S:
+      return None
+    with open(FOCUS_FILE, encoding='utf-8') as file:
+      station = file.read().strip()
+  except OSError:
+    return None
+  return station if station in potion_shop.STATIONS else None
+
+
+def _write_focus(station):
+  try:
+    with open(FOCUS_FILE, 'w', encoding='utf-8') as file:
+      file.write(f'{station}\n')
+  except OSError as error:
+    log.warning('Potion Shop: focus not saved: %s', error)
