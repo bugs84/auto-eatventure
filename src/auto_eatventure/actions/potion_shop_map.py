@@ -145,15 +145,23 @@ def shop_icons(game):
 
 def station_arrow(game, name, icons):
   """The upgrade arrow (of stations.find_icons()) of the station on the
-  current view, None when it has none (MAX or too expensive)."""
+  current view, None when it has none (MAX or too expensive). The
+  station's place is moved by how far the map is from its view (a
+  scroll of ~180 px put the Unicorn's arrow on the Djinn's place)."""
   coords = game.coords
   station = getattr(coords, f'potion_shop_{name}_station')
+  offset = shop_offset(game)
+  if offset is not None:
+    if name in CELLAR_STATIONS:
+      offset -= coords.potion_shop_cellar_view_y
+    station = Point(station.x, station.y + offset)
   radius = coords.potion_shop_station_arrow_x
-  for icon in icons:
-    if (abs(icon.x - station.x) <= radius
-        and abs(icon.y - station.y) <= radius):
-      return icon
-  return None
+  near = [icon for icon in icons
+          if abs(icon.x - station.x) <= radius
+          and abs(icon.y - station.y) <= radius]
+  return min(near, default=None,
+             key=lambda icon: abs(icon.x - station.x)
+             + abs(icon.y - station.y))
 
 
 def is_locked(game, arrow):
