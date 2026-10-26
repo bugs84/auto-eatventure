@@ -27,6 +27,9 @@ LOCKED_THRESHOLD = 0.8
 # "MAX" in a station's popup
 MAX_THRESHOLD = 0.8
 POPUP_DELAY_S = 1
+# Levels are bought by taps on the open popup's button, one each (a
+# long press buys too many to count)
+LEVEL_TAP_DELAY_S = 0.3
 # Stations of the cellar view (coords potion_shop_<name>_station); the
 # others are on the shop view
 CELLAR_STATIONS = ('water', 'spider', 'mushrooms', 'frog')
@@ -161,11 +164,37 @@ def station_place(game, name):
   return Point(station.x, station.y + offset)
 
 
+def current_view(game):
+  """'shop' or 'cellar' when the map is at that view (last
+  screenshot), else None."""
+  offset = shop_offset(game)
+  if offset is None:
+    return None
+  aligned = game.coords.potion_shop_aligned_y
+  if abs(offset) <= aligned:
+    return 'shop'
+  if abs(offset - game.coords.potion_shop_cellar_view_y) <= aligned:
+    return 'cellar'
+  return None
+
+
+def view_of(name):
+  return 'cellar' if name in CELLAR_STATIONS else 'shop'
+
+
 def read_station(game, name):
-  """The station's popup numbers (StationPopup of
-  vision/station_popup.py; tapped open and closed), 'max' when it is
-  MAX, None when they can't be read (e.g. not unlocked, covered; the
-  screenshot is saved to logs/)."""
+  """The station's popup numbers (tapped open and closed): see
+  open_station()."""
+  popup = open_station(game, name)
+  close_station(game, name)
+  return popup
+
+
+def open_station(game, name):
+  """Open the station's popup. Returns its numbers (StationPopup of
+  vision/station_popup.py), 'max' when it is MAX, None when they can't
+  be read (e.g. not unlocked, covered; the screenshot is saved to
+  logs/)."""
   coords = game.coords
   place = station_place(game, name)
   game.device.tap(Point(
@@ -173,18 +202,40 @@ def read_station(game, name):
     place.y + coords.station_tap_offset_y + coords.station_tap_shift_y))
   time.sleep(POPUP_DELAY_S)
   game.screen.capture()
-  popup = game.screen.read_station_popup(coords)
-  if popup is None and is_max_shown(game, place):
-    popup = 'max'
-  elif popup is None:
-    # To see why (e.g. a new suffix letter without its sample)
-    cv2.imwrite(os.path.join(LOG_DIR, f'station_popup_{name}.png'),
-                game.screen.bgr)
+  return _popup_numbers(game, name, place)
+
+
+def buy_levels(game, name, count):
+  """Tap the open popup's button count times (a level each). Returns
+  the popup's numbers after (see open_station())."""
+  button = game.screen.station_popup_button(game.coords)
+  if button is None:
+    return None
+  for _ in range(count):
+    game.device.tap(button)
+    time.sleep(LEVEL_TAP_DELAY_S)
+  time.sleep(POPUP_DELAY_S)
+  game.screen.capture()
+  return _popup_numbers(game, name, station_place(game, name))
+
+
+def close_station(game, name):
+  """Close the station's open popup."""
   if name in CELLAR_STATIONS:
     close_cellar_popup(game)
   else:
-    game.device.tap(coords.potion_shop_floor)
+    game.device.tap(game.coords.potion_shop_floor)
   time.sleep(POPUP_DELAY_S)
+
+
+def _popup_numbers(game, name, place):
+  popup = game.screen.read_station_popup(game.coords)
+  if popup is None and is_max_shown(game, place):
+    return 'max'
+  if popup is None:
+    # To see why (e.g. a new suffix letter without its sample)
+    cv2.imwrite(os.path.join(LOG_DIR, f'station_popup_{name}.png'),
+                game.screen.bgr)
   return popup
 
 

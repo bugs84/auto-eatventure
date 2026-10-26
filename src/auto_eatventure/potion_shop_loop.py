@@ -7,10 +7,10 @@ import time
 
 from auto_eatventure import potion_bottles_loop
 from auto_eatventure.actions import (
-  popups, potion_shop, potion_shop_cauldron, potion_shop_map, stations,
-  upgrades)
+  popups, potion_shop, potion_shop_cauldron, potion_shop_map, stations)
 from auto_eatventure.logger import key_log
 from auto_eatventure.potion_bottles_loop import PotionBottlesLoop
+from auto_eatventure.potion_shop_planner import Planner
 from auto_eatventure.timer import Timer
 
 log = logging.getLogger(__name__)
@@ -42,52 +42,22 @@ IDLE_BREW_S = 5 * 60
 # after the dialog was seen once): it is opened after this time without
 # a look anyway
 CAULDRON_CHECK_S = 5 * 60
-# A red station icon next to the Upgrades button looks like its badge
-# (and skipped customer rows keep it shown); when nothing could be
-# bought the badge is ignored for this time
-UPGRADES_RETRY_S = 60
 # "+N Customer(s)" upgrades bought before brewing is done: the first two
 # (cheap, needed at the start); the rest after the last brew (video)
 EARLY_CUSTOMER_ROWS = 2
-# Every CELLAR_CHECK_S the map is scrolled to the cellar for
-# CELLAR_LOOPS loops of crates and station upgrades there
-CELLAR_CHECK_S = 60
-CELLAR_LOOPS = 3
-# ... only every CELLAR_FOCUS_CHECK_S while the coins are saved for a
-# station of the shop (StationFocus.in_shop())
-CELLAR_FOCUS_CHECK_S = 5 * 60
+# The other view (shop, cellar) is looked at for crates this often
+OTHER_VIEW_S = 15 * 60
 # The rewards are looked at (when all are done: bottling, then Exit)
 # right away and then every COMPLETION_CHECK_S
 COMPLETION_CHECK_S = 15 * 60
-# End game: once Beetle Juice (the shop's last station) is MAX, only the
-# best paying station is upgraded, coins are saved for it, until it is
-# MAX (level 1000), then the next one. Stations by income: Bat Wing,
-# Dragon Scale, Unicorn Horn, Djinn's Breath, Mermaid Tears, Beetle
-# Juice, then the cellar's Purified Water, Spider Silk, Mystic
-# Mushrooms, Frog Screams.
-END_GAME_STATION = 'beetle'
-FOCUS_STATIONS = ('spider', 'mushrooms', 'frog')
-# Focused stations whose last upgrade (Upgrades dialog: Mushrooms x100,
-# Frog x175) was still to be bought; their levels are upgraded only after
-# it, levels without it are not worth the coins
-LAST_UPGRADES = ('mushrooms', 'frog')
-# Station focus: the coins go to the station whose next level returns
-# the most per coin (its popup: profit / price; the times, often
-# covered, differ far less). Only its arrow is tapped and the coins are
-# saved for it, until it had no arrow for FOCUS_WAIT_S (its levels cost
-# more than a few minutes of income). The popups are read every
-# SURVEY_S, after a profit upgrade of the station (Upgrades dialog) and
-# after its own upgrade. (LG 2026-10-26: Water 67.5ak for 1.91al, Frog
-# 670ak for 2.11am: Water returns ~100x more per coin.)
-FOCUS_WAIT_S = 3 * 60
-SURVEY_S = 10 * 60
-# In the end game (END_GAME_STATION MAX, looked at every
-# END_GAME_CHECK_S) the focused station's last upgrade (bought yet?)
-# and, without an arrow, its MAX are looked at again STATION_CHECK_S
-# after a "not yet"; after a yes the next check follows right away
-# (after a restart the bot passes the MAX stations in seconds)
-END_GAME_CHECK_S = 5 * 60
-STATION_CHECK_S = 60
+# Station levels and the Upgrades dialog's rows are bought by
+# potion_shop_planner.py from the numbers read: each station's popup
+# (once, then after each purchase; unreadable ones again after
+# UNREAD_RETRY_S, all of them every SURVEY_S) and the dialog's rows
+# (once, then every UPGRADES_READ_S: the user may buy some).
+UNREAD_RETRY_S = 10 * 60
+SURVEY_S = 60 * 60
+UPGRADES_READ_S = 30 * 60
 # Screenshots outside the event in a row that end the loop (the event
 # ended or the game left it)
 OUTSIDE_LOOPS = 3
@@ -117,22 +87,22 @@ class PotionShopWatch:
 
 class PotionShopLoop:
   """Plays the event: one screenshot per loop, then the first thing to
-  do on it. The map stays scrolled to the shop with its stations."""
+  do on it. The map stays at the shop or the cellar view (its
+  stations), whichever the coins are spent on."""
 
   def __init__(self, game):
     self.game = game
     self.loops = 0
     self.misplaced_loops = 0
     self.cauldron = CauldronWatch()
-    self.upgrades_timer = Timer()
-    self.cellar_timer = Timer()
+    self.other_view_timer = Timer()
+    self.other_view_timer.postpone(OTHER_VIEW_S)
     self.completion_timer = Timer()
     self.completed = False
     # Customer rows that may still be bought; None (no limit) once all
     # of potion_shop_cauldron.LATE_PLAN is brewed
     self.customer_rows_left = EARLY_CUSTOMER_ROWS
-    self.end_game = EndGame(game)
-    self.focus = StationFocus(game)
+    self.plan = StationPlan(game)
 
   def run(self):
     """Play until the bot is no longer inside the event or all rewards
@@ -166,39 +136,62 @@ class PotionShopLoop:
       self.cauldron.note(self._brewed(potion_shop_cauldron.brew(game)),
                          reason == 'badge')
       return
-    if upgrades.has_badge(game) and self.upgrades_timer.is_due():
-      self._buy_upgrades()
     if (self.loops % CRATE_CHECK_LOOPS == 0
         and potion_shop_map.open_crates(game)):
       return
-    if self._play_occasional():
+    view = self._view()
+    if view is None or self._play_occasional(view):
       return
-    if self._shop_misplaced():
-      potion_shop_map.show_shop(game)
-      return
-    if self.focus.survey(cellar=False):
-      return
-    if not self.focus.upgrade(potion_shop_map.shop_icons(game),
-                              cellar=False):
-      # Nothing to wait for here (the shop's stations are MAX or too
-      # expensive, or the focused station is in the cellar)
-      self.cellar_timer.reset()
+    left = self.customer_rows_left
+    bought = self.plan.play(view, left is None or left > 0)
+    if bought == 'customer' and left is not None:
+      self.customer_rows_left = left - 1
 
-  def _play_occasional(self):
-    """The rewards check, the end game or a cellar visit. Returns True
-    when one was played."""
+  def _play_occasional(self, view):
+    """The rewards check, a look at the other view (its crates) or an
+    unlock of a new station. Returns True when one was played."""
     if self.completion_timer.is_due():
       self.completion_timer.postpone(COMPLETION_CHECK_S)
       self.completed = potion_shop.is_completed(self.game)
       return True
-    if self.end_game.play():
+    if self.other_view_timer.is_due():
+      self.other_view_timer.postpone(OTHER_VIEW_S)
+      self._show('shop' if view == 'cellar' else 'cellar')
       return True
-    if self.cellar_timer.is_due():
-      self.cellar_timer.postpone(
-        CELLAR_FOCUS_CHECK_S if self.focus.in_shop() else CELLAR_CHECK_S)
-      self._play_cellar()
-      return True
-    return False
+    return self._unlock_stations(view)
+
+  def _view(self):
+    """The view shown ('shop' or 'cellar'); None when the map was moved
+    away (scrolled back to the shop after MISPLACED_LOOPS loops)."""
+    view = potion_shop_map.current_view(self.game)
+    if view is not None:
+      self.misplaced_loops = 0
+      return view
+    self.misplaced_loops += 1
+    if self.misplaced_loops >= MISPLACED_LOOPS:
+      potion_shop_map.show_shop(self.game)
+    return None
+
+  def _show(self, view):
+    if view == 'cellar':
+      potion_shop_map.show_cellar(self.game)
+    else:
+      potion_shop_map.show_shop(self.game)
+
+  def _unlock_stations(self, view):
+    """Tap the arrows over dashed tiles (new stations) of the view.
+    Returns True when one was tapped."""
+    game = self.game
+    icons = (potion_shop_map.shop_icons(game) if view == 'shop'
+             else stations.find_icons(game))
+    locked = [icon for icon in icons
+              if potion_shop_map.is_locked(game, icon)]
+    if not locked:
+      return False
+    stations.upgrade(game, locked)
+    if view == 'cellar':
+      potion_shop_map.close_cellar_popup(game)
+    return True
 
   def _handle_dialog(self):
     """Brew in the Cauldron dialog (it also opens by itself) or close
@@ -221,45 +214,6 @@ class PotionShopLoop:
       self.customer_rows_left = None
       key_log.info('POTION SHOP - Brewing done, buying customers')
     return result == 'brewed'
-
-  def _buy_upgrades(self):
-    """Buy the affordable upgrades; customer rows only the first
-    EARLY_CUSTOMER_ROWS until brewing is done."""
-    left = self.customer_rows_left
-    kinds = potion_shop.buy_upgrades(
-      self.game, potion_shop.MAX_UPGRADE_BUYS if left is None else left)
-    if left is not None:
-      self.customer_rows_left = left - kinds.count('customer')
-    if not kinds:
-      self.upgrades_timer.postpone(UPGRADES_RETRY_S)
-    for kind in kinds:
-      if kind in potion_shop.STATIONS:
-        self.focus.profit_changed(kind)
-
-  def _play_cellar(self):
-    """Open the crates and upgrade the stations of the cellar, then
-    back to the shop."""
-    game = self.game
-    if potion_shop_map.show_cellar(game):
-      for _ in range(CELLAR_LOOPS):
-        game.screen.capture()
-        potion_shop_map.open_crates(game)
-        if self.focus.survey(cellar=True):
-          game.screen.capture()
-        if not self.focus.upgrade(stations.find_icons(game), cellar=True):
-          break
-    potion_shop_map.show_shop(game)
-
-  def _shop_misplaced(self):
-    """Whether the map was moved away from the shop (e.g. by a tap
-    that scrolled it) for MISPLACED_LOOPS loops."""
-    offset = potion_shop_map.shop_offset(self.game)
-    aligned = self.game.coords.potion_shop_aligned_y
-    if offset is not None and abs(offset) <= aligned:
-      self.misplaced_loops = 0
-      return False
-    self.misplaced_loops += 1
-    return self.misplaced_loops >= MISPLACED_LOOPS
 
   def _close_unknown_dialog(self):
     """A dialog without the usual red X: tap its usual X places."""
@@ -297,184 +251,107 @@ class CauldronWatch:
         IDLE_BREW_S if self.idle_brews >= IDLE_BREWS else BREW_RETRY_S)
 
 
-class EndGame:
-  """The end game of PotionShopLoop: once END_GAME_STATION is MAX, only
-  FOCUS_STATIONS are upgraded, one after another."""
+class StationPlan:
+  """Buys what potion_shop_planner.Planner chooses: a station's levels
+  (taps on its popup's button, its view scrolled to) or a row of the
+  Upgrades dialog; waits (saves the coins) while it can't be paid."""
 
   def __init__(self, game):
     self.game = game
-    self.end_game_timer = Timer()
-    self.station_check_timer = Timer()
-    # Station name -> 'bought' (its last upgrade) or 'max'
-    self.station_states = {}
-
-  def play(self):
-    """End game: upgrade only the first focused station that isn't MAX
-    (in the cellar) once its last upgrade is bought, else wait for
-    coins. Returns False while it isn't the end game or when all
-    focused stations are MAX."""
-    game = self.game
-    if not self._is_end_game():
-      return False
-    name = next((name for name in FOCUS_STATIONS
-                 if self.station_states.get(name) != 'max'), None)
-    if name is None:
-      return False
-    if (name not in self.station_states
-        and not self._is_last_upgrade_bought(name)):
-      return True
-    if not potion_shop_map.is_cellar_shown(game):
-      potion_shop_map.show_cellar(game)
-      return True
-    arrow = potion_shop_map.station_arrow(game, name,
-                                          stations.find_icons(game))
-    if arrow is not None:
-      stations.upgrade(game, [arrow])
-      # Near the top of the screen stations.upgrade() closes the popup
-      # by a tap beside the icon, which in the cellar opens it again;
-      # the open popup hid the arrow
-      potion_shop_map.close_cellar_popup(game)
-    elif self.station_check_timer.is_due():
-      if potion_shop_map.is_station_max(game, name):
-        key_log.info('POTION SHOP - %s is MAX', name)
-        self.station_states[name] = 'max'
-      else:
-        self.station_check_timer.postpone(STATION_CHECK_S)
-    return True
-
-  def _is_last_upgrade_bought(self, name):
-    """Whether the station's last upgrade is bought (none for a station
-    not in LAST_UPGRADES)."""
-    if name in LAST_UPGRADES:
-      if not self.station_check_timer.is_due():
-        return False
-      if potion_shop.has_last_upgrade(self.game, name):
-        self.station_check_timer.postpone(STATION_CHECK_S)
-        return False
-      key_log.info('POTION SHOP - %s: last upgrade bought', name)
-    self.station_states[name] = 'bought'
-    return True
-
-  def _is_end_game(self):
-    """Whether END_GAME_STATION is MAX (looked at in the shop view
-    every END_GAME_CHECK_S until it is)."""
-    station = END_GAME_STATION
-    if self.station_states.get(station) == 'max':
-      return True
-    if not self.end_game_timer.is_due():
-      return False
-    self.end_game_timer.postpone(END_GAME_CHECK_S)
-    game = self.game
-    if not (potion_shop_map.show_shop(game)
-            and potion_shop_map.is_station_max(game, station)):
-      return False
-    key_log.info('POTION SHOP - End game: upgrading only %s',
-                 ', '.join(FOCUS_STATIONS))
-    self.station_states[station] = 'max'
-    return True
-
-
-class StationFocus:
-  """Station upgrades: only the focused station's arrow (and unlocks of
-  new stations) while it had one within FOCUS_WAIT_S, else (and without
-  a focus) all arrows."""
-
-  def __init__(self, game):
-    self.game = game
-    self.station = None
-    self.timer = Timer()
-    # {station: profit of an item per coin of its next level}
-    self.returns = {}
-    # Stations whose popup is to be read (on their view), of them those
-    # upgraded since (their last value is too high)
-    self.stale = set()
-    self.upgraded = set()
+    self.planner = Planner()
+    self.upgrades_timer = Timer()
     self.survey_timer = Timer()
+    # Station -> Timer: when to read its popup again (unread ones)
+    self.unread_timers = {}
+    self.waiting_for = None
 
-  def profit_changed(self, station):
-    """The station's profit was multiplied (Upgrades dialog)."""
-    self.stale.add(station)
-
-  def survey(self, cellar):
-    """Read the popups of the stale stations of the cellar or the shop
-    view (all of them every SURVEY_S) and focus on the best. Returns
-    True when a popup was read (the screen changed)."""
+  def play(self, view, customers):
+    """Read what is to be read on the view or buy the choice. Returns
+    the kind of the row bought ('customer', ...), 'level', 'read'
+    (the screen changed) or None (nothing done)."""
+    game = self.game
+    planner = self.planner
+    if planner.upgrades is None or self.upgrades_timer.is_due():
+      self.upgrades_timer.postpone(UPGRADES_READ_S)
+      planner.upgrades = potion_shop.read_upgrades(game)
+      return 'read'
     if self.survey_timer.is_due():
       self.survey_timer.postpone(SURVEY_S)
-      self.stale.update(potion_shop.STATIONS)
-    names = [name for name in potion_shop.STATIONS if name in self.stale
-             and (name in potion_shop_map.CELLAR_STATIONS) == cellar]
-    if not names or potion_shop_map.shop_offset(self.game) is None:
-      return False
+      self.unread_timers = {}
+    if self._read_unread(view):
+      return 'read'
+    coins = game.screen.read_coins(game.coords)
+    if coins is None:
+      return None
+    here = [name for name in potion_shop.STATIONS
+            if potion_shop_map.view_of(name) == view]
+    choice = planner.choice(coins, customers, here)
+    if choice is None:
+      return None
+    if choice.kind == 'upgrade':
+      return self._buy_upgrade(choice, coins)
+    return self._buy_levels(choice.station, coins, customers, view)
+
+  def _read_unread(self, view):
+    """Read the popups of the view's stations not read yet (again after
+    UNREAD_RETRY_S when unreadable). Returns True when one was read."""
+    names = [name for name in potion_shop.STATIONS
+             if potion_shop_map.view_of(name) == view
+             and name not in self.planner.stations
+             and name not in self.planner.maxed
+             and self.unread_timers.setdefault(name, Timer()).is_due()]
     for name in names:
-      self.stale.discard(name)
-      upgraded = name in self.upgraded
-      self.upgraded.discard(name)
       popup = potion_shop_map.read_station(self.game, name)
+      log.debug('Potion Shop: %s %s', name, popup)
       if popup is None:
-        log.debug('Potion Shop: %s popup unreadable', name)
-      if popup is None and not upgraded:
-        # Often covered by the event's buttons or an alchemist: the
-        # last value is kept (unless upgraded since: it is too high)
-        continue
-      if popup in ('max', None):
-        self.returns.pop(name, None)
+        self.unread_timers[name].postpone(UNREAD_RETRY_S)
       else:
-        self.returns[name] = popup.profit / popup.price
-        log.debug('Potion Shop: %s %s', name, popup)
-    self._focus_best()
-    return True
+        self.planner.station_read(name, popup)
+    return bool(names)
 
-  def _focus_best(self):
-    if not self.returns:
-      return
-    best = max(self.returns, key=self.returns.get)
-    if best != self.station:
-      log.info('Potion Shop: focus on %s (returns %s)', best, ', '.join(
-        f'{name} {value:.2g}' for name, value in sorted(
-          self.returns.items(), key=lambda item: -item[1])))
-      self.station = best
-      self.timer.postpone(FOCUS_WAIT_S)
+  def _buy_upgrade(self, choice, coins):
+    upgrade = choice.upgrade
+    if choice.cost > coins:
+      self._wait(f'{upgrade.title} ({upgrade.price})')
+      return None
+    if potion_shop.buy_upgrade(self.game, upgrade):
+      self.planner.upgrade_bought(upgrade)
+      return upgrade.kind
+    # Not found or grey: the dialog is read again
+    self.planner.upgrades = None
+    return 'read'
 
-  def in_shop(self):
-    """Whether the coins are saved for a station of the shop."""
-    return (self.station is not None
-            and self.station not in potion_shop_map.CELLAR_STATIONS
-            and not self.timer.is_due())
-
-  def upgrade(self, icons, cellar):
-    """Tap the arrows (icons) of the cellar or the shop view. Returns
-    False when there is nothing to wait for on this view (no arrow, the
-    focused station is on the other one)."""
+  def _buy_levels(self, name, coins, customers, view):
+    """Buy the levels of the station that pay off now (scrolled to its
+    view first)."""
     game = self.game
-    name = self.station
-    locked = [icon for icon in icons
-              if potion_shop_map.is_locked(game, icon)]
-    if name is not None and locked:
-      # New stations are unlocked whatever the focus
-      stations.upgrade(game, locked)
-      return True
-    here = name is not None and (
-      name in potion_shop_map.CELLAR_STATIONS) == cellar
-    if here:
-      arrow = potion_shop_map.station_arrow(game, name, icons)
-      if arrow is not None:
-        stations.upgrade(game, [arrow])
-        if cellar:
-          potion_shop_map.close_cellar_popup(game)
-        else:
-          # Its popup may stay open over the shop
-          game.screen.capture()
-          if popups.is_screen_dimmed(game):
-            popups.close_popup(game)
-        # Its next level costs more: read again
-        self.stale.add(name)
-        self.upgraded.add(name)
-        self.timer.postpone(FOCUS_WAIT_S)
-        return True
-    if name is not None and not self.timer.is_due():
-      # Coins saved for the focused station
-      return here
-    if icons:
-      stations.upgrade(game, icons)
-    return bool(icons)
+    station = self.planner.stations[name]
+    if station.price > coins:
+      self._wait(f'{name} level ({station.price:.3g})')
+      return None
+    if potion_shop_map.view_of(name) != view:
+      if potion_shop_map.view_of(name) == 'cellar':
+        potion_shop_map.show_cellar(game)
+      else:
+        potion_shop_map.show_shop(game)
+      return 'read'
+    popup = potion_shop_map.open_station(game, name)
+    if popup is not None:
+      self.planner.station_read(name, popup)
+    count = (self.planner.levels_to_buy(name, coins, customers, (name,))
+             if name in self.planner.stations else 0)
+    if count:
+      popup = potion_shop_map.buy_levels(game, name, count)
+      log.info('Potion Shop: %s +%d levels (%s)', name, count, popup)
+      if popup is None:
+        self.planner.levels_bought(name, count)
+      else:
+        self.planner.station_read(name, popup)
+    potion_shop_map.close_station(game, name)
+    self.waiting_for = None
+    return 'level'
+
+  def _wait(self, what):
+    if what != self.waiting_for:
+      log.info('Potion Shop: saving coins for %s', what)
+      self.waiting_for = what
