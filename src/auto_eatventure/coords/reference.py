@@ -335,3 +335,4 @@ station_popup_button_max_y = 220
 station_popup_row_above_y = 150
 station_popup_row_gap_y = 10
 station_popup_gap_x = 25
+station_popup_cover_margin_x = 10
