@@ -59,6 +59,7 @@ src/auto_eatventure/         # The only package (src layout)
     colors.py                # HSV color ranges, color_ratio()
     upgrade_icons.py         # Station upgrade icons by shape + color
     level_label.py           # "Lvl N" labels: digits read by samples
+    station_popup.py         # Station popups: profit, price read
     top_bar.py               # Black line at the bottom of the top bar
   coords/                    # Screen positions
     reference.py             # Positions at the reference 1220x2712

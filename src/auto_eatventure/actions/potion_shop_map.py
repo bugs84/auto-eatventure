@@ -143,18 +143,45 @@ def shop_icons(game):
   return icons
 
 
-def station_arrow(game, name, icons):
-  """The upgrade arrow (of stations.find_icons()) of the station on the
-  current view, None when it has none (MAX or too expensive). The
-  station's place is moved by how far the map is from its view (a
-  scroll of ~180 px put the Unicorn's arrow on the Djinn's place)."""
+def station_place(game, name):
+  """Where the station's arrow shows on the current view: its place on
+  the shop or cellar view moved by how far the map is from that view
+  (a scroll of ~180 px put the Unicorn's arrow on the Djinn's place)."""
   coords = game.coords
   station = getattr(coords, f'potion_shop_{name}_station')
   offset = shop_offset(game)
-  if offset is not None:
-    if name in CELLAR_STATIONS:
-      offset -= coords.potion_shop_cellar_view_y
-    station = Point(station.x, station.y + offset)
+  if offset is None:
+    return station
+  if name in CELLAR_STATIONS:
+    offset -= coords.potion_shop_cellar_view_y
+  return Point(station.x, station.y + offset)
+
+
+def read_station(game, name):
+  """The station's popup numbers (StationPopup of
+  vision/station_popup.py; tapped open and closed), None when they
+  can't be read (e.g. MAX, not unlocked, covered)."""
+  coords = game.coords
+  place = station_place(game, name)
+  game.device.tap(Point(
+    place.x + coords.station_tap_shift_x,
+    place.y + coords.station_tap_offset_y + coords.station_tap_shift_y))
+  time.sleep(POPUP_DELAY_S)
+  game.screen.capture()
+  popup = game.screen.read_station_popup(coords)
+  if name in CELLAR_STATIONS:
+    close_cellar_popup(game)
+  else:
+    game.device.tap(coords.potion_shop_floor)
+  time.sleep(POPUP_DELAY_S)
+  return popup
+
+
+def station_arrow(game, name, icons):
+  """The upgrade arrow (of stations.find_icons()) of the station on the
+  current view, None when it has none (MAX or too expensive)."""
+  coords = game.coords
+  station = station_place(game, name)
   radius = coords.potion_shop_station_arrow_x
   near = [icon for icon in icons
           if abs(icon.x - station.x) <= radius

@@ -314,7 +314,8 @@ loop of `PotionShopLoop`:
    keep the alchemists from carrying the ingredients). A bought
    "<station> profit xN" row (`potion_shop_upgrade_<station>`, the
    icon with a price tag; an exact match tells it from the "made
-   faster" clock) puts the focus (`StationFocus`) on that station.
+   faster" clock) has the station's popup read again
+   (`StationFocus.profit_changed()`).
 6. Every 2nd loop `potion_shop_map.open_crates()` (crates in a shadow by
    `potion_shop_crate_shadow` when no lit one is found).
 7. End game (`EndGame`), once Beetle Juice is MAX
@@ -332,15 +333,21 @@ loop of `PotionShopLoop`:
    the counter, cellar entrance; each with its place on the shop view)
    is at the view's offset, measuring after every swipe; the shop view
    is restored when it was out of place in 2 loops in a row.
-10. `StationFocus.upgrade()` on the shop and cellar views: only the
-    focused station's arrow (`potion_shop_map.station_arrow()`, coords
-    `potion_shop_<station>_station`), the coins are saved for it until
+10. `StationFocus.survey()` on the shop and cellar views: every 10 min
+    (and after a profit upgrade or its own upgrade) each station's
+    popup is opened (`potion_shop_map.read_station()`) and read by
+    `vision/station_popup.py` (profit of an item, time, price of the
+    next level; characters compared with the samples in
+    `matching_screenshots/station_popup_chars/`). The focus is the
+    station with the most profit per coin of its next level.
+    `StationFocus.upgrade()` then taps only the focused station's arrow
+    (`potion_shop_map.station_arrow()`, coords
+    `potion_shop_<station>_station` moved by the map's scroll), the
+    coins are saved for it until
     it had no arrow for 3 min (MAX, expensive levels); without a focus
     or after that all arrows (`stations.upgrade()`, also unlocks new
     stations). On the shop view `potion_shop_map.shop_icons()` adds
     Beetle Juice's arrow, below `station_icon_max_y` on the LG G6.
-    The focus is kept in `logs/potion_shop_focus.txt` over restarts
-    (ignored after 24 h); a station name may be written there by hand.
 
 - Never tapped: Boost (ad), Activate / Pass (real money)
 - Not done yet: speed boosts
