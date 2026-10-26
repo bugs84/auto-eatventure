@@ -1,13 +1,16 @@
-"""Station popups ("Level N", the profit of an item and its time, the
-price of the next level on the blue button): the numbers read by
-comparing their characters with samples. "67.5ak" is read as a number
-of coins (67.5e18)."""
+"""Numbers of the Potion Shop read by comparing their characters with
+samples: station popups ("Level N", the profit of an item and its time,
+the price of the next level on the blue button), the prices of the
+Upgrades dialog's rows and the coin counter. "67.5ak" is read as a
+number of coins (67.5e18)."""
 
 from collections import namedtuple
 import os
 
 import cv2
 import numpy as np
+
+from auto_eatventure.coords.geometry import Point
 
 CHARS_DIR = os.path.join('matching_screenshots', 'station_popup_chars')
 # Characters are compared at this size (width, height); one whose best
@@ -46,7 +49,14 @@ MIN_CHAR_AREA = 15
 LETTER_SUFFIX_EXPONENT = 15
 SUFFIXES = {'': 0, 'K': 3, 'M': 6, 'B': 9, 'T': 12}
 
-StationPopup = namedtuple('StationPopup', 'profit seconds price')
+# profit, seconds and level are None when unreadable (often covered by
+# the event's buttons at the screen's edges or by the top bar)
+StationPopup = namedtuple('StationPopup', 'profit seconds price level')
+# A button of the Upgrades dialog: its center, price (None when
+# unreadable) and whether it is blue (affordable; grey when not)
+PriceButton = namedtuple('PriceButton', 'center price affordable')
+# A button is blue when this share of it is
+MIN_BLUE = 0.3
 
 
 def load_char_samples():
@@ -66,32 +76,129 @@ def load_char_samples():
 
 
 def read_popup(image, coords, samples):
-  """The StationPopup open on the screenshot (BGR; its seconds None
-  when unreadable), None when there is none or the profit or price
-  can't be read (also when partly covered)."""
+  """The StationPopup open on the screenshot (BGR), None when there is
+  none or its price can't be read (also when partly covered)."""
+  button = _find_button(image, coords)
+  if button is None:
+    return None
+  x, y, width, _ = button
+  gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+  groups = _groups(gray[max(0, y - coords.station_popup_row_above_y):
+                        y - coords.station_popup_row_gap_y, x:x + width]
+                   < TEXT_MAX_GRAY, coords)
+  row_covered, button_covered = _covered(image, button, coords)
+  price = _popup_price(image, button, button_covered, coords, samples)
+  if price is None:
+    return None
+  profit = (_uncovered_coins(groups[0], row_covered, samples)
+            if groups else None)
+  # The time is often under the event's buttons at the screen's edge
+  seconds = (_seconds(_text(_after_clock(groups[1]), samples))
+             if len(groups) > 1 else None)
+  return StationPopup(profit, seconds, price,
+                      _level(gray, button, coords, samples))
+
+
+def _popup_price(image, button, covered, coords, samples):
+  """The price on the popup's button, None when unreadable."""
+  x, y, width, height = button
+  groups = _groups(_price_text(
+    image[y:y + int(height * BUTTON_TEXT_SHARE), x:x + width])
+                   & ~covered, coords)
+  if not groups:
+    return None
+  return _uncovered_coins(max(groups, key=len), covered, samples)
+
+
+def popup_button(image, coords):
+  """Center (Point) of the open popup's button, None when none."""
   button = _find_button(image, coords)
   if button is None:
     return None
   x, y, width, height = button
-  gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-  row = gray[max(0, y - coords.station_popup_row_above_y):
-             y - coords.station_popup_row_gap_y, x:x + width]
-  groups = _groups(row < TEXT_MAX_GRAY, coords)
-  row_covered, button_covered = _covered(image, button, coords)
-  price_groups = _groups(_price_text(
-    image[y:y + int(height * BUTTON_TEXT_SHARE), x:x + width])
-                         & ~button_covered, coords)
-  if not groups or not price_groups:
+  return Point(x + width // 2, y + height // 3)
+
+
+def _level(gray, button, coords, samples):
+  """N of the popup's "Level N" (its digits after the l), None when
+  unreadable (e.g. under the top bar)."""
+  x, y, width, _ = button
+  top = y - coords.station_popup_level_top_y
+  if top < 0:
     return None
-  profit = _uncovered_coins(groups[0], row_covered, samples)
-  price = _uncovered_coins(max(price_groups, key=len), button_covered,
-                           samples)
-  if profit is None or price is None:
+  groups = _groups(gray[top:y - coords.station_popup_level_bottom_y,
+                        x:x + width] < TEXT_MAX_GRAY, coords)
+  if not groups:
     return None
-  # The time is often under the event's buttons at the screen's edge
-  seconds = (_seconds(_text(_after_clock(groups[1]), samples))
-             if len(groups) > 1 else None)
-  return StationPopup(profit, seconds, price)
+  chars = [_closest_char(box[4], box[2] / box[3], samples)
+           for box in max(groups, key=len)]
+  digits = ''
+  while chars and chars[-1] is not None and chars[-1].isdigit():
+    digits = chars.pop() + digits
+  if not digits or chars[-1:] != ['l']:
+    return None
+  return int(digits)
+
+
+def read_coins(image, region, coords, samples):
+  """The coins of the counter in the region (the largest light area,
+  dark digits), None when unreadable (e.g. dimmed by a dialog)."""
+  part = image[max(0, region.top):region.bottom,
+               max(0, region.left):region.right]
+  if not part.size:
+    return None
+  mask = _white(part).astype(np.uint8)
+  count, _, stats, _ = cv2.connectedComponentsWithStats(mask)
+  if count < 2:
+    return None
+  x, y, width, height, _ = max(stats[1:count], key=lambda stat: stat[4])
+  margin = coords.coin_counter_margin_y
+  inside = part[y + margin:y + height - margin,
+                x + margin:x + width - margin]
+  if not inside.size:
+    return None
+  groups = _groups(cv2.cvtColor(inside, cv2.COLOR_BGR2GRAY)
+                   < TEXT_MAX_GRAY, coords)
+  if not groups:
+    return None
+  return parse_coins(_text(max(groups, key=len), samples))
+
+
+def read_price_buttons(image, region, coords, samples):
+  """The PriceButtons (blue or grey) in the region, top to bottom."""
+  left, top = max(0, region.left), max(0, region.top)
+  part = image[top:region.bottom, left:region.right]
+  count, _, stats, _ = cv2.connectedComponentsWithStats(
+    _button_color(part).astype(np.uint8))
+  buttons = []
+  for x, y, width, height, _ in sorted(stats[1:count],
+                                       key=lambda stat: stat[1]):
+    if (width >= coords.upgrade_row_button_min_x
+        and coords.station_popup_button_min_y <= height
+        <= coords.station_popup_button_max_y):
+      button = part[y:y + int(height * BUTTON_TEXT_SHARE), x:x + width]
+      buttons.append(PriceButton(
+        Point(left + x + width // 2, top + y + height // 2),
+        _button_price(button, coords, samples), _is_blue(button)))
+  return buttons
+
+
+def _is_blue(button):
+  hsv = cv2.cvtColor(button, cv2.COLOR_BGR2HSV)
+  return (cv2.inRange(hsv, BUTTON_LOW, BUTTON_HIGH) > 0).mean() >= MIN_BLUE
+
+
+def _button_price(button, coords, samples):
+  """The price on a button (cut out), None when unreadable; specks at
+  its edges (the row's light background beside its rounded corners)
+  are not characters."""
+  width = button.shape[1]
+  groups = [[box for box in group if box[0] > 0 and _right(box) < width]
+            for group in _groups(_price_text(button), coords)]
+  groups = [group for group in groups if group]
+  if not groups:
+    return None
+  return parse_coins(_text(max(groups, key=len), samples))
 
 
 def _covered(image, button, coords):
@@ -115,11 +222,11 @@ def _widened(covered, coords):
 
 
 def _uncovered_coins(group, covered, samples):
-  """_coins() of the group, None when covered left of its end (a
+  """parse_coins() of the group, None when covered left of its end (a
   leading digit may be hidden: 20.9ak read as 0.9ak)."""
   if covered[:_right(group[-1])].any():
     return None
-  return _coins(_text(group, samples))
+  return parse_coins(_text(group, samples))
 
 
 def _find_button(image, coords):
@@ -224,19 +331,25 @@ def _closest_char(char, ratio, samples):
   return best
 
 
-def _coins(text):
-  """67.5ak -> 6.75e19; None when not a number with a known suffix."""
+def parse_coins(text):
+  """67.5ak -> 6.75e19; None when not a number with a known suffix (a
+  0 and an o look alike: an o of the number is a 0, a 0 of a two
+  letter suffix an o)."""
   if not text:
     return None
-  digits = text.rstrip('abcdefghijklmnopqrstuvwxyzKMBT')
-  suffix = text[len(digits):]
+  if text[-1] in SUFFIXES:
+    digits, suffix = text[:-1], text[-1]
+  elif len(text) > 2 and text[-2].isalpha() and text[-2] != 'o':
+    digits, suffix = text[:-2], text[-2:].replace('0', 'o')
+  else:
+    digits, suffix = text, ''
   try:
-    number = float(digits)
+    number = float(digits.replace('o', '0'))
   except ValueError:
     return None
   if suffix in SUFFIXES:
     return number * 10.0 ** SUFFIXES[suffix]
-  if len(suffix) == 2 and suffix.islower():
+  if suffix.isalpha() and suffix.islower():
     index = (ord(suffix[0]) - ord('a')) * 26 + ord(suffix[1]) - ord('a')
     return number * 10.0 ** (LETTER_SUFFIX_EXPONENT + 3 * index)
   return None
