@@ -447,3 +447,18 @@ time per phase). Printable manual plan for the user:
   no slot), so the "+N Customer(s)" rows were never bought. A planned
   potion with "Slots Full!" now counts as done when no slot can be
   freed: "Brewing done, buying customers" 10:47 on the LG.
+- Station arrows are found where the scrolled map has the station
+  (`station_place()`: its place moved by the landmark offset).
+- 2026-10-26 noon: the station focus follows the numbers of the
+  station popups (`vision/station_popup.py`, characters compared with
+  samples in `matching_screenshots/station_popup_chars/`): the focus is
+  the station with the most profit per coin of its next level (all
+  popups every 10 min, a station again after its upgrade). Greedy:
+  each upgrade lowers its return, so the focus moves between the
+  stations (mermaid 0.068 -> djinn -> beetle -> ...).
+- The event's buttons at the screen's edge (chest "1485" left, chest
+  "1d 11h" right) cover parts of the Bat's and Dragon Scale's popups:
+  covered columns are found (no white above the button, no blue at its
+  top) and a number covered left of its end is not read (20.9ak read
+  as 0.9ak). An unreadable popup keeps the station's last value (only
+  MAX drops it). The Bat's profit is always covered on the shop view.
