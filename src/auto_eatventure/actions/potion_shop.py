@@ -6,6 +6,7 @@ played by potion_shop_loop.py."""
 import logging
 import time
 
+from auto_eatventure import potion_shop_upgrades
 from auto_eatventure.actions import levels, popups, upgrades
 from auto_eatventure.logger import key_log
 from auto_eatventure.vision.colors import GREEN
@@ -31,18 +32,13 @@ COIN_MIN_RATIO = 0.08
 # The event's loading screen is all teal (its coin area too)
 LOADING_TEAL = [((80, 200, 100), (90, 255, 180))]
 LOADING_MIN_RATIO = 0.9
-# Rows of the Upgrades dialog looked at (the 5th is cut off), upgrades
-# bought in one visit at most (a bought row leaves the list, the rows
-# below move up)
-UPGRADE_ROWS = 4
-MAX_UPGRADE_BUYS = 30
-UPGRADE_BUY_DELAY_S = 0.6
-# Stations, by income (template potion_shop_upgrade_<name>: the icon of
-# their "profit xN" rows, with a price tag; their "made faster" rows show
-# a clock instead: difference ~0.01-0.02 vs >= 0.038)
+# The Upgrades dialog is read page by page (a swipe moves it ~3 rows),
+# up to its end (the same rows twice)
+UPGRADE_PAGES = 15
+UPGRADE_DELAY_S = 1
+# Stations, by income
 STATIONS = ('bat', 'dragon', 'unicorn', 'djinn', 'mermaid', 'beetle',
             'water', 'spider', 'mushrooms', 'frog')
-PROFIT_ROW_DIFFERENCE = 0.03
 
 
 def is_available(game):
@@ -125,68 +121,85 @@ def leave(game):
   return not is_inside(game)
 
 
-def buy_upgrades(game, customers):
-  """Buy the affordable upgrades of the Upgrades dialog, the top row
-  first, but at most `customers` "+N Customer(s)" rows (the guides buy
-  them only after brewing: more customers keep the alchemists from
-  carrying the ingredients). Returns the kinds of the bought rows
-  (_row_kind())."""
+def read_upgrades(game):
+  """The rows of the Upgrades dialog (potion_shop_upgrades.Upgrade, not
+  bought yet), None when the dialog did not open."""
   if not upgrades.open_dialog(game):
-    return []
-  kinds = []
-  while len(kinds) < MAX_UPGRADE_BUYS:
-    row = _affordable_row(game, kinds.count('customer') < customers)
-    if row is None:
-      break
-    button, kind = row
-    log.info('Potion Shop: buying an upgrade (%s)', kind or 'other')
-    game.device.tap(button)
-    kinds.append(kind)
-    time.sleep(UPGRADE_BUY_DELAY_S)
-    game.screen.capture()
+    return None
+  rows = []
+  _scan_upgrades(game, lambda buttons: _note_rows(rows, buttons))
   upgrades.close_dialog(game)
   game.screen.capture()
-  return kinds
+  log.info('Potion Shop: %d upgrades to buy', len(rows))
+  return rows
 
 
-def _affordable_row(game, customers):
-  """(buy button, _row_kind()) of the first visible row that can be
-  bought (customer rows only when customers); None when none."""
-  coords = game.coords
-  for index in range(UPGRADE_ROWS):
-    dy = index * coords.potion_shop_upgrade_row_y
-    button = coords.first_upgrade_buy_roi.moved(0, dy)
-    if not upgrades.is_affordable(game, button):
-      continue
-    kind = _row_kind(game, coords.potion_shop_upgrade_icon_roi.moved(0, dy))
-    if kind == 'customer' and not customers:
-      continue
-    return button.center, kind
-  return None
-
-
-def _row_kind(game, icon_roi):
-  """'customer' for a "+N Customer(s)" row, the station's name for a
-  "<station> profit xN" row, else None."""
-  if game.screen.has('potion_shop_upgrade_customer', icon_roi):
-    return 'customer'
-  for name in STATIONS:
-    if game.screen.find_exact(f'potion_shop_upgrade_{name}', icon_roi,
-                              PROFIT_ROW_DIFFERENCE):
-      return name
-  return None
-
-
-def has_last_upgrade(game, name):
-  """Whether the Upgrades dialog still lists the station's last
-  upgrade (template potion_shop_upgrade_<name>); also True when the
-  dialog did not open."""
+def buy_upgrade(game, upgrade):
+  """Buy the row of the Upgrades dialog (its button found by its
+  price). Returns True when bought (gone from the dialog)."""
   if not upgrades.open_dialog(game):
-    return True
-  listed = game.screen.has(f'potion_shop_upgrade_{name}',
-                           game.coords.potion_shop_upgrades_roi)
+    return False
+  bought = _scan_upgrades(game, lambda buttons: _buy_row(game, upgrade,
+                                                         buttons))
   upgrades.close_dialog(game)
-  return listed
+  game.screen.capture()
+  if bought:
+    key_log.info('POTION SHOP - Bought %s (%s %s x%s, %s)', upgrade.title,
+                 upgrade.station or '', upgrade.kind,
+                 upgrade.multiplier, upgrade.price)
+  return bool(bought)
+
+
+def _scan_upgrades(game, page):
+  """Call page(buttons) on each page of the open dialog until it
+  returns something other than None (returned) or the end."""
+  coords = game.coords
+  last = None
+  for _ in range(UPGRADE_PAGES):
+    buttons = game.screen.read_price_buttons(
+      coords.potion_shop_upgrade_buttons_roi, coords)
+    result = page(buttons)
+    if result is not None:
+      return result
+    prices = [button.price for button in buttons]
+    if prices == last:
+      break
+    last = prices
+    game.device.swipe(coords.potion_shop_upgrades_swipe)
+    time.sleep(UPGRADE_DELAY_S)
+    game.screen.capture()
+  return None
+
+
+def _note_rows(rows, buttons):
+  for button in buttons:
+    if button.price is None:
+      continue
+    upgrade = potion_shop_upgrades.find(button.price)
+    if upgrade is None:
+      log.info('Potion Shop: unknown upgrade of price %.3g', button.price)
+    elif upgrade not in rows:
+      rows.append(upgrade)
+
+
+def _buy_row(game, upgrade, buttons):
+  """Tap the button of the upgrade among buttons. Returns True when
+  bought, False when it can't be (grey), None when not among them."""
+  for button in buttons:
+    if (button.price is None
+        or potion_shop_upgrades.find(button.price) != upgrade):
+      continue
+    if not button.affordable:
+      return False
+    game.device.tap(button.center)
+    time.sleep(UPGRADE_DELAY_S)
+    game.screen.capture()
+    return not any(
+      other.price is not None
+      and potion_shop_upgrades.find(other.price) == upgrade
+      for other in game.screen.read_price_buttons(
+        game.coords.potion_shop_upgrade_buttons_roi, game.coords))
+  return None
 
 
 def _open_dialog(game, button_name):

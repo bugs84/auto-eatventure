@@ -1,0 +1,132 @@
+price_text	price_exponent	title	effect_kind	station	multiplier
+23	1.36	Opening discount	customer		1
+135	2.13	Hire a potion-mixer	alchemist		1
+3.75K	3.57	Free samples	customer		2
+15K	4.18	Hire Aurelius	alchemist		1
+2.5M	6.40	Buy a Potion Kettle	unlock		
+12.5M	7.10	Host an alchemy workshop	customer		2
+20M	7.30	Recruit from the forest	alchemist		1
+50B	10.70	Hire another worker	alchemist		1
+850B	11.93	Aged wings	profit	bat	2
+15T	13.18	Put up a sign	customer		1
+34.9T	13.54	Bigger ladle	faster	bat	
+500T	14.70	Hire Martin the Alchemist	alchemist		1
+680T	14.83	Freshly ground	profit	dragon	2
+3.4aa	15.53	Double concentrated	profit	bat	3
+27.9aa	16.45	Grind harder	faster	dragon	
+133aa	17.12	Dig a Cellar	unlock		
+544aa	17.74	Paint before shaving	profit	unicorn	2
+2.72ab	18.43	Finely powdered	profit	dragon	3
+22.3ab	19.35	Precision shaver	faster	unicorn	
+33.1ab	19.52	Filtered through Vampire ash	profit	bat	4
+100ab	20.00	Hire Briar from the guild	alchemist		1
+436ab	20.64	Make Djinn brush his teeth	profit	djinn	2
+1.54ac	21.19	Chop wings	faster	bat	
+2.18ac	21.34	Include certificate	profit	unicorn	3
+2.25ac	21.35	Advertise in 'Wizard Monthly'	customer		2
+17.9ac	22.25	Rub clockwise	faster	djinn	
+26.5ac	22.42	Sourced from Elder Dragons	profit	dragon	4
+150ac	23.18	Use Transilvanian Bats	profit	bat	5
+349ac	23.54	Genuine tears	profit	mermaid	2
+1.23ad	24.09	Grind fewer at once	faster	dragon	
+1.75ad	24.24	Sell as limited edition	profit	djinn	3
+14.3ad	25.16	Fan the flames	faster	mermaid	
+21.2ad	25.33	Mix with glitter	profit	unicorn	4
+120ad	26.08	Add rubys for color	profit	dragon	5
+279ad	26.45	Remove shell fragments	profit	beetle	2
+600ad	26.78	Bring on Jax	alchemist		1
+750ad	26.88	Aged wings	profit	bat	10
+981ad	26.99	Soak to soften	faster	unicorn	
+1.4ae	27.15	Double distilled	profit	mermaid	3
+11.5ae	28.06	Squeeze harder	faster	beetle	
+17ae	28.23	Remake with popular Djinn	profit	djinn	4
+96ae	28.98	Harvest under a double rainbow	profit	unicorn	5
+600ae	29.78	Freshly ground	profit	dragon	10
+785ae	29.89	Rub counterclockwise	faster	djinn	
+1.12af	30.05	Rare species blend	profit	beetle	3
+1.51af	30.18	Use stronger solvent	faster	bat	
+1.79af	30.25	Crystal clear	profit	water	2
+4af	30.60	Get a guild endorsement	customer		1
+13.6af	31.13	Discard first runnings	profit	mermaid	4
+73.1af	31.86	Bigger buckets	faster	water	
+76.8af	31.89	Wish customers would pay more	profit	djinn	5
+150af	32.18	Double concentrated	profit	bat	25
+480af	32.68	Paint before shaving	profit	unicorn	10
+628af	32.80	Preheat	faster	mermaid	
+1.21ag	33.08	Cut before grinding	faster	dragon	
+1.55ag	33.19	Expand to new towns	alchemist		1
+6.24ag	33.80	Use venomous spiders	profit	spider	2
+7.14ag	33.85	Enhanced mineral content	profit	water	3
+10.9ag	34.04	Glow-in-the-Dark Formula	profit	beetle	4
+61.5ag	34.79	Use tears of joy	profit	mermaid	5
+121ag	35.08	Finely powdered	profit	dragon	25
+256ag	35.41	Feed the spiders	faster	spider	
+384ag	35.58	Make Djinn brush his teeth	profit	djinn	10
+503ag	35.70	Soften carapace	faster	beetle	
+961ag	35.98	Coarser grind	faster	unicorn	
+11.5ah	37.06	Remove dirt	profit	mushrooms	2
+25ah	37.40	Discard weak strands	profit	spider	3
+49.2ah	37.69	Use golden Beetles	profit	beetle	5
+69.3ah	37.84	Filter out dust	profit	water	4
+96ah	37.98	Include certificate	profit	unicorn	25
+308ah	38.49	Genuine tears	profit	mermaid	10
+468ah	38.67	Enhance the substrate	faster	mushrooms	
+769ah	38.89	Don't rub, just knock	faster	djinn	
+1ai	39.00	Filtered through Vampire ash	profit	bat	50
+3ai	39.48	Guarantee efficacy	customer		1
+3.22ai	39.51	Drill into ceiling	faster	water	
+15.5ai	40.19	Hire Jax's mentor	alchemist		1
+17.2ai	40.24	Send through amplifier	profit	frog	2
+45.7ai	40.66	Hand-picked selection	profit	mushrooms	3
+76.9ai	40.89	Sell as limited edition	profit	djinn	25
+243ai	41.39	Higher thread count	profit	spider	4
+246ai	41.39	Remove shell fragments	profit	beetle	10
+315ai	41.50	Label as 'Gravity Perfected'	profit	water	5
+615ai	41.79	Pull a vacuum	faster	mermaid	
+702ai	41.85	Warm-up ribbits	faster	frog	
+800ai	41.90	Sourced from Elder Dragons	profit	dragon	50
+11.3aj	43.05	Speedy spooling technique	faster	spider	
+61.5aj	43.79	Double distilled	profit	mermaid	25
+68.5aj	43.84	Apply distortion	profit	frog	3
+444aj	44.65	Label as 'Wizard's Choice'	profit	mushrooms	4
+492aj	44.69	Macerate before pressing	faster	beetle	
+640aj	44.81	Mix with glitter	profit	unicorn	50
+1.11ak	45.05	Anti-stick coating	profit	spider	5
+1.58ak	45.20	Crystal clear	profit	water	10
+20.6ak	46.31	Dry with hot air	faster	mushrooms	
+49.2ak	46.69	Rare species blend	profit	beetle	25
+75.1ak	46.88	Use Transilvanian Bats	profit	bat	75
+130ak	47.11	Lure talent from rivals	alchemist		1
+512ak	47.71	Remake with popular Djinn	profit	djinn	50
+665ak	47.82	Shift one octave up	profit	frog	4
+2.02al	48.31	Sell as 'Elixir-Grade'	profit	mushrooms	5
+3.15al	48.50	Loosen the soil	faster	water	
+5.51al	48.74	Use venomous spiders	profit	spider	10
+6.4al	48.81	Sponsor a local festival	customer		1
+30.9al	49.49	Poke gently	faster	frog	
+60al	49.78	Add rubys for color	profit	dragon	75
+315al	50.50	Enhanced mineral content	profit	water	25
+410al	50.61	Discard first runnings	profit	mermaid	50
+3.02am	51.48	Layer with tritone	profit	frog	5
+10.1am	52.00	Remove dirt	profit	mushrooms	10
+11.1am	52.05	Selective spider breeding	faster	spider	
+48am	52.68	Harvest under a double rainbow	profit	unicorn	75
+328am	53.52	Glow-in-the-Dark Formula	profit	beetle	50
+1.11an	54.05	Discard weak strands	profit	spider	25
+4.15an	54.62	Post job notices	alchemist		1
+15.1an	55.18	Send through amplifier	profit	frog	10
+20.2an	55.31	Control air humidity	faster	mushrooms	
+38.4an	55.58	Wish customers would pay more	profit	djinn	75
+2.02ao	57.31	Hand-picked selection	profit	mushrooms	25
+2.1ao	57.32	Filter out dust	profit	water	50
+30.3ao	58.48	Honey & lemon soak	faster	frog	
+30.8ao	58.49	Use tears of joy	profit	mermaid	75
+3.02ap	60.48	Apply distortion	profit	frog	25
+7.35ap	60.87	Higher thread count	profit	spider	50
+24.6ap	61.39	Use golden Beetles	profit	beetle	75
+13.5aq	64.13	Label as 'Wizard's Choice'	profit	mushrooms	50
+158aq	65.20	Label as 'Gravity Perfected'	profit	water	75
+20.2ar	67.31	Shift one octave up	profit	frog	50
+551ar	68.74	Anti-stick coating	profit	spider	75
+1.01at	72.00	Sell as 'Elixir-Grade'	profit	mushrooms	100
+1.51au	75.18	Layer with tritone	profit	frog	175

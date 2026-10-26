@@ -1,5 +1,7 @@
 # Potion Shop event
 
+Continuing the work? Read `HANDOFF.md` (state, tools, next steps) first.
+
 Goal: play the Potion Shop event to the end (15/15 rewards), as fast as
 possible (the event leaderboard ranks by completion time). Device:
 Xiaomi e0cb42c1 (1080x2400). Coordinates are device px unless noted.

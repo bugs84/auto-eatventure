@@ -336,3 +336,14 @@ station_popup_row_above_y = 150
 station_popup_row_gap_y = 10
 station_popup_gap_x = 25
 station_popup_cover_margin_x = 10
+# "Level N" of a station popup: this far above its button
+station_popup_level_top_y = 355
+station_popup_level_bottom_y = 270
+# Buttons of the Upgrades dialog's rows are narrower than a popup's;
+# the dialog's buttons and its scroll
+upgrade_row_button_min_x = 200
+potion_shop_upgrade_buttons_roi = Region(780, 750, 1130, 1900)
+potion_shop_upgrades_swipe = Swipe(Point(610, 1590), Point(610, 1100))
+# The event's coin counter (light, right of the coin) and its border
+potion_shop_coins_roi = Region(220, 0, 640, 260)
+coin_counter_margin_y = 7
