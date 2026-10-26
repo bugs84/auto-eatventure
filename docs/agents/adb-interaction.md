@@ -57,6 +57,11 @@ def swipe(self, swipe):
 - **Windows**: `adb shell screencap -p` with `\r\n` -> `\n` fix
 - **Linux/macOS**: `adb exec-out screencap -p` (raw binary)
 
+When adb fails (the phone was shortly disconnected) or the PNG is
+broken (rarely, e.g. at night), it logs a warning and tries again, up
+to `SCREENSHOT_TRIES` times `SCREENSHOT_RETRY_DELAY_S` seconds apart;
+then it raises the last error.
+
 `Screen.capture()` (`vision/screen.py`) calls it and keeps three representations:
 - `screen.bgr` -- BGR numpy array
 - `screen.gray` -- grayscale numpy array
@@ -66,6 +71,8 @@ def swipe(self, swipe):
 
 ```python
 def start_app(self):
+  self._adb.shell('input keyevent KEYCODE_WAKEUP')
+  self._adb.shell('wm dismiss-keyguard')
   self._adb.shell(f'monkey -p {GAME_PACKAGE} '
                   '-c android.intent.category.LAUNCHER 1')
 
@@ -73,7 +80,7 @@ def close_app(self):
   self._adb.shell(f'am force-stop {GAME_PACKAGE}')
 ```
 
-Package: `com.hwqgrhhjfd.idlefastfood` (`GAME_PACKAGE`). `start_app()` launches the game or brings it to the foreground; it does not restart a running game. `close_app()` is currently unused.
+Package: `com.hwqgrhhjfd.idlefastfood` (`GAME_PACKAGE`). `start_app()` launches the game or brings it to the foreground; it does not restart a running game. It first wakes the screen and dismisses the lock screen (only without a PIN): when the game crashes, nothing keeps the screen on and the phone goes to sleep after its screen timeout. `close_app()` is currently unused.
 
 ## Platform Differences
 

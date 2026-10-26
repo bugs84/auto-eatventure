@@ -38,29 +38,27 @@ def _connect():
            width, height,
            reference.REFERENCE_WIDTH, reference.REFERENCE_HEIGHT)
   coords = ScaledCoords(width, height)
-  templates = load_templates(*_template_scale(coords))
+  templates = load_templates(_template_scale(coords))
   screen = Screen(device, templates, config.DEBUG_TEMPLATE_MATCHING)
   return Game(device, screen, coords)
 
 
 def _template_scale(coords):
-  """(x, y) scale of the templates: the resolution's, unless
+  """Scale of the templates: the screen width's, unless
   TEMPLATE_SCALE_OVERRIDE is set."""
   override = config.TEMPLATE_SCALE_OVERRIDE
   if not override:
-    log.info('Template scale: x=%.4f, y=%.4f',
-             coords.x_scale, coords.y_scale)
-    return coords.x_scale, coords.y_scale
+    log.info('Template scale: %.4f', coords.scale)
+    return coords.scale
   try:
     scale = float(override)
   except ValueError:
     log.warning('Invalid TEMPLATE_SCALE_OVERRIDE=%r — ignored, using '
-                'resolution-based scale x=%.4f, y=%.4f',
-                override, coords.x_scale, coords.y_scale)
-    return coords.x_scale, coords.y_scale
+                'width-based scale %.4f', override, coords.scale)
+    return coords.scale
   log.info('TEMPLATE_SCALE_OVERRIDE=%.4f — overriding auto-scale '
-           '(was x=%.4f, y=%.4f)', scale, coords.x_scale, coords.y_scale)
-  return scale, scale
+           '(was %.4f)', scale, coords.scale)
+  return scale
 
 
 def _log_features():

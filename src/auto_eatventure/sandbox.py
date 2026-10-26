@@ -96,7 +96,7 @@ class Sandbox:
       path = os.path.join(TEMPLATES_DIR, file_name)
       try:
         self.templates[name] = load_template(
-          path, self.coords.x_scale, self.coords.y_scale)
+          path, self.coords.scale)
       except FileNotFoundError as error:
         print(f'  {error} — skipped.')
 
@@ -424,10 +424,10 @@ def _open_image(path):
 
 
 def _print_scale(sandbox):
-  x_scale, y_scale = sandbox.coords.x_scale, sandbox.coords.y_scale
-  if abs(x_scale - 1.0) > 0.001 or abs(y_scale - 1.0) > 0.001:
-    print(f'  [sandbox] Templates scaled x={x_scale:.4f}, '
-          f'y={y_scale:.4f} to match device resolution.')
+  scale = sandbox.coords.scale
+  if abs(scale - 1.0) > 0.001:
+    print(f'  [sandbox] Templates scaled by {scale:.4f} to match the '
+          'device width.')
   else:
     print('  [sandbox] Device matches reference resolution — '
           'templates used at original size.')

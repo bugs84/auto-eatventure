@@ -5,6 +5,7 @@ import logging
 import re
 import subprocess
 import sys
+import time
 
 import numpy as np
 from adbutils import adb
@@ -13,6 +14,11 @@ from PIL import Image
 log = logging.getLogger(__name__)
 
 GAME_PACKAGE = 'com.hwqgrhhjfd.idlefastfood'
+# A failed screenshot (the phone was shortly disconnected, adb exit
+# status 255; a broken PNG) is retried this many times before the bot
+# crashes
+SCREENSHOT_TRIES = 5
+SCREENSHOT_RETRY_DELAY_S = 5
 
 
 class Device:
@@ -48,6 +54,16 @@ class Device:
 
   def screenshot(self):
     """Return the screen as a BGR image (numpy array)."""
+    for _ in range(SCREENSHOT_TRIES - 1):
+      try:
+        return self._screenshot()
+      except (subprocess.CalledProcessError, OSError) as error:
+        log.warning('Screenshot failed (%s), retrying in %d s',
+                    error, SCREENSHOT_RETRY_DELAY_S)
+        time.sleep(SCREENSHOT_RETRY_DELAY_S)
+    return self._screenshot()
+
+  def _screenshot(self):
     if sys.platform == 'win32':
       # Kept from the original code: older adb versions on Windows
       # turned \n into \r\n (untested with current adb)
@@ -77,7 +93,11 @@ class Device:
     """Launch the game, or bring it to the foreground.
 
     It does not restart a running game (that needs close_app()).
+    The screen is woken first and the lock screen dismissed (without a
+    PIN): after the game crashes, the phone goes to sleep.
     """
+    self._adb.shell('input keyevent KEYCODE_WAKEUP')
+    self._adb.shell('wm dismiss-keyguard')
     self._adb.shell(f'monkey -p {GAME_PACKAGE} '
                     '-c android.intent.category.LAUNCHER 1')
 
