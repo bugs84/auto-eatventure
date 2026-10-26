@@ -27,9 +27,15 @@ LOCKED_THRESHOLD = 0.8
 # "MAX" in a station's popup
 MAX_THRESHOLD = 0.8
 POPUP_DELAY_S = 1
-# Levels are bought by taps on the open popup's button, one each (a
-# long press buys too many to count)
+# Levels are bought by taps on the open popup's button, one each, or
+# from HOLD_MIN_LEVELS on by holding it (faster, as in the cities: a 3 s
+# hold bought 51 levels): HOLD_MS_PER_LEVEL each, HOLD_MIN_MS to
+# HOLD_MAX_MS; the popup read after it tells how many were bought
 LEVEL_TAP_DELAY_S = 0.3
+HOLD_MIN_LEVELS = 5
+HOLD_MS_PER_LEVEL = 60
+HOLD_MIN_MS = 800
+HOLD_MAX_MS = 3000
 # Stations of the cellar view (coords potion_shop_<name>_station); the
 # others are on the shop view
 CELLAR_STATIONS = ('water', 'spider', 'mushrooms', 'frog')
@@ -206,14 +212,18 @@ def open_station(game, name):
 
 
 def buy_levels(game, name, count):
-  """Tap the open popup's button count times (a level each). Returns
-  the popup's numbers after (see open_station())."""
+  """Buy about count levels on the open popup (tap or hold its
+  button). Returns the popup's numbers after (see open_station())."""
   button = game.screen.station_popup_button(game.coords)
   if button is None:
     return None
-  for _ in range(count):
-    game.device.tap(button)
-    time.sleep(LEVEL_TAP_DELAY_S)
+  if count >= HOLD_MIN_LEVELS:
+    game.device.long_press(button, max(HOLD_MIN_MS, min(
+      HOLD_MAX_MS, count * HOLD_MS_PER_LEVEL)))
+  else:
+    for _ in range(count):
+      game.device.tap(button)
+      time.sleep(LEVEL_TAP_DELAY_S)
   time.sleep(POPUP_DELAY_S)
   game.screen.capture()
   return _popup_numbers(game, name, station_place(game, name))
