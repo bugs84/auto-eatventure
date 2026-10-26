@@ -443,3 +443,7 @@ time per phase). Printable manual plan for the user:
   plan's active potions are raised further and `CauldronWatch` opens
   the Cauldron every 5 min anyway: Divine brewed again 10:35.
 - The LG watchdog pauses at 30 % and resumes at 70 % (user's choice).
+- With all four kept potions MAX the plan never finished (Golden has
+  no slot), so the "+N Customer(s)" rows were never bought. A planned
+  potion with "Slots Full!" now counts as done when no slot can be
+  freed: "Brewing done, buying customers" 10:47 on the LG.
