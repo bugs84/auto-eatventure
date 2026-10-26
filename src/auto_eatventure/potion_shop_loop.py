@@ -343,10 +343,14 @@ class StationPlan:
     if count:
       popup = potion_shop_map.buy_levels(game, name, count)
       log.info('Potion Shop: %s +%d levels (%s)', name, count, popup)
-      if popup is None:
+      if popup is not None:
+        self.planner.station_read(name, popup)
+      elif count < potion_shop_map.HOLD_MIN_LEVELS:
         self.planner.levels_bought(name, count)
       else:
-        self.planner.station_read(name, popup)
+        # Held: how many is unknown, read again
+        del self.planner.stations[name]
+        self.unread_timers.pop(name, None)
     potion_shop_map.close_station(game, name)
     self.waiting_for = None
     return 'level'
