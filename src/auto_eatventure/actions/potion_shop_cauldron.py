@@ -13,8 +13,9 @@ log = logging.getLogger(__name__)
 
 # Claim, Brew, "Slots Full!", "MAX" and Bottle of the Cauldron dialog
 BUTTON_THRESHOLD = 0.8
-# The red "!" badge fills ~20-30% of its area (like the Upgrades one)
-BADGE_MIN_RATIO = 0.12
+# The red "!" badge fills ~20-30% of its area (like the Upgrades one),
+# on the LG G6 only ~12% (a smaller badge); ~0-4% without it
+BADGE_MIN_RATIO = 0.08
 # The red X of the Cauldron dialog fills most of its area
 CLOSE_MIN_RATIO = 0.4
 CAULDRON_DELAY_S = 1.5
