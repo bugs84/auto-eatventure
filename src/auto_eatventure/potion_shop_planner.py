@@ -29,7 +29,7 @@ CHEAP_SHARE = 0.001
 # times more (a few levels per popup opened)
 CHEAP_BATCH = 4
 # Levels bought in one go at most (taps on the open popup)
-MAX_LEVELS = 30
+MAX_LEVELS = 60
 # Scrolling to the other view (shop, cellar) takes a while: a choice
 # here is taken while it pays for itself at most this many times later
 # than the best one there
