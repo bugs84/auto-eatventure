@@ -3,12 +3,15 @@ PotionShopWatch (GameLoop's hook) looks for it and enters it,
 PotionShopLoop plays it while the bot is inside it."""
 
 import logging
+import os
 import time
+
+import cv2
 
 from auto_eatventure import potion_bottles_loop
 from auto_eatventure.actions import (
   popups, potion_shop, potion_shop_cauldron, potion_shop_map, stations)
-from auto_eatventure.logger import key_log
+from auto_eatventure.logger import LOG_DIR, key_log
 from auto_eatventure.potion_bottles_loop import PotionBottlesLoop
 from auto_eatventure.potion_shop_planner import Planner
 from auto_eatventure.timer import Timer
@@ -58,6 +61,8 @@ COMPLETION_CHECK_S = 15 * 60
 UNREAD_RETRY_S = 10 * 60
 SURVEY_S = 60 * 60
 UPGRADES_READ_S = 30 * 60
+# Loops in a row with the coin counter unreadable that are logged
+COINS_MISSES = 10
 # Screenshots outside the event in a row that end the loop (the event
 # ended or the game left it)
 OUTSIDE_LOOPS = 3
@@ -264,6 +269,7 @@ class StationPlan:
     # Station -> Timer: when to read its popup again (unread ones)
     self.unread_timers = {}
     self.waiting_for = None
+    self.coins_misses = 0
 
   def play(self, view, customers):
     """Read what is to be read on the view or buy the choice. Returns
@@ -282,7 +288,9 @@ class StationPlan:
       return 'read'
     coins = game.screen.read_coins(game.coords)
     if coins is None:
+      self._coins_unread()
       return None
+    self.coins_misses = 0
     here = [name for name in potion_shop.STATIONS
             if potion_shop_map.view_of(name) == view]
     choice = planner.choice(coins, customers, here)
@@ -341,8 +349,12 @@ class StationPlan:
     count = (self.planner.levels_to_buy(name, coins, customers, (name,))
              if name in self.planner.stations else 0)
     if count:
+      before = self.planner.stations[name].level
       popup = potion_shop_map.buy_levels(game, name, count)
-      log.info('Potion Shop: %s +%d levels (%s)', name, count, popup)
+      log.info('Potion Shop: %s +%d levels wanted, level %s -> %s',
+               name, count, before,
+               popup if popup in (None, 'max') else popup.level)
+      log.debug('Potion Shop: %s %s', name, popup)
       if popup is not None:
         self.planner.station_read(name, popup)
       elif count < potion_shop_map.HOLD_MIN_LEVELS:
@@ -354,6 +366,16 @@ class StationPlan:
     potion_shop_map.close_station(game, name)
     self.waiting_for = None
     return 'level'
+
+  def _coins_unread(self):
+    """The coin counter can't be read (a dialog for a moment, or e.g.
+    a new suffix letter without its sample: nothing is bought then)."""
+    self.coins_misses += 1
+    if self.coins_misses == COINS_MISSES:
+      log.warning('Potion Shop: coin counter unreadable, see '
+                  'logs/coins_unreadable.png')
+      cv2.imwrite(os.path.join(LOG_DIR, 'coins_unreadable.png'),
+                  self.game.screen.bgr)
 
   def _wait(self, what):
     if what != self.waiting_for:
