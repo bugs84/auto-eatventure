@@ -79,4 +79,27 @@ x50 20.2ar, Spider x75 551ar, Mushrooms x100 1.01at, Frog x175 1.51au.
 - Alchemists, the Kettle and the cellar first; customer rows only the
   first two until brewing is done (as before).
 - The other view is scrolled to only when the purchase there is clearly
-  better (1.5x) or every 15 min for its crates.
+  better (1.5x), when its stations are not read yet (e.g. all of the
+  shop MAX) or every 15 min for its crates.
+- A popup once open, its levels are bought while they are nearly
+  (1.5x) the best choice (`OPEN_POPUP_FACTOR`), up to 60. From 5
+  levels on the button is held (as in the cities): 1 s + 38 ms a level
+  (holds speed up: 1.8 s ~20, 3.3 s ~62, 5.4 s ~124 levels on the LG);
+  the popup read after it tells the real level.
+- The rewards are the goal (`NOTES.md`, Rewards): Unicorn, Beetle,
+  Spider 1000 and all stations 1000. Payback (fastest income growth)
+  gets there: stations become cheap compared with the coins and are
+  then finished by the cheap batches.
+
+## Live LG 2026-10-27
+
+- 00:47 Djinn MAX, 01:14 Mermaid MAX, 01:15 Beetle MAX (all of the
+  shop MAX; Unicorn before 01:33).
+- Rows bought: Djinn x75, Frog x10, Mushrooms faster, Water x50,
+  Mermaid x75, Mushrooms x25, Frog faster, Beetle x75, Spider x50,
+  Water x75 (01:49).
+- 02:00 coins ~1e65, cellar: Water 944, Mushrooms ~750, Frog ~750,
+  Spider (level unread); Water levels one at a time (income-limited).
+- Coin counter: "p", "q" of the suffix are cut at the bottom (own
+  samples `p_1`, `q_1`); unreadable coins are logged (WARNING +
+  `logs/coins_unreadable.png`) - nothing is bought then.

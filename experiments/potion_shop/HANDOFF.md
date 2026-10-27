@@ -32,6 +32,11 @@ Read this first when continuing the Potion Shop work, then `NOTES.md`
   `stations_lg.py`, `upg_lg.py`, `levelup_lg.py`, `enter_lg.py`.
 - First live run 23:52: Bat and Dragon MAX (cheap levels), Djinn x75
   bought by the planner, then Unicorn/Djinn/Mermaid levels.
+- Night 2026-10-27 (the user asleep, "do it as well as you can"):
+  levels per open popup while nearly the best, the button held for 5+
+  levels (the user's wish), coin counter p/q samples, other view
+  scrolled to when unread. 01:33 the whole shop MAX; the cellar left.
+  Live log of it: `STATIONS_UPGRADES.md` (Live LG 2026-10-27).
 - Battery of the LG logged every 5 min (`battery_lg.sh` in the dev kit
   dir, log `battery_lg.log`): the user moved the LG to a USB hub at
   ~23:00 and wants a comparison of the drain in the morning (before:
