@@ -378,6 +378,18 @@ Swipe pattern cycles through 7 down-swipes then 7 up-swipes
 chosen so the total distance per direction still spans a tall level
 before reversing.
 
+## Error Recovery
+
+`GameLoop.run()` catches an unexpected exception of `play_once()`
+(e.g. the game crashed, the bot tapped the home screen and another
+app came up in landscape: an empty screenshot crop). `_recover()`
+logs it with its traceback (autoplay.log, one line in key_events.log),
+brings the game back (`device.start_app()`, which starts it again after
+a crash) and waits for it (`start_dialogs.wait_until_ready()`). Up to
+`RECOVERY_TRIES` (2) errors in a row are recovered from; a loop played
+without an error resets the count, the next error ends the bot ("Bot
+crashed", as before). Ctrl+C and SIGTERM are not caught.
+
 ## Level Transition Flow
 
 `levels.go_to_next_level()` in `actions/levels.py`:
