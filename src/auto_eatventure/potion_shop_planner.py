@@ -143,7 +143,7 @@ class Planner:
     cheap = self._cheap(coins, customers, here)
     if cheap is not None:
       return cheap
-    times = self._times(coins, customers)
+    times = self.times(coins, customers)
     if not times:
       return None
     best_time, best = min(times, key=lambda item: item[0])
@@ -169,7 +169,7 @@ class Planner:
     count = 0
     while count < MAX_LEVELS and name in planner.stations:
       station = planner.stations[name]
-      times = planner._times(coins, customers)
+      times = planner.times(coins, customers)
       # Its next level, or the levels up to its star
       level = [time for time, choice in times
                if choice.kind == 'level' and choice.station == name]
@@ -181,7 +181,7 @@ class Planner:
       count += 1
     return count
 
-  def _times(self, coins, customers):
+  def times(self, coins, customers):
     """(Time to pay for itself, Choice) of the candidates."""
     total = sum(station.profit for station in self.stations.values()
                 if station.profit is not None)
