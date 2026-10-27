@@ -301,13 +301,21 @@ class StationPlan:
     return self._buy_levels(choice.station, coins, customers, view)
 
   def _read_unread(self, view):
-    """Read the popups of the view's stations not read yet (again after
-    UNREAD_RETRY_S when unreadable). Returns True when one was read."""
-    names = [name for name in potion_shop.STATIONS
-             if potion_shop_map.view_of(name) == view
-             and name not in self.planner.stations
-             and name not in self.planner.maxed
-             and self.unread_timers.setdefault(name, Timer()).is_due()]
+    """Read the popups of the stations not read yet (again after
+    UNREAD_RETRY_S when unreadable): of the view, else scroll to the
+    other one. Returns True when one was read (or scrolled to)."""
+    unread = [name for name in potion_shop.STATIONS
+              if name not in self.planner.stations
+              and name not in self.planner.maxed
+              and self.unread_timers.setdefault(name, Timer()).is_due()]
+    names = [name for name in unread
+             if potion_shop_map.view_of(name) == view]
+    if unread and not names:
+      if potion_shop_map.view_of(unread[0]) == 'cellar':
+        potion_shop_map.show_cellar(self.game)
+      else:
+        potion_shop_map.show_shop(self.game)
+      return True
     for name in names:
       popup = potion_shop_map.read_station(self.game, name)
       log.debug('Potion Shop: %s %s', name, popup)
