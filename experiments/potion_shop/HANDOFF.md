@@ -37,6 +37,11 @@ Read this first when continuing the Potion Shop work, then `NOTES.md`
   levels (the user's wish), coin counter p/q samples, other view
   scrolled to when unread. 01:33 the whole shop MAX; the cellar left.
   Live log of it: `STATIONS_UPGRADES.md` (Live LG 2026-10-27).
+- 2026-10-27 07:40 the LG was unplugged (bot stopped). State: whole
+  shop and Water MAX, Mushrooms 832, Frog 803, Spider (level unread);
+  rows bought after 04:00: Mushrooms x50, Frog x50. 08:12 the user
+  asked to stop the event: LG `.env` `POTION_SHOP_ENABLED="0"`, normal
+  levels after it is plugged in again.
 - Battery of the LG logged every 5 min (`battery_lg.sh` in the dev kit
   dir, log `battery_lg.log`): the user moved the LG to a USB hub at
   ~23:00 and wants a comparison of the drain in the morning (before:
