@@ -29,13 +29,13 @@ MAX_THRESHOLD = 0.8
 POPUP_DELAY_S = 1
 # Levels are bought by taps on the open popup's button, one each, or
 # from HOLD_MIN_LEVELS on by holding it (faster, as in the cities: a 3 s
-# hold bought 51 levels): HOLD_MS_PER_LEVEL each, HOLD_MIN_MS to
+# hold bought 51 levels, 1.8 s ~20): HOLD_MS_PER_LEVEL each, HOLD_MIN_MS to
 # HOLD_MAX_MS; the popup read after it tells how many were bought
 LEVEL_TAP_DELAY_S = 0.3
 HOLD_MIN_LEVELS = 5
-HOLD_MS_PER_LEVEL = 60
+HOLD_MS_PER_LEVEL = 90
 HOLD_MIN_MS = 800
-HOLD_MAX_MS = 3000
+HOLD_MAX_MS = 6000
 # Stations of the cellar view (coords potion_shop_<name>_station); the
 # others are on the shop view
 CELLAR_STATIONS = ('water', 'spider', 'mushrooms', 'frog')
