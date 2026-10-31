@@ -58,6 +58,9 @@ StationPopup = namedtuple('StationPopup', 'profit seconds price level')
 PriceButton = namedtuple('PriceButton', 'center price affordable')
 # A button is blue when this share of it is
 MIN_BLUE = 0.3
+# A row's button is whole when at least this share of their median
+# height
+FULL_BUTTON_SHARE = 0.97
 
 
 def load_char_samples():
@@ -175,12 +178,19 @@ def read_price_buttons(image, region, coords, samples):
   part = image[top:region.bottom, left:region.right]
   count, _, stats, _ = cv2.connectedComponentsWithStats(
     _button_color(part).astype(np.uint8))
+  boxes = [(x, y, width, height)
+           for x, y, width, height, _ in sorted(stats[1:count],
+                                                key=lambda stat: stat[1])
+           if width >= coords.upgrade_row_button_min_x
+           and coords.station_popup_button_min_y <= height
+           <= coords.station_popup_button_max_y]
+  # A button cut by the dialog's edge (its price partly hidden: a g
+  # read as q) is lower than the others
+  heights = sorted(box[3] for box in boxes)
+  full = heights[len(heights) // 2] * FULL_BUTTON_SHARE if boxes else 0
   buttons = []
-  for x, y, width, height, _ in sorted(stats[1:count],
-                                       key=lambda stat: stat[1]):
-    if (width >= coords.upgrade_row_button_min_x
-        and coords.station_popup_button_min_y <= height
-        <= coords.station_popup_button_max_y):
+  for x, y, width, height in boxes:
+    if height >= full:
       button = part[y:y + int(height * BUTTON_TEXT_SHARE), x:x + width]
       buttons.append(PriceButton(
         Point(left + x + width // 2, top + y + height // 2),
