@@ -40,6 +40,9 @@ OTHER_VIEW_FACTOR = 1.5
 # back as soon as the coins grow)
 OPEN_POPUP_FACTOR = 1.5
 
+# The Upgrades dialog's row that adds the cellar (and its stations)
+CELLAR_ROW = 'Dig a Cellar'
+
 # kind: 'level' (station: levels of it, count: how many it pays to buy
 # at once, cost: their price) or 'upgrade' (upgrade: the Upgrade)
 Choice = namedtuple('Choice', 'kind station count upgrade cost')
@@ -117,6 +120,20 @@ class Planner:
         moved.add_levels(bought)
         profit = moved.profit
     self.stations[name] = Station(profit, popup.price, level)
+
+  def cellar_dug(self):
+    """Whether the cellar is dug: its row is not among the Upgrades
+    dialog's rows read (the cheapest ones not bought) though one costing
+    more is, or none is left. False until the rows are read."""
+    if self.upgrades is None:
+      return False
+    cellar = next(upgrade for upgrade in UPGRADES
+                  if upgrade.title == CELLAR_ROW)
+    if cellar in self.upgrades:
+      return False
+    return not self.upgrades or any(
+      upgrade_price(upgrade) > upgrade_price(cellar)
+      for upgrade in self.upgrades)
 
   def levels_bought(self, name, count):
     """Count levels of the station were bought (its popup unread)."""
