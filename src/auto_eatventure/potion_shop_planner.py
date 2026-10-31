@@ -135,6 +135,15 @@ class Planner:
       upgrade_price(upgrade) > upgrade_price(cellar)
       for upgrade in self.upgrades)
 
+  def rows_bought(self, kind):
+    """How many rows of the kind were bought (known after a restart
+    too): those cheaper than a row read and not among the rows read."""
+    top = max((upgrade_price(upgrade) for upgrade in self.upgrades or ()),
+              default=0)
+    return sum(1 for upgrade in UPGRADES
+               if upgrade.kind == kind and upgrade_price(upgrade) < top
+               and upgrade not in self.upgrades)
+
   def levels_bought(self, name, count):
     """Count levels of the station were bought (its popup unread)."""
     station = self.stations[name]

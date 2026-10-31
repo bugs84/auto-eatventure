@@ -104,9 +104,9 @@ class PotionShopLoop:
     self.other_view_timer.postpone(OTHER_VIEW_S)
     self.completion_timer = Timer()
     self.completed = False
-    # Customer rows that may still be bought; None (no limit) once all
-    # of potion_shop_cauldron.LATE_PLAN is brewed
-    self.customer_rows_left = EARLY_CUSTOMER_ROWS
+    # All of potion_shop_cauldron.LATE_PLAN brewed: customer rows bought
+    # without a limit
+    self.brewing_done = False
     self.plan = StationPlan(game)
 
   def run(self):
@@ -147,10 +147,8 @@ class PotionShopLoop:
     view = self._view()
     if view is None or self._play_occasional(view):
       return
-    left = self.customer_rows_left
-    bought = self.plan.play(view, left is None or left > 0)
-    if bought == 'customer' and left is not None:
-      self.customer_rows_left = left - 1
+    self.plan.play(view, self.brewing_done or (
+      self.plan.planner.rows_bought('customer') < EARLY_CUSTOMER_ROWS))
 
   def _play_occasional(self, view):
     """The rewards check, a look at the other view (its crates) or an
@@ -218,8 +216,8 @@ class PotionShopLoop:
   def _brewed(self, result):
     """Note a 'done' of potion_shop_cauldron.brew(). Returns True when
     a potion was brewed."""
-    if result == 'done' and self.customer_rows_left is not None:
-      self.customer_rows_left = None
+    if result == 'done' and not self.brewing_done:
+      self.brewing_done = True
       key_log.info('POTION SHOP - Brewing done, buying customers')
     return result == 'brewed'
 

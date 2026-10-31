@@ -477,3 +477,27 @@ time per phase). Printable manual plan for the user:
   the LG reached "an" at 12:37 and the Water popup was unreadable. An
   unreadable popup's screenshot is saved to
   `logs/station_popup_<station>.png` to cut the missing sample from.
+
+## New event on the Xiaomi (2026-10-31 23:35 - )
+
+Dad's account (cloud save loaded 10-31, app 1.55.5) entered a fresh
+event ("Welcome to the Potion Shop!" Open, 3d 24m left). Found and
+fixed while it ran (the user away, "do your best"):
+- The coin counter and prices of a new event are in K/M/B/T: no
+  samples -> coins None, nothing bought (bot idle at the map bottom).
+  Capital samples are `upper_<char>.png` (Windows ignores case).
+  Lowercase b-g cut from the Upgrades dialog (all its rows are listed,
+  by price, ~50 at the start up to 61.5ag); a g cut by the dialog's
+  bottom edge reads as q (that row is read whole on the next page).
+- Cellar stations were read before the cellar was dug (the map
+  scrolled to its bottom each 10 min): skipped until "Dig a Cellar"
+  is bought (`Planner.cellar_dug()`).
+- A locked station's popup shows its unlock price only: it was taken
+  as a station read; now read again after an unlock.
+- EARLY_CUSTOMER_ROWS was counted per loop object: each restart of the
+  bot allowed 2 more (4 customer rows bought by 00:06). Now counted
+  from the dialog (`Planner.rows_bought()`).
+- Started inside the event, GameLoop's Adventures tapped there (Master
+  Chef dialog): skipped while inside.
+Timeline: 23:47 Kettle, 00:07 Dig a Cellar (133aa), beetle unlocked by
+00:08; coins 3ab at 00:00.
