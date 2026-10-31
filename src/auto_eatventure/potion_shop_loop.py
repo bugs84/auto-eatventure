@@ -161,8 +161,9 @@ class PotionShopLoop:
       return True
     if self.other_view_timer.is_due():
       self.other_view_timer.postpone(OTHER_VIEW_S)
-      self._show('shop' if view == 'cellar' else 'cellar')
-      return True
+      if view == 'cellar' or self.plan.planner.cellar_dug():
+        self._show('shop' if view == 'cellar' else 'cellar')
+        return True
     return self._unlock_stations(view)
 
   def _view(self):
@@ -196,6 +197,8 @@ class PotionShopLoop:
     stations.upgrade(game, locked)
     if view == 'cellar':
       potion_shop_map.close_cellar_popup(game)
+    # Their popups (of a locked station: its price only) read anew
+    self.plan.unread_timers = {}
     return True
 
   def _handle_dialog(self):
@@ -225,6 +228,13 @@ class PotionShopLoop:
     log.info('Potion Shop: closing an unknown dialog')
     self.game.device.tap(self.game.coords.potion_shop_dialog_close)
     time.sleep(1)
+
+
+def _is_locked(popup):
+  """A locked station's popup shows only its price (unlocked when its
+  arrow over the dashed tile is tapped)."""
+  return (popup != 'max' and popup.level is None and popup.profit is None
+          and popup.seconds is None)
 
 
 class CauldronWatch:
@@ -304,9 +314,11 @@ class StationPlan:
     """Read the popups of the stations not read yet (again after
     UNREAD_RETRY_S when unreadable): of the view, else scroll to the
     other one. Returns True when one was read (or scrolled to)."""
+    cellar = self.planner.cellar_dug()
     unread = [name for name in potion_shop.STATIONS
               if name not in self.planner.stations
               and name not in self.planner.maxed
+              and (cellar or potion_shop_map.view_of(name) != 'cellar')
               and self.unread_timers.setdefault(name, Timer()).is_due()]
     names = [name for name in unread
              if potion_shop_map.view_of(name) == view]
@@ -319,7 +331,7 @@ class StationPlan:
     for name in names:
       popup = potion_shop_map.read_station(self.game, name)
       log.debug('Potion Shop: %s %s', name, popup)
-      if popup is None:
+      if popup is None or _is_locked(popup):
         self.unread_timers[name].postpone(UNREAD_RETRY_S)
       else:
         self.planner.station_read(name, popup)
