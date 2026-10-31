@@ -5,7 +5,7 @@ import logging
 from auto_eatventure import config
 from auto_eatventure.actions import (
   adventures, boxes, food_delivery, helper_invite, levels, popular_dish,
-  popups, start_dialogs, stations, upgrades)
+  popups, potion_shop, start_dialogs, stations, upgrades)
 from auto_eatventure.actions.stale import StaleWatch
 from auto_eatventure.actions.start_dialogs import LateDialogWatch
 from auto_eatventure.logger import key_log
@@ -80,9 +80,11 @@ class GameLoop:
 
     if (config.POPULAR_DISH_ENABLED
         and not self.popular_dish_waits_for_upgrade
-        and self.popular_dish_timer.is_due()):
+        and self.popular_dish_timer.is_due()
+        and not self._in_potion_shop()):
       self._select_popular_dish()
-    if config.COLLECT_ADVENTURES_ENABLED and self.adventures_timer.is_due():
+    if (config.COLLECT_ADVENTURES_ENABLED and self.adventures_timer.is_due()
+        and not self._in_potion_shop()):
       self._collect_adventures()
 
     game.screen.capture()
@@ -148,6 +150,14 @@ class GameLoop:
     food_delivery.accept(self.game, truck)
     self.food_delivery_timer.postpone(food_delivery.PAUSE_S)
     return True
+
+  def _in_potion_shop(self):
+    """Whether the bot is inside the Potion Shop event (e.g. started in
+    it): the city's buttons are not there, the event is played first."""
+    if not config.POTION_SHOP_ENABLED:
+      return False
+    self.game.screen.capture()
+    return potion_shop.is_inside(self.game)
 
   def _play_potion_shop(self):
     """Returns True when the bot was in the Potion Shop event (played
