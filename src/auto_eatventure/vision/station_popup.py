@@ -48,6 +48,7 @@ MIN_CHAR_AREA = 15
 # "aa" is 1e15, "ab" 1e18, ...; below it K, M, B, T
 LETTER_SUFFIX_EXPONENT = 15
 SUFFIXES = {'': 0, 'K': 3, 'M': 6, 'B': 9, 'T': 12}
+UPPER_PREFIX = 'upper_'
 
 # profit, seconds and level are None when unreadable (often covered by
 # the event's buttons at the screen's edges or by the top bar)
@@ -62,14 +63,17 @@ MIN_BLUE = 0.3
 def load_char_samples():
   """[(char, binary sample, width/height)] of the samples in CHARS_DIR
   (cut out white on black): <char>.png and more per char as
-  <char>_<n>.png (the dot is told by its size)."""
+  <char>_<n>.png (the dot is told by its size); capitals (K, M, B, T)
+  as upper_<char>.png (file names ignore case on Windows)."""
   samples = []
   for name in sorted(os.listdir(CHARS_DIR)):
     if name.endswith('.png'):
       image = cv2.imread(os.path.join(CHARS_DIR, name),
                          cv2.IMREAD_GRAYSCALE)
       height, width = image.shape
-      samples.append((name[0], cv2.resize(
+      char = (name[len(UPPER_PREFIX)] if name.startswith(UPPER_PREFIX)
+              else name[0])
+      samples.append((char, cv2.resize(
         image, CHAR_SIZE, interpolation=cv2.INTER_AREA) > 127,
                       width / height))
   return samples
