@@ -32,9 +32,10 @@ MISPLACED_LOOPS = 2
 # brewing the kettle shows the ingredients it still needs). It fades
 # out for a while after a new brew, and the finished potion's Claim
 # shows a moment after the badge: so the badge is ignored for
-# BREW_PAUSE_S after a brew and looked at again after BREW_RETRY_S
-# when the Cauldron had nothing to do.
-BREW_PAUSE_S = 20
+# BREW_PAUSE_S after a brew (on the Xiaomi it still shows ~30 s after)
+# and looked at again after BREW_RETRY_S when the Cauldron had nothing
+# to do.
+BREW_PAUSE_S = 45
 BREW_RETRY_S = 15
 # The badge also shows when the plan has nothing more to brew: after
 # IDLE_BREWS checks in a row without a brew it is looked at only every
