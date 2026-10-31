@@ -13,9 +13,12 @@ log = logging.getLogger(__name__)
 
 # Claim, Brew, "Slots Full!", "MAX" and Bottle of the Cauldron dialog
 BUTTON_THRESHOLD = 0.8
-# The red "!" badge fills ~20-30% of its area (like the Upgrades one),
-# on the LG G6 only ~12% (a smaller badge); ~0-4% without it
-BADGE_MIN_RATIO = 0.08
+# The bright red "!" badge fills ~12% of its area (Xiaomi, LG G6);
+# without it 0 (the shop's dark red tables behind the area are ~18% of
+# colors.RED, not of this brighter red)
+BADGE_RED = [((0, 120, 220), (8, 255, 255)),
+             ((172, 120, 220), (180, 255, 255))]
+BADGE_MIN_RATIO = 0.06
 # The red X of the Cauldron dialog fills most of its area
 CLOSE_MIN_RATIO = 0.4
 CAULDRON_DELAY_S = 1.5
@@ -58,7 +61,7 @@ def can_brew(game):
   """The Cauldron button shows its red "!" badge (a brewed potion is
   done)."""
   return (game.screen.color_ratio(
-            game.coords.potion_shop_cauldron_badge_roi, RED)
+            game.coords.potion_shop_cauldron_badge_roi, BADGE_RED)
           >= BADGE_MIN_RATIO)
 
 
