@@ -532,3 +532,12 @@ code: Kettle bought within 3 min, brewing swift at 00:57.
 - A test interrupted at 01:09 left a dialog over the top bar: the
   bot counted 3 loops "outside", left the event (01:13), collected
   Adventures and entered again by its PotionShopWatch at 01:24.
+- 02:40 the Xiaomi's coins reached "ai": an i is a dot over a stem
+  (the dot was read as a decimal point, the stem as an l) - now a dot
+  over another box makes it an i, a j when its stem reaches below the
+  line ("aj" prices were read as "ai": unknown upgrades a thousandth
+  of their price). 10.1am needed a second m sample.
+- Spider Silk's popup on the LG's cellar view: its level under the top
+  bar too (never read); the map scroll of Bat Wing Extract applies to
+  the cellar stations as well (back to the cellar view after). Checked
+  on the LG at 03:05: spider 29, water 125, bat 475 read whole.
