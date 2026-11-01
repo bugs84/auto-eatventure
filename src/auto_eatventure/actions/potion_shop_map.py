@@ -211,6 +211,8 @@ def open_station(game, name):
   top = game.screen.station_popup_top(coords)
   if top is not None and top < game.null_spot.y:
     _close_popup(game, name)
+    game.screen.capture()
+    before = game.screen.bgr
     # Short swipes are not exact: at least the shortest one that moves
     # the map (more is fine)
     distance = max(
@@ -222,8 +224,13 @@ def open_station(game, name):
     time.sleep(SWIPE_DELAY_S)
     game.screen.capture()
     # With no landmark shown (on the LG the barrel then under the bottom
-    # buttons, the ink hidden by the prices) it moved by the swipe
-    place = _tap_station(game, name, Point(place.x, place.y + distance))
+    # buttons, the ink hidden by the prices) it moved as measured (not
+    # quite by the swipe)
+    moved = game.screen.moved(before, coords.potion_shop_map_band)
+    log.debug('Potion Shop: swiped %d px, the map moved %s', distance,
+              moved)
+    place = _tap_station(game, name, Point(
+      place.x, place.y + (distance if moved is None else moved)))
   return _popup_numbers(game, name, place)
 
 
