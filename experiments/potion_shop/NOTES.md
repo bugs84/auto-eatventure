@@ -501,3 +501,34 @@ fixed while it ran (the user away, "do your best"):
   Chef dialog): skipped while inside.
 Timeline: 23:47 Kettle, 00:07 Dig a Cellar (133aa), beetle unlocked by
 00:08; coins 3ab at 00:00.
+- The Cauldron's badge: the shop's dark red tables (V ~160) gave a
+  false badge on the Xiaomi (the Cauldron opened every ~20 s); the
+  badge is bright red (V >= 220, `BADGE_RED`).
+- Upgrades dialog buttons cut by its edges were misread (7.14ag as
+  "aq", 96ae as "96ab"): buttons lower than 97 % of the page's median
+  height are skipped (read whole on the next page).
+- "unknown upgrade of price 9.6e+19 / 7.69e+20" (00:34): the "ah"
+  rows at the dialog's end - no sample of h (now h.png, h_1.png).
+- Bat Wing Extract (top left of the shop view): its popup's
+  "Level N" line is under the top bar and its profit under the chest
+  icon (Xiaomi and LG), so its levels were bought blind ("level None
+  -> None"). The map is now swiped down before the popup is opened
+  (`potion_shop_station_popup_top_y`; at least by the cut, short
+  swipes move the map ~1.2x and are not exact) and back after.
+  Checked on both: Xiaomi level 551/599 read, LG level 171 read.
+
+## LG in the same new event (2026-10-31 23:53 - )
+
+The LG's bot had been started at 23:51 with the code before the fixes
+above: inside the event for an hour, nothing bought (coins in B
+unreadable, it stood at the map's bottom; "Cauldron dialog did not
+open" every 5 min - no Kettle yet). Restarted at 00:54 with the new
+code: Kettle bought within 3 min, brewing swift at 00:57.
+- Tests of the LG from the main worktree are wrong twice over: the
+  main `.env` (load_dotenv() looks next to the code) points to the
+  Xiaomi, and the potion-shop branch lacks the width-based scaling of
+  potion-shop-lg (station_popup_* offsets scaled by height on the LG).
+  Test the LG from `../auto-eatventurelg` with its own `src`.
+- A test interrupted at 01:09 left a dialog over the top bar: the
+  bot counted 3 loops "outside", left the event (01:13), collected
+  Adventures and entered again by its PotionShopWatch at 01:24.
