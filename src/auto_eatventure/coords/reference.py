@@ -302,6 +302,13 @@ potion_shop_upgrades_roi = Region(60, 980, 420, 2000)
 potion_shop_upgrade_icon_roi = Region(60, 1015, 420, 1215)
 potion_shop_upgrade_row_y = 203
 potion_shop_station_popup_y = 508
+# A popup's "Level N" line reaches this far above its station's place
+# (with room for the chest icon below the top bar, which covers the
+# profit): when that is under the top bar (Bat Wing Extract at the top
+# of the shop view), the map is scrolled down for the popup first
+potion_shop_station_popup_top_y = 710
+# Shortest swipe that moves the map (a shorter one may tap a station)
+potion_shop_min_swipe_y = 60
 potion_shop_aligned_y = 25
 potion_shop_max_swipe_y = 1000
 potion_shop_swipe_x = 830
