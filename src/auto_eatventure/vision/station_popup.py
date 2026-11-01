@@ -42,6 +42,9 @@ BUTTON_TOP_SHARE = 0.12
 # A dot is lower than this share of the text's height, the clock icon
 # higher than CLOCK_MIN_HEIGHT of it
 DOT_MAX_HEIGHT = 0.4
+# A dotted stem reaching below the text's line by more than this share
+# of its height is a j (else an i)
+J_BELOW = 0.15
 CLOCK_MIN_HEIGHT = 1.15
 # Specks of the popup's rounded corners are not characters
 MIN_CHAR_AREA = 15
@@ -330,14 +333,17 @@ def _text(group, samples):
   height = _text_height(group)
   dots = [index for index, box in enumerate(group)
           if box[3] < height * DOT_MAX_HEIGHT]
-  # An i is a dot over a short stem (its stem alone looks like an l)
+  # An i or a j is a dot over a stem (an i's stem alone looks like an
+  # l); a j's reaches below the line
   dotted = {index for index, box in enumerate(group)
             if index not in dots
             and any(_overlap(group[dot], box) for dot in dots)}
+  bottoms = sorted(box[1] + box[3] for box in group)
+  line = bottoms[len(bottoms) // 2]
   text = ''
-  for index, (_, _, width, box_height, char) in enumerate(group):
+  for index, (_, y, width, box_height, char) in enumerate(group):
     if index in dotted:
-      text += 'i'
+      text += 'j' if y + box_height > line + height * J_BELOW else 'i'
       continue
     if index in dots:
       if not any(_overlap(group[index], group[stem]) for stem in dotted):
