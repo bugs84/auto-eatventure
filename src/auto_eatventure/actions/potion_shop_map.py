@@ -157,15 +157,16 @@ def shop_icons(game):
   return icons
 
 
-def station_place(game, name):
+def station_place(game, name, unseen=None):
   """Where the station's arrow shows on the current view: its place on
   the shop or cellar view moved by how far the map is from that view
-  (a scroll of ~180 px put the Unicorn's arrow on the Djinn's place)."""
+  (a scroll of ~180 px put the Unicorn's arrow on the Djinn's place).
+  With no landmark found: unseen, by default its place on its view."""
   coords = game.coords
   station = getattr(coords, f'potion_shop_{name}_station')
   offset = shop_offset(game)
   if offset is None:
-    return station
+    return unseen or station
   if name in CELLAR_STATIONS:
     offset -= coords.potion_shop_cellar_view_y
   return Point(station.x, station.y + offset)
@@ -212,22 +213,25 @@ def open_station(game, name):
     _close_popup(game, name)
     # Short swipes are not exact: at least the shortest one that moves
     # the map (more is fine)
+    distance = max(
+      game.null_spot.y + coords.potion_shop_popup_margin_y - top,
+      coords.potion_shop_min_swipe_y)
     start = Point(coords.potion_shop_swipe_x,
                   coords.potion_shop_swipe_from_y)
-    game.device.swipe(Swipe(start, Point(start.x, start.y + max(
-      game.null_spot.y + coords.potion_shop_popup_margin_y - top,
-      coords.potion_shop_min_swipe_y))))
+    game.device.swipe(Swipe(start, Point(start.x, start.y + distance)))
     time.sleep(SWIPE_DELAY_S)
     game.screen.capture()
-    place = _tap_station(game, name)
+    # With no landmark shown (on the LG the barrel then under the bottom
+    # buttons, the ink hidden by the prices) it moved by the swipe
+    place = _tap_station(game, name, Point(place.x, place.y + distance))
   return _popup_numbers(game, name, place)
 
 
-def _tap_station(game, name):
+def _tap_station(game, name, unseen=None):
   """Tap the station (by the last screenshot) to open its popup.
-  Returns its place."""
+  Returns its place (see station_place())."""
   coords = game.coords
-  place = station_place(game, name)
+  place = station_place(game, name, unseen)
   game.device.tap(Point(
     place.x + coords.station_tap_shift_x,
     place.y + coords.station_tap_offset_y + coords.station_tap_shift_y))
