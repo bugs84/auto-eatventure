@@ -93,6 +93,11 @@ class Screen:
     there is none."""
     return station_popup.popup_button(self.bgr, coords)
 
+  def station_popup_top(self, coords):
+    """Top (y) of the open station popup's level line, None when there
+    is no popup."""
+    return station_popup.popup_top(self.bgr, coords)
+
   def read_coins(self, coords):
     """The event's coins (its counter), None when unreadable."""
     return station_popup.read_coins(self.bgr, coords.potion_shop_coins_roi,

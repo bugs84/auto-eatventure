@@ -121,6 +121,15 @@ def _popup_price(image, button, covered, coords, samples):
                           samples)
 
 
+def popup_top(image, coords):
+  """Top (y) of the open popup's "Level N" line (negative when above
+  the screen), None when no popup is open."""
+  button = _find_button(image, coords)
+  if button is None:
+    return None
+  return button[1] - coords.station_popup_level_top_y
+
+
 def popup_button(image, coords):
   """Center (Point) of the open popup's button, None when none."""
   button = _find_button(image, coords)
