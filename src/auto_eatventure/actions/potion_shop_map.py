@@ -52,6 +52,8 @@ SWIPE_DELAY_S = 1.5
 # A 1 s swipe moves the map ~1.1-1.3x its length, so a correction swipe
 # covers a part of the offset and is repeated
 SWIPE_SHARE = 0.8
+# Swipes to show a station's popup clear of the top bar
+POPUP_SCROLL_TRIES = 3
 
 
 def open_crates(game):
@@ -201,15 +203,40 @@ def open_station(game, name):
   """Open the station's popup. Returns its numbers (StationPopup of
   vision/station_popup.py), 'max' when it is MAX, None when they can't
   be read (e.g. not unlocked, covered; the screenshot is saved to
-  logs/)."""
+  logs/). A popup that would be cut by the top bar is shown whole: the
+  map is scrolled down first (back by close_station())."""
   coords = game.coords
   place = station_place(game, name)
+  if name not in CELLAR_STATIONS:
+    place = _clear_top_bar(game, name, place)
   game.device.tap(Point(
     place.x + coords.station_tap_shift_x,
     place.y + coords.station_tap_offset_y + coords.station_tap_shift_y))
   time.sleep(POPUP_DELAY_S)
   game.screen.capture()
   return _popup_numbers(game, name, place)
+
+
+def _clear_top_bar(game, name, place):
+  """Scroll the map down until the station's popup is clear of the top
+  bar (by at least the part cut: short swipes are not exact, more is
+  fine). Returns the station's place after."""
+  coords = game.coords
+  for _ in range(POPUP_SCROLL_TRIES):
+    top = place.y - coords.potion_shop_station_popup_top_y
+    cut = game.null_spot.y - top
+    if cut <= 0:
+      break
+    start = Point(coords.potion_shop_swipe_x,
+                  coords.potion_shop_swipe_from_y)
+    game.device.swipe(Swipe(start, Point(
+      start.x, start.y + max(cut, coords.potion_shop_min_swipe_y))))
+    time.sleep(SWIPE_DELAY_S)
+    game.screen.capture()
+    if shop_offset(game) is None:
+      break
+    place = station_place(game, name)
+  return place
 
 
 def buy_levels(game, name, count):
@@ -234,6 +261,10 @@ def close_station(game, name):
   """Close the station's open popup."""
   if name in CELLAR_STATIONS:
     close_cellar_popup(game)
+  elif current_view(game) != 'shop':
+    # Scrolled down for the popup (see open_station()): back, the
+    # popup closed by the null spot's tap
+    show_shop(game)
   else:
     game.device.tap(game.coords.potion_shop_floor)
   time.sleep(POPUP_DELAY_S)
