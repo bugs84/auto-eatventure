@@ -2,6 +2,7 @@
 PotionShopWatch (GameLoop's hook) looks for it and enters it,
 PotionShopLoop plays it while the bot is inside it."""
 
+import datetime
 import logging
 import os
 import time
@@ -20,9 +21,10 @@ log = logging.getLogger(__name__)
 
 # The event (weekly) is looked for this often; once all its rewards are
 # done it is entered again only in its last hour (all active potions
-# bottled), or after EVENT_DONE_S when that hour has begun
+# bottled), then not before its end. That time is kept in
+# NEXT_VISIT_FILE: a restart doesn't enter a done event again.
 EVENT_CHECK_S = 30 * 60
-EVENT_DONE_S = 24 * 60 * 60
+NEXT_VISIT_FILE = 'potion_shop_next_visit.txt'
 # Crates are looked for every this many loops
 CRATE_CHECK_LOOPS = 2
 # The map is scrolled back to the shop when its landmark was out of
@@ -75,20 +77,62 @@ class PotionShopWatch:
 
   def __init__(self):
     self._timer = Timer()
+    wait = _saved_wait()
+    if wait > 0:
+      self._timer.postpone(wait)
+      log.info('Potion Shop: done, entered again at %s (%s)',
+               _read_next_visit(), NEXT_VISIT_FILE)
 
   def play_if_due(self, game):
     """When due, enter the event (unless inside) and play it until the
-    bot is no longer inside. Returns True when the bot was inside."""
-    if not self._timer.is_due():
+    bot is no longer inside (also before, when it is inside, e.g. left
+    there by a restart). Returns True when the bot was inside."""
+    inside = potion_shop.is_inside(game)
+    if not (inside or self._timer.is_due()):
       return False
     self._timer.postpone(EVENT_CHECK_S)
-    if not (potion_shop.is_inside(game)
+    if not (inside
             or (potion_shop.is_available(game) and potion_shop.enter(game))):
       return False
     if PotionShopLoop(game).run():
-      final = potion_bottles_loop.seconds_to_final_bottles()
-      self._timer.postpone(final if final > 0 else EVENT_DONE_S)
+      wait = _done_wait()
+      self._timer.postpone(wait)
+      _save_next_visit(wait)
     return True
+
+
+def _done_wait():
+  """Seconds until the done event is entered again: its last hour (all
+  active potions bottled), when that has begun its end."""
+  final = potion_bottles_loop.seconds_to_final_bottles()
+  if final > 0:
+    return final
+  return max(final + potion_bottles_loop.FINAL_BOTTLES_S, EVENT_CHECK_S)
+
+
+def _save_next_visit(wait):
+  visit = datetime.datetime.now() + datetime.timedelta(seconds=wait)
+  with open(NEXT_VISIT_FILE, 'w', encoding='utf-8') as file:
+    file.write(visit.strftime('%Y-%m-%d %H:%M:%S') + '\n')
+  log.info('Potion Shop: done, entered again at %s', visit)
+
+
+def _read_next_visit():
+  """The time saved by _save_next_visit(), None when none (or not a
+  time)."""
+  try:
+    with open(NEXT_VISIT_FILE, encoding='utf-8') as file:
+      return datetime.datetime.fromisoformat(file.read().strip())
+  except (OSError, ValueError):
+    return None
+
+
+def _saved_wait():
+  """Seconds until the saved next visit (<= 0: none or past)."""
+  visit = _read_next_visit()
+  if visit is None:
+    return 0
+  return (visit - datetime.datetime.now()).total_seconds()
 
 
 class PotionShopLoop:
