@@ -326,6 +326,10 @@ potion_shop_min_swipe_y = 60
 # A popup with its level under the top bar is shown this far below it:
 # its profit then clear of the chest icon below the top bar
 potion_shop_popup_margin_y = 60
+# The kettle's top on the shop view (always shown; its part on the
+# cellar view is the cellar's floor): found again after a swipe it
+# tells how far the map moved
+potion_shop_map_band = Region(400, 900, 820, 1150)
 potion_shop_aligned_y = 25
 potion_shop_max_swipe_y = 1000
 potion_shop_swipe_x = 830
