@@ -47,6 +47,8 @@ CELLAR_STATIONS = ('water', 'spider', 'mushrooms', 'frog')
 LANDMARKS = ('barrel', 'landmark', 'skull', 'cellar')
 LANDMARK_THRESHOLD = 0.7
 LANDMARK_MISSES = 2
+# Scrolls for a popup to be read (cut by the top bar, then covered)
+POPUP_SCROLLS = 2
 ALIGN_TRIES = 8
 SWIPE_DELAY_S = 1.5
 # A 1 s swipe moves the map ~1.1-1.3x its length, so a correction swipe
@@ -202,36 +204,57 @@ def open_station(game, name):
   """Open the station's popup. Returns its numbers (StationPopup of
   vision/station_popup.py), 'max' when it is MAX, None when they can't
   be read (e.g. not unlocked, covered; the screenshot is saved to
-  logs/). A popup with its level under the top bar (Bat Wing Extract
-  at the top of the shop, Spider Silk of the cellar on the LG) is
-  opened again with the map scrolled down by the part cut (back by
+  logs/). A popup cut by the top bar (Bat Wing Extract at the top of
+  the shop, Spider Silk of the cellar on the LG) or with its price
+  under the event's buttons at the screen's edge (Dragon Scale Dust on
+  the LG) is opened again with the map scrolled down (back by
   close_station())."""
-  coords = game.coords
   place = _tap_station(game, name)
+  for _ in range(POPUP_SCROLLS):
+    distance = _popup_scroll(game, place)
+    if not distance:
+      break
+    place = _scroll_down(game, name, place, distance)
+  return _popup_numbers(game, name, place)
+
+
+def _popup_scroll(game, place):
+  """How far to scroll the map down for the open popup to be read: by
+  the part cut by the top bar, below the event's buttons when they
+  cover its price; 0 when it is read (or none is open)."""
+  coords = game.coords
   top = game.screen.station_popup_top(coords)
-  if top is not None and top < game.null_spot.y:
-    _close_popup(game, name)
-    game.screen.capture()
-    before = game.screen.bgr
+  if top is None:
+    return 0
+  if top < game.null_spot.y:
     # Short swipes are not exact: at least the shortest one that moves
     # the map (more is fine)
-    distance = max(
-      game.null_spot.y + coords.potion_shop_popup_margin_y - top,
-      coords.potion_shop_min_swipe_y)
-    start = Point(coords.potion_shop_swipe_x,
-                  coords.potion_shop_swipe_from_y)
-    game.device.swipe(Swipe(start, Point(start.x, start.y + distance)))
-    time.sleep(SWIPE_DELAY_S)
-    game.screen.capture()
-    # With no landmark shown (on the LG the barrel then under the bottom
-    # buttons, the ink hidden by the prices) it moved as measured (not
-    # quite by the swipe)
-    moved = game.screen.moved(before, coords.potion_shop_map_band)
-    log.debug('Potion Shop: swiped %d px, the map moved %s', distance,
-              moved)
-    place = _tap_station(game, name, Point(
-      place.x, place.y + (distance if moved is None else moved)))
-  return _popup_numbers(game, name, place)
+    return max(game.null_spot.y + coords.potion_shop_popup_margin_y - top,
+               coords.potion_shop_min_swipe_y)
+  if (game.screen.read_station_popup(coords) is None
+      and not is_max_shown(game, place)):
+    return coords.potion_shop_cover_scroll_y
+  return 0
+
+
+def _scroll_down(game, name, place, distance):
+  """Close the popup, scroll the map down and open it again. Returns
+  the station's place."""
+  coords = game.coords
+  _close_popup(game, name)
+  game.screen.capture()
+  before = game.screen.bgr
+  start = Point(coords.potion_shop_swipe_x, coords.potion_shop_swipe_from_y)
+  game.device.swipe(Swipe(start, Point(start.x, start.y + distance)))
+  time.sleep(SWIPE_DELAY_S)
+  game.screen.capture()
+  # With no landmark shown (on the LG the barrel then under the bottom
+  # buttons, the ink hidden by the prices) it moved as measured (not
+  # quite by the swipe)
+  moved = game.screen.moved(before, coords.potion_shop_map_band)
+  log.debug('Potion Shop: swiped %d px, the map moved %s', distance, moved)
+  return _tap_station(game, name, Point(
+    place.x, place.y + (distance if moved is None else moved)))
 
 
 def _tap_station(game, name, unseen=None):
