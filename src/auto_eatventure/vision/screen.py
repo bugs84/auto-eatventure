@@ -10,6 +10,10 @@ from auto_eatventure.vision import (
 
 log = logging.getLogger(__name__)
 
+# A part of the screen found again after a swipe (the map's customers
+# and bubbles move meanwhile)
+MOVED_MIN_SCORE = 0.6
+
 
 class Screen:
   """The last screenshot in the color spaces the detections need.
@@ -97,6 +101,17 @@ class Screen:
     """Top (y) of the open station popup's level line, None when there
     is no popup."""
     return station_popup.popup_top(self.bgr, coords)
+
+  def moved(self, before, region):
+    """How far (px, + = lower) the part of the before screenshot in the
+    region is on the last one (e.g. the map after a swipe), None when
+    it is not found."""
+    score, found = matching.best_match(
+      self.bgr[:, region.left:region.right],
+      before[region.top:region.bottom, region.left:region.right])
+    if score < MOVED_MIN_SCORE:
+      return None
+    return found.top - region.top
 
   def read_coins(self, coords):
     """The event's coins (its counter), None when unreadable."""
