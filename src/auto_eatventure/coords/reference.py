@@ -330,6 +330,9 @@ potion_shop_popup_margin_y = 60
 # cellar view is the cellar's floor): found again after a swipe it
 # tells how far the map moved
 potion_shop_map_band = Region(400, 900, 820, 1150)
+# A popup with its price under the event's buttons at the screen's edge
+# (the chest, its timer) is scrolled this far down, below them
+potion_shop_cover_scroll_y = 220
 potion_shop_aligned_y = 25
 potion_shop_max_swipe_y = 1000
 potion_shop_swipe_x = 830
