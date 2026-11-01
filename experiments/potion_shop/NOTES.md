@@ -541,3 +541,26 @@ code: Kettle bought within 3 min, brewing swift at 00:57.
   bar too (never read); the map scroll of Bat Wing Extract applies to
   the cellar stations as well (back to the cellar view after). Checked
   on the LG at 03:05: spider 29, water 125, bat 475 read whole.
+
+## Popups cut by the top bar: measured, not fixed (2026-11-01)
+
+- The fixed reach `potion_shop_station_popup_top_y = 710` over-scrolled
+  the Xiaomi's cellar for Spider Silk: its button went under the event's
+  chest icon on the right edge, its price was unread from 04:43, and the
+  planner (an unread station is left out) bought only frog levels one by
+  one, never the spider's cheap ones (5.33am beside the frog's 23.5as).
+- Now the popup is opened first; `popup_top()` (station_popup.py) gives
+  the top of its "Level N" line from its button. Only when that is above
+  the null spot (under the top bar) is it closed, the map swiped down by
+  the cut + `potion_shop_popup_margin_y` (60, keeps Bat's profit clear of
+  the chest icon below the top bar) and the popup opened again.
+- LG (2:1): after that swipe no landmark shows (the barrel goes under
+  the bottom buttons, the ink is hidden by the customers' prices), so
+  `station_place()` gave the unmoved place and Bat was never read. The
+  place before the swipe moved by the swipe is used then (a 1 s swipe
+  of 226 ref px moved the map ~229).
+- Test pitfall: pausing a bot (kill -STOP) can leave a popup open. The
+  Djinn's popup covers the Dragon, so a test tap on the Dragon read the
+  Djinn (level 438). Close popups before testing.
+- Tested: Xiaomi bat 732 (9 s), spider 598, all cellar stations; LG bat
+  559 (12-14 s), spider 167, water 240, dragon 250, unicorn 531.
