@@ -589,3 +589,14 @@ code: Kettle bought within 3 min, brewing swift at 00:57.
 - Test pitfall: a paused bot may be in a dialog (Cauldron): a test's
   taps then go into it. Check current_view() first; the settings gear
   check (has('settings')) failed on the LG's map.
+
+## A done event is not entered again after a restart (2026-11-01)
+
+Once all rewards are done the bot comes back only in the event's last
+hour (bottles all active potions), then not before the event's end.
+That time was kept only in memory: a restart (by hand, the LG's
+watchdog) entered the done event again (Xiaomi 13:17, 13:22). Now it
+is saved in `potion_shop_next_visit.txt` (gitignored, one local time,
+e.g. `2026-11-03 23:00:00`) and read at start. Delete the file to make
+the bot enter the event right away. A bot started inside the event
+plays it anyway (and leaves it once done).
