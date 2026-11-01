@@ -564,3 +564,39 @@ code: Kettle bought within 3 min, brewing swift at 00:57.
   Djinn (level 438). Close popups before testing.
 - Tested: Xiaomi bat 732 (9 s), spider 598, all cellar stations; LG bat
   559 (12-14 s), spider 167, water 240, dragon 250, unicorn 531.
+
+## LG: coins "ag", the map's real move, the dragon's covered price (2026-11-01)
+
+- Coins: the g's tail goes below the LG's light coin box, cut it read as
+  q: 61ag as 61aq (e30 too many). The planner chose upgrades it could not
+  pay, found them grey and re-read the Upgrades dialog ("50 upgrades to
+  buy" every ~1.5 min), nothing bought 05:30-06:40. Sample g_1 (the cut
+  g of the LG's counter). A cut q of the LG's counter (coins "aq", far
+  off) would look alike: check then.
+- The map scrolled for Bat's popup moves ~16 % more than the swipe on
+  the LG (238 -> 276, 229 -> 267, 260 -> 301): the station was tapped
+  beside it. Screen.moved() finds the kettle's top
+  (potion_shop_map_band) again after the swipe (score ~0.9).
+- The chest icon at the LG's right edge covers the top right corner of
+  Dragon Scale Dust's button. Depending on the map's offset its price
+  was None (covered) or 4.33aa read as 4.33ai (the end of the last a
+  hidden, the cover just right of the text not counted). Now a cover up
+  to 2 gaps right of the text counts too, and an open but unread popup
+  (not MAX) is opened again with the map scrolled down 220 (below the
+  chest), up to POPUP_SCROLLS.
+- With these the LG bought the dragon from level 250 (4.33aa a level
+  against coins in "ag") to 600+ within minutes, profit 6.45ab -> 2.59ac+.
+- Test pitfall: a paused bot may be in a dialog (Cauldron): a test's
+  taps then go into it. Check current_view() first; the settings gear
+  check (has('settings')) failed on the LG's map.
+
+## A done event is not entered again after a restart (2026-11-01)
+
+Once all rewards are done the bot comes back only in the event's last
+hour (bottles all active potions), then not before the event's end.
+That time was kept only in memory: a restart (by hand, the LG's
+watchdog) entered the done event again (Xiaomi 13:17, 13:22). Now it
+is saved in `potion_shop_next_visit.txt` (gitignored, one local time,
+e.g. `2026-11-03 23:00:00`) and read at start. Delete the file to make
+the bot enter the event right away. A bot started inside the event
+plays it anyway (and leaves it once done).
