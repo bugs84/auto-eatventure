@@ -314,6 +314,11 @@ def _right(box):
   return box[0] + box[2]
 
 
+def _overlap(box, other):
+  """Whether the boxes overlap horizontally."""
+  return box[0] < _right(other) and other[0] < _right(box)
+
+
 def _text_height(group):
   return sorted(box[3] for box in group)[len(group) // 2]
 
@@ -323,10 +328,20 @@ def _text(group, samples):
   if not group:
     return None
   height = _text_height(group)
+  dots = [index for index, box in enumerate(group)
+          if box[3] < height * DOT_MAX_HEIGHT]
+  # An i is a dot over a short stem (its stem alone looks like an l)
+  dotted = {index for index, box in enumerate(group)
+            if index not in dots
+            and any(_overlap(group[dot], box) for dot in dots)}
   text = ''
-  for _, _, width, box_height, char in group:
-    if box_height < height * DOT_MAX_HEIGHT:
-      text += '.'
+  for index, (_, _, width, box_height, char) in enumerate(group):
+    if index in dotted:
+      text += 'i'
+      continue
+    if index in dots:
+      if not any(_overlap(group[index], group[stem]) for stem in dotted):
+        text += '.'
       continue
     known = _closest_char(char, width / box_height, samples)
     if known is None:
