@@ -206,9 +206,7 @@ def open_station(game, name):
   logs/). A popup that would be cut by the top bar is shown whole: the
   map is scrolled down first (back by close_station())."""
   coords = game.coords
-  place = station_place(game, name)
-  if name not in CELLAR_STATIONS:
-    place = _clear_top_bar(game, name, place)
+  place = _clear_top_bar(game, name, station_place(game, name))
   game.device.tap(Point(
     place.x + coords.station_tap_shift_x,
     place.y + coords.station_tap_offset_y + coords.station_tap_shift_y))
@@ -259,12 +257,16 @@ def buy_levels(game, name, count):
 
 def close_station(game, name):
   """Close the station's open popup."""
-  if name in CELLAR_STATIONS:
-    close_cellar_popup(game)
-  elif current_view(game) != 'shop':
+  view = view_of(name)
+  if current_view(game) != view:
     # Scrolled down for the popup (see open_station()): back, the
     # popup closed by the null spot's tap
-    show_shop(game)
+    if view == 'cellar':
+      show_cellar(game)
+    else:
+      show_shop(game)
+  elif view == 'cellar':
+    close_cellar_popup(game)
   else:
     game.device.tap(game.coords.potion_shop_floor)
   time.sleep(POPUP_DELAY_S)

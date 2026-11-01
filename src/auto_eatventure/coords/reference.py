@@ -305,7 +305,8 @@ potion_shop_station_popup_y = 508
 # A popup's "Level N" line reaches this far above its station's place
 # (with room for the chest icon below the top bar, which covers the
 # profit): when that is under the top bar (Bat Wing Extract at the top
-# of the shop view), the map is scrolled down for the popup first
+# of the shop view, Spider Silk of the cellar's on the LG), the map is
+# scrolled down for the popup first
 potion_shop_station_popup_top_y = 710
 # Shortest swipe that moves the map (a shorter one may tap a station)
 potion_shop_min_swipe_y = 60
