@@ -249,12 +249,12 @@ def _widened(covered, coords):
 
 
 def _uncovered_coins(group, covered, coords, samples):
-  """parse_coins() of the group, None when covered up to its end from
-  just left of its start (a leading digit may be hidden: 20.9ak read
-  as 0.9ak; a cover further left, e.g. of the button's corner, hides
-  none)."""
-  start = max(0, group[0][0] - 2 * coords.station_popup_gap_x)
-  if covered[start:_right(group[-1])].any():
+  """parse_coins() of the group, None when covered from just left of
+  its start to just right of its end (a leading digit may be hidden:
+  20.9ak read as 0.9ak; the end of a letter: 4.33aa read as 4.33ai; a
+  cover further away, e.g. of the button's corner, hides none)."""
+  gap = 2 * coords.station_popup_gap_x
+  if covered[max(0, group[0][0] - gap):_right(group[-1]) + gap].any():
     return None
   return parse_coins(_text(group, samples))
 
