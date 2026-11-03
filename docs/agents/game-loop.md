@@ -96,7 +96,8 @@ Nothing of this runs in the game loop.
 
 ```python
 self.loops += 1
-self.stale.check(game)                          # StaleWatch
+if self.stale.check(game):                      # StaleWatch
+  self._game_restarted(); return                # the game was stuck
 self._select_popular_dish()                     # when its Timer is due
 self._collect_adventures()                      # after start, every 5 h
 game.screen.capture()
@@ -369,9 +370,32 @@ without a station icon (`found_nothing()`, reset by `found_work()`),
   to `RECOVERY_POPUP_CLOSE_TRIES` (3) dialogs by their red X (a dialog
   may block the game) and tap the null spot, then reset
   `idle_loops` to 0, so this repeats once per ~50 empty
-  loops (~2-3 min), not on every loop. The
-  game is **not** restarted: `start_app()` only brings a running game
-  to the foreground (a real restart would need `close_app()` first).
+  loops (~4 min), not on every loop. `start_app()` only brings a
+  running game to the foreground.
+- **Restart of a stuck game** (`_restart()`), when the recovery didn't
+  help:
+  - `FRONT_CHECK_DELAY_S` (4 s) after the recovery, the window in front
+    (`device.focused_window()`, `dumpsys window`) is another window of
+    the game than its `GAME_ACTIVITY`, e.g. its ad: the game shows an
+    ad nobody closed again whenever it is brought to the foreground
+    (2026-11-03: the helper's "+4m" ad, shown again 3 s after each
+    recovery); restarted at once
+  - or `RESTART_RECOVERIES` (6) recoveries in a row without a station
+    upgrade between them (~25 min; counted by `_recoveries`, reset by
+    `found_work()` and `reset()`). Waiting for coins took at most 7-8
+    recoveries in 3 weeks of logs, a stuck game 16 to 280 (the Xiaomi
+    stood the whole night of 2026-10-24).
+
+  The last screenshot is saved to `logs/stuck_<date_time>.png` (the
+  newest `STUCK_SCREENSHOTS_KEPT` (10) kept), the restart is logged as
+  FATAL (`autoplay.log` and `key_events.log`, it should not happen),
+  then the game is force-stopped (`close_app()`), started again and
+  `wait_until_ready()` waits for it (closing the offline earnings
+  dialog). `check()` returns True and `GameLoop._game_restarted()`
+  starts a new `LateDialogWatch` and moves the restaurant into place
+  again (`needs_reposition`). Another restart comes after 6 more
+  recoveries at the earliest, so a game that stays stuck isn't
+  restarted over and over.
 
 Swipe pattern cycles through 7 down-swipes then 7 up-swipes
 (`SWIPES_PER_DIRECTION = 7`), each 650px at reference resolution —

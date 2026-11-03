@@ -50,9 +50,6 @@ Copy `.env-sample` to `.env` and configure:
 # Optional: target specific device (from `adb devices`)
 device_serial=""
 
-# Debug: log the score of every template check (very noisy)
-DEBUG_TEMPLATE_MATCHING="0"
-
 # Optional: override auto-computed template scale factor
 TEMPLATE_SCALE_OVERRIDE=""
 
@@ -78,8 +75,11 @@ LOG_LEVEL="INFO"
 # Logging: file level (written to logs/autoplay.log)
 LOG_FILE_LEVEL="DEBUG"
 
-# Logging: days to keep rotated log files
-LOG_MAX_DAYS="7"
+# Logging: MB that logs/autoplay.log and its gzipped old files take
+LOG_MAX_MB="100"
+
+# Logging: days to keep the daily files of logs/key_events.log
+KEY_LOG_MAX_DAYS="365"
 ```
 
 For the Potion Shop event (`POTION_SHOP_ENABLED`), copy

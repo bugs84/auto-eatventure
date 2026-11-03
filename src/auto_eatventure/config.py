@@ -27,10 +27,10 @@ COLLECT_ADVENTURES_ENABLED = _flag('COLLECT_ADVENTURES_ENABLED', '1')
 POTION_SHOP_ENABLED = _flag('POTION_SHOP_ENABLED', '0')
 
 # Troubleshooting of the template detection
-DEBUG_TEMPLATE_MATCHING = _flag('DEBUG_TEMPLATE_MATCHING', '0')
 # A number replacing the resolution-based template scale; empty = off
 TEMPLATE_SCALE_OVERRIDE = _text('TEMPLATE_SCALE_OVERRIDE')
 
 LOG_LEVEL = _text('LOG_LEVEL', 'INFO')
 LOG_FILE_LEVEL = _text('LOG_FILE_LEVEL', 'DEBUG')
-LOG_MAX_DAYS = int(_text('LOG_MAX_DAYS', '30'))
+LOG_MAX_MB = int(_text('LOG_MAX_MB', '100'))
+KEY_LOG_MAX_DAYS = int(_text('KEY_LOG_MAX_DAYS', '365'))

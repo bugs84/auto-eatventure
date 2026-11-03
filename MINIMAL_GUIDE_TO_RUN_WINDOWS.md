@@ -33,7 +33,6 @@ notepad .env
 Fill in your device serial (and credentials if needed) When it is only connected device it is not needed to fill it:
 ```
 device_serial=ABC123XYZ
-DEBUG_TEMPLATE_MATCHING="0"
 ```
 
 ---

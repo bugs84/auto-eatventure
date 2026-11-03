@@ -76,7 +76,9 @@ class GameLoop:
     action that changes the screen a lot ends the loop early."""
     game = self.game
     self.loops += 1
-    self.stale.check(game)
+    if self.stale.check(game):
+      self._game_restarted()
+      return
 
     if (config.POPULAR_DISH_ENABLED
         and not self.popular_dish_waits_for_upgrade
@@ -110,6 +112,12 @@ class GameLoop:
       self._upgrade_stations(icons)
     else:
       self._no_station_to_upgrade()
+
+  def _game_restarted(self):
+    """The game was restarted (stuck): its start dialogs may come late,
+    the restaurant is moved into place again."""
+    self.late_dialogs = LateDialogWatch()
+    self.needs_reposition = True
 
   def _upgrade_stations(self, icons):
     if self.needs_reposition:
