@@ -27,4 +27,7 @@ def close_popup(game):
 def is_screen_dimmed(game):
   """A dialog dims the white settings gear."""
   gear = game.coords.settings_roi.crop(game.screen.gray)
-  return gear.max() < SETTINGS_GEAR_MIN_BRIGHTNESS
+  brightness = gear.max()
+  log.debug('Settings gear brightness %d (dimmed below %d)', brightness,
+            SETTINGS_GEAR_MIN_BRIGHTNESS)
+  return brightness < SETTINGS_GEAR_MIN_BRIGHTNESS

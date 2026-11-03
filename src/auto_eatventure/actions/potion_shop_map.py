@@ -154,6 +154,7 @@ def shop_icons(game):
   beetle = station_arrow(game, 'beetle', find_upgrade_icons(
     game.screen.hsv, coords.upgrade_arrow_min_height_y,
     coords.upgrade_arrow_max_height_y))
+  log.debug('Beetle Juice arrow %s', beetle)
   if beetle is not None and beetle not in icons:
     icons.append(beetle)
   return icons
