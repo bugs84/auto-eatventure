@@ -14,6 +14,9 @@ from PIL import Image
 log = logging.getLogger(__name__)
 
 GAME_PACKAGE = 'com.hwqgrhhjfd.idlefastfood'
+# The game's own window (the restaurant, its dialogs); its ads have
+# other activities in its package
+GAME_ACTIVITY = 'com.singular.unitybridge.SingularUnityActivity'
 # A failed screenshot (the phone was shortly disconnected, adb exit
 # status 255; a broken PNG) is retried this many times before the bot
 # crashes
@@ -76,16 +79,24 @@ class Device:
     rgb = Image.open(io.BytesIO(png)).convert('RGB')
     return np.array(rgb)[:, :, ::-1].copy()
 
+  # The taps, swipes and app starts are logged (DEBUG) with the bot code
+  # calling them (stacklevel=2), to analyze what the bot did
+
   def tap(self, point):
+    log.debug('Tap (%d, %d)', *point, stacklevel=2)
     self._adb.shell(f'input tap {point.x} {point.y}')
 
   def long_press(self, point, duration_ms):
     """Hold a finger on the point (a swipe that doesn't move)."""
+    log.debug('Long press (%d, %d) for %d ms', *point, duration_ms,
+              stacklevel=2)
     self._adb.shell(f'input swipe {point.x} {point.y} '
                     f'{point.x} {point.y} {duration_ms}')
 
   def swipe(self, swipe):
     """Swipe along a coords.geometry.Swipe."""
+    log.debug('Swipe (%d, %d) -> (%d, %d)', *swipe.start, *swipe.end,
+              stacklevel=2)
     self._adb.swipe(swipe.start.x, swipe.start.y,
                     swipe.end.x, swipe.end.y)
 
@@ -96,6 +107,7 @@ class Device:
     The screen is woken first and the lock screen dismissed (without a
     PIN): after the game crashes, the phone goes to sleep.
     """
+    log.debug('Start the game / bring it to the foreground', stacklevel=2)
     self._adb.shell('input keyevent KEYCODE_WAKEUP')
     self._adb.shell('wm dismiss-keyguard')
     self._adb.shell(f'monkey -p {GAME_PACKAGE} '
@@ -103,4 +115,17 @@ class Device:
 
   def close_app(self):
     """Force-stop the game."""
+    log.debug('Force-stop the game', stacklevel=2)
     self._adb.shell(f'am force-stop {GAME_PACKAGE}')
+
+  def focused_window(self):
+    """The window in front: "<package>/<activity>" (e.g. the game's
+    GAME_ACTIVITY, or an ad's activity in the game's package), '' when
+    unknown (e.g. the screen is off)."""
+    output = self._adb.shell('dumpsys window | grep mCurrentFocus')
+    # "mCurrentFocus=Window{19279cb u0 <package>/<activity>}"
+    match = re.search(r'mCurrentFocus=Window\{\S+ \S+ ([^}\s]+)\}', output)
+    window = match.group(1) if match else ''
+    log.debug('Window in front: %s', window or output.strip(),
+              stacklevel=2)
+    return window

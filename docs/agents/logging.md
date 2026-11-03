@@ -13,11 +13,13 @@ logger.py              # setup_logging() + key_log
   |
   +-- Console handler  # StreamHandler -> stdout (default: INFO)
   |
-  +-- File handler     # TimedRotatingFileHandler -> logs/autoplay.log
-  |                    # Rotates daily, keeps LOG_MAX_DAYS backups
+  +-- File handler     # _CompressingFileHandler -> logs/autoplay.log
+  |                    # New file every 10 MB, old ones gzipped,
+  |                    # all together at most LOG_MAX_MB
   |
   +-- Key events       # TimedRotatingFileHandler -> logs/key_events.log
                        # Key milestones only (file-only, no console)
+                       # Rotates daily, keeps KEY_LOG_MAX_DAYS
 ```
 
 ## Configuration (via `.env`)
@@ -28,16 +30,18 @@ Read in `config.py`.
 |----------|---------|---------|
 | `LOG_LEVEL` | `INFO` | Console output verbosity |
 | `LOG_FILE_LEVEL` | `DEBUG` | File output verbosity |
-| `LOG_MAX_DAYS` | `30` (`.env-sample`: `7`) | Days to retain rotated log files |
+| `LOG_MAX_MB` | `100` | MB that `autoplay.log` and its gzipped old files take together |
+| `KEY_LOG_MAX_DAYS` | `365` | Days to keep the daily files of `key_events.log` |
 
 ## Log Levels
 
 | Level | Usage |
 |-------|-------|
-| `DEBUG` | Internal details: template match scores (with `DEBUG_TEMPLATE_MATCHING="1"`) |
+| `DEBUG` | What the bot saw and did, for the analysis of a problem: every screenshot, search (template, region, score, position), reading, tap, swipe and app start, the station icons found, the window in front |
 | `INFO` | All game actions: upgrading stations, opening boxes, buying upgrades, chests, level transitions, layout adjustments, stale swipes |
 | `WARNING` | Recovery actions: stale state (bring game to foreground), missing config, invalid env values, an expected screen not found (Okay / Open buttons, Adventures) |
 | `ERROR` | Failures: top bar not found at start (null spot fallback); a crash (uncaught exception) with its traceback |
+| `CRITICAL` (shown as `FATAL`) | The game was stuck and had to be restarted (`actions/stale.py`); should not happen |
 
 ## Crashes and End of the Bot
 
@@ -66,13 +70,14 @@ log.warning('Nothing to update for %d loops — bringing game to '
 
 ## Initialization
 
-`setup_logging(console_level, file_level, max_days)` must be called
+`setup_logging(console_level, file_level, max_mb, key_log_max_days)`
+must be called
 once at startup, before logging. `run()` in `main.py` does it with
 the levels from `config.py` (which loads `.env`):
 
 ```python
 setup_logging(config.LOG_LEVEL, config.LOG_FILE_LEVEL,
-              config.LOG_MAX_DAYS)
+              config.LOG_MAX_MB, config.KEY_LOG_MAX_DAYS)
 ```
 
 Its first log line is `START - Bot started`, so every bot start is
@@ -84,16 +89,37 @@ easy to find in `autoplay.log` (the key events log gets its own
 
 - Log directory: `logs/` (auto-created, gitignored)
 - Active log file: `logs/autoplay.log`
-- Rotated files: `logs/autoplay.log.YYYY-MM-DD`
-- Rotation: daily at midnight
-- Retention: configurable via `LOG_MAX_DAYS`
+- Rotation: by size, when it reaches `LOG_FILE_MB` (10 MB, ~1 day of
+  DEBUG lines), it is renamed to `logs/autoplay.log.YYYY-MM-DD_HHMMSS`
+  (the time of the rotation) and gzipped (~15x smaller; read with
+  `zless`, `zgrep`)
+- Retention: the oldest gzipped files are deleted while they and a
+  full `autoplay.log` take more than `LOG_MAX_MB` (100 MB, a few weeks)
+- The daily files of older versions (`autoplay.log.YYYY-MM-DD`) are
+  gzipped at the start and count to the same limit
+- Pillow's DEBUG lines (each PNG chunk of every screenshot) are left
+  out (`PIL` logger at INFO)
+
+### Debug lines for the analysis of a problem
+
+The taps, swipes and app starts (`android/device.py`) and the
+screenshots, searches and readings (`vision/screen.py`) are logged at
+DEBUG with `stacklevel`, so the file format's module, function and
+line name the bot code calling them, e.g.:
+
+```
+2026-11-03 18:02:11,532 [DEBUG] game_loop.play_once:92: Screenshot
+2026-11-03 18:02:11,951 [DEBUG] boxes.open_all:17: Find all box (min 0.70): [(479, 1982)]
+2026-11-03 18:02:11,952 [INFO ] boxes.open_all:20: Opening box
+2026-11-03 18:02:11,953 [DEBUG] boxes.open_all:21: Tap (479, 1982)
+```
 
 ## Key Events Log
 
 A separate file recording only key milestones. Useful for tracking progress (e.g. counting cleared restaurants).
 
 - File: `logs/key_events.log`
-- Rotated daily (same retention as main log)
+- Rotated daily, kept `KEY_LOG_MAX_DAYS` (365) days
 - **No console output** — file only
 - Format: `2024-01-15 14:23:01,234  EVENT_TYPE - description`
 
@@ -104,7 +130,8 @@ A separate file recording only key milestones. Useful for tracking progress (e.g
 | `START` | Bot process begins | `START - Bot started` |
 | `NEXT LEVEL` | Renovated to next level (same city) | `NEXT LEVEL - Renovated to next level` |
 | `FLY` | Flying to a new city/restaurant | `FLY - Flying to next city` |
-| `STALE` | Nothing to update for more than 50 loops, game brought to the foreground (not restarted; at most once per ~2-3 min) | `STALE - Nothing to update, bringing game to foreground` |
+| `STALE` | Nothing to update for more than 50 loops, game brought to the foreground (not restarted; at most once per ~4 min) | `STALE - Nothing to update, bringing game to foreground` |
+| `FATAL` | The game was stuck and restarted: its other window (an ad) in front after a stale recovery, or 6 stale recoveries in a row (~25 min); a screenshot is saved. Should not happen | `FATAL - GAME STUCK (<reason>), restarting the game. This should not happen, see logs/stuck_<date_time>.png and autoplay.log` |
 | `POPULAR DISH` | Popular Dish selected and stopped (optional) | `POPULAR DISH - Selected first dish` |
 | `RACE` | "Restaurant Race ended!" reward claimed | `RACE - Restaurant Race reward claimed` |
 | `ADVENTURES` | Free Adventures rewards collected (only when something was collected) | `ADVENTURES - Collected rewards: Zeus' Feast 2x, Hangry Pirates 1x` |
@@ -144,10 +171,11 @@ Console format matches previous `print()` output (message only, no timestamps). 
 ## File Output Format
 
 ```
-2024-01-15 14:23:01,234 [INFO ] auto_eatventure.actions.chests: Chest found — opening
+2024-01-15 14:23:01,234 [INFO ] chests.open_all:23: Chest found — opening
 ```
 
-File format includes timestamp, level, and module name for debugging.
+File format includes timestamp, level, and the module, function and
+line of the log call (of the bot code calling a tap or a search).
 
 ## Adding Log Statements
 

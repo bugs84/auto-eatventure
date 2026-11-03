@@ -65,7 +65,7 @@ __main__.py --- entry point (python -m auto_eatventure), calls main.run()
 | `actions/levels.py` | `go_to_next_level()`, `tap_welcome_okay()`, `tap_open_button()` | Renovate / fly to the next city and the dialogs after it. |
 | `actions/popups.py` | `close_popup()`, `is_screen_dimmed()` | Red X popups, dimmed screen. |
 | `actions/race_reward.py` | `claim()` | "Restaurant Race ended!" reward. |
-| `actions/stale.py` | `StaleWatch` | Recovery and search swipes when nothing can be upgraded. |
+| `actions/stale.py` | `StaleWatch` | Recovery, restart of a stuck game and search swipes when nothing can be upgraded. |
 | `actions/popular_dish.py`, `food_delivery.py`, `helper_invite.py`, `adventures.py` | | Optional features (switches in `config.py`). |
 | `actions/potion_shop.py` | `is_available()`, `is_inside()`, `enter()`, `close_outside_dialog()`, `is_completed()`, `leave()`, `buy_upgrades()`, `has_last_upgrade()` | Potion Shop event (optional): its button and dialog (Enter / Exit, rewards) and its Upgrades dialog. |
 | `actions/potion_shop_cauldron.py` | `can_brew()`, `is_cauldron_open()`, `brew()`, `bottle_or_brew()`, `bottle_all()`, `BREW_PLAN`, `LATE_PLAN`, `POTIONS` | Potion Shop Cauldron: claiming, brewing by plan, bottling. |
@@ -100,6 +100,7 @@ State is purely **in-memory** in `GameLoop` and its helpers:
 
 - `loops` -- iteration counter driving periodic actions
 - `StaleWatch.idle_loops` -- consecutive loops with no station icon found (reset after stale recovery and on a new level)
+- `StaleWatch._recoveries` -- stale recoveries in a row without a station upgrade; the game is restarted after 6 (reset by an upgrade, a restart and on a new level)
 - `needs_reposition` -- the first station icons of a level reposition the restaurant
 - `popular_dish_waits_for_upgrade` -- after a level change Popular Dish waits for the first station upgrade
 - `Timer`s of the optional features, `LateDialogWatch` for the first minute
