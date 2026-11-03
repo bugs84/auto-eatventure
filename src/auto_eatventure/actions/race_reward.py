@@ -34,7 +34,10 @@ def claim(game):
   if button is None:
     log.warning('Restaurant Race ended, but its Claim not found')
     return False
-  if button.crop(screen.hsv)[:, :, 2].mean() < CLAIM_MIN_BRIGHTNESS:
+  brightness = button.crop(screen.hsv)[:, :, 2].mean()
+  log.debug('Race Claim brightness %.0f (covered below %d)', brightness,
+            CLAIM_MIN_BRIGHTNESS)
+  if brightness < CLAIM_MIN_BRIGHTNESS:
     log.info('Restaurant Race ended dialog is covered, not claiming')
     return False
   log.info('Restaurant Race ended - claiming the reward at (%d, %d)',
