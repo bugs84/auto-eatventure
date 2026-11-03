@@ -33,7 +33,7 @@ src/auto_eatventure/         # The only package (src layout)
   potion_orders.py           # potion_orders.txt: the bottles wanted
   config.py                  # Settings from .env (feature switches, logs)
   timer.py                   # Timer: when an occasional action is due
-  logger.py                  # setup_logging(), key_log (daily rotation)
+  logger.py                  # setup_logging(), key_log (rotated logs)
   sandbox.py                 # Interactive testing tool
   actions/                   # Game actions, one module per feature
     game.py                  # Game: device + screen + coords + null_spot
