@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 def run():
   """Run the bot until it is stopped."""
   setup_logging(config.LOG_LEVEL, config.LOG_FILE_LEVEL,
-                config.LOG_MAX_DAYS)
+                config.LOG_MAX_MB, config.KEY_LOG_MAX_DAYS)
   log.info('START - Bot started')
   game = _connect()
   game.device.start_app()
@@ -39,7 +39,7 @@ def _connect():
            reference.REFERENCE_WIDTH, reference.REFERENCE_HEIGHT)
   coords = ScaledCoords(width, height)
   templates = load_templates(*_template_scale(coords))
-  screen = Screen(device, templates, config.DEBUG_TEMPLATE_MATCHING)
+  screen = Screen(device, templates)
   return Game(device, screen, coords)
 
 

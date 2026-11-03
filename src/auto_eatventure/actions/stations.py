@@ -22,9 +22,13 @@ def find_icons(game):
   icons = find_upgrade_icons(
     game.screen.hsv, coords.upgrade_arrow_min_height_y,
     coords.upgrade_arrow_max_height_y)
-  return [icon for icon in icons
-          if icon.y <= coords.station_icon_max_y
-          and not _is_near_club_button(coords, icon)]
+  tappable = [icon for icon in icons
+              if icon.y <= coords.station_icon_max_y
+              and not _is_near_club_button(coords, icon)]
+  log.debug('Station icons %s, tappable %s',
+            [tuple(icon) for icon in icons],
+            [tuple(icon) for icon in tappable])
+  return tappable
 
 
 def upgrade(game, icons):
