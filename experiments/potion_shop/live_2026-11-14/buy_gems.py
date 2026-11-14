@@ -10,7 +10,8 @@ by a template first: only the item card's gem price, its dialog's gem
 button and the red X are ever tapped - never an offer for real money.
 Each purchase is written to gems.log (its total per phone may not go
 over GEM_LIMIT of the phone's .env, default 0: nothing is bought) and
-to the phone's logs/key_events.log ("GEMS - ...").
+to the phone's logs/autoplay.log; only a reached limit goes to its
+logs/key_events.log (key milestones, nothing frequent).
 """
 import datetime
 import os
@@ -56,14 +57,18 @@ def gem_limit(folder):
   return int(value.strip()) if value and value.strip() else 0
 
 
-def key_event(folder, text):
-  """A line in the bot's key_events.log (its format, see logger.py);
-  the bot is stopped meanwhile."""
+def bot_log(folder, text, key=False):
+  """A line in the bot's autoplay.log, with key=True in its
+  key_events.log (their formats, see logger.py); the bot is stopped
+  meanwhile."""
   now = datetime.datetime.now()
-  with open(os.path.join(folder, 'logs', 'key_events.log'), 'a',
+  stamp = f'{now:%Y-%m-%d %H:%M:%S},{now.microsecond // 1000:03d}'
+  name, line = (('key_events.log', f'{stamp}  GEMS - {text}') if key
+                else ('autoplay.log',
+                      f'{stamp} [INFO ] buy_gems: Gems: {text}'))
+  with open(os.path.join(folder, 'logs', name), 'a',
             encoding='utf-8') as file:
-    file.write(f'{now:%Y-%m-%d %H:%M:%S},{now.microsecond // 1000:03d}'
-               f'  GEMS - {text}\n')
+    file.write(line + '\n')
 
 
 def spent(name):
@@ -178,8 +183,11 @@ def buy(phone, item, count, limit, folder):
       file.write(f'{datetime.datetime.now():%Y-%m-%d %H:%M:%S} '
                  f'{phone.name}: bought {text} for {gems} gems\n')
     log(f'bought {text} {bought}x, {phone.name} spent {spent(phone.name)}')
-    key_event(folder, f'Bought {text} for {gems} gems'
-                      f' ({spent(phone.name)} of {limit} this event)')
+    bot_log(folder, f'Bought {text} for {gems} gems'
+                    f' ({spent(phone.name)} of {limit} this event)')
+    if spent(phone.name) + gems > limit:
+      bot_log(folder, f'Limit reached: {spent(phone.name)} of {limit}'
+                      ' gems spent this event', key=True)
   for _ in range(3):  # close the dialog (if left open) and the shop
     image = phone.screen()
     close = phone.find(image, 'close_x')
@@ -219,8 +227,8 @@ def main():
   limit = gem_limit(folder)
   if spent(name) + ITEMS[item][0] > limit:
     log(f'{name}: gem limit reached ({spent(name)} of {limit})')
-    key_event(folder, f'Limit reached, {item} not bought'
-                      f' ({spent(name)} of {limit} this event)')
+    bot_log(folder, f'Limit reached, {item} not bought'
+                    f' ({spent(name)} of {limit} this event)')
     return
   for pid in pids(watchdog):
     os.kill(int(pid), 15)
