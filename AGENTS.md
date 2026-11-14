@@ -111,6 +111,7 @@ requirements.txt             # Python dependencies
 - Secrets and device config go in `.env` (gitignored).
 - Env vars are read only in `config.py`, with sensible defaults.
 - Never commit `.env`; only `.env-sample` is tracked.
+- Screenshots, working notes and machine-specific scripts (watchdogs, launchers) stay local (gitignored), not in the repository.
 
 ### Adding New Game Actions
 1. Capture a screenshot of the UI element (`PYTHONPATH=src python -m auto_eatventure.sandbox`), crop the template and save it to `matching_screenshots/` as PNG.

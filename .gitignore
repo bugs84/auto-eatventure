@@ -8,3 +8,19 @@ logs/
 potion_orders.txt
 potion_orders.txt.tmp
 potion_shop_next_visit.txt
+
+# Local only, not in the repository: screenshots, working notes and the
+# launchers and watchdogs of the machine that runs the bots
+captured_screenshots_on_the_fly/
+/test*.png
+experiments/**/*.png
+experiments/**/*.jpg
+experiments/**/*.txt
+experiments/potion_shop/HANDOFF.md
+experiments/potion_shop/STATIONS_UPGRADES.md
+experiments/potion_shop/upgrades_video.tsv
+experiments/potion_shop/video_transcript/
+experiments/upgrade_icons/arrow_prototype.py
+konsole.rc
+run-konsole.sh
+watchdog/
