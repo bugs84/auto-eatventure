@@ -8,8 +8,9 @@ Pauses the phone's watchdog and bot, buys up to COUNT, closes the shop
 and starts the watchdog again (race_schedule.sh). Every tap is checked
 by a template first: only the item card's gem price, its dialog's gem
 button and the red X are ever tapped - never an offer for real money.
-Each purchase is written to gems.log; a phone's total there may not go
-over GEM_LIMIT of its .env (default 0: nothing is bought).
+Each purchase is written to gems.log (its total per phone may not go
+over GEM_LIMIT of the phone's .env, default 0: nothing is bought) and
+to the phone's logs/key_events.log ("GEMS - ...").
 """
 import datetime
 import os
@@ -53,6 +54,16 @@ def gem_limit(folder):
   """GEM_LIMIT of the phone's .env (see .env-sample), 0 when unset."""
   value = dotenv_values(os.path.join(folder, '.env')).get('GEM_LIMIT')
   return int(value.strip()) if value and value.strip() else 0
+
+
+def key_event(folder, text):
+  """A line in the bot's key_events.log (its format, see logger.py);
+  the bot is stopped meanwhile."""
+  now = datetime.datetime.now()
+  with open(os.path.join(folder, 'logs', 'key_events.log'), 'a',
+            encoding='utf-8') as file:
+    file.write(f'{now:%Y-%m-%d %H:%M:%S},{now.microsecond // 1000:03d}'
+               f'  GEMS - {text}\n')
 
 
 def spent(name):
@@ -129,7 +140,7 @@ def find_card(phone, card):
   return False
 
 
-def buy(phone, item, count, limit):
+def buy(phone, item, count, limit, folder):
   gems, card, title, buttons, text = ITEMS[item]
   image = phone.screen()
   cart = phone.find(image, 'cart')
@@ -167,6 +178,8 @@ def buy(phone, item, count, limit):
       file.write(f'{datetime.datetime.now():%Y-%m-%d %H:%M:%S} '
                  f'{phone.name}: bought {text} for {gems} gems\n')
     log(f'bought {text} {bought}x, {phone.name} spent {spent(phone.name)}')
+    key_event(folder, f'Bought {text} for {gems} gems'
+                      f' ({spent(phone.name)} of {limit} this event)')
   for _ in range(3):  # close the dialog (if left open) and the shop
     image = phone.screen()
     close = phone.find(image, 'close_x')
@@ -206,6 +219,8 @@ def main():
   limit = gem_limit(folder)
   if spent(name) + ITEMS[item][0] > limit:
     log(f'{name}: gem limit reached ({spent(name)} of {limit})')
+    key_event(folder, f'Limit reached, {item} not bought'
+                      f' ({spent(name)} of {limit} this event)')
     return
   for pid in pids(watchdog):
     os.kill(int(pid), 15)
@@ -213,7 +228,7 @@ def main():
     os.kill(int(pid), 15)
   time.sleep(4)
   try:
-    bought = buy(Phone(name, serial), item, count, limit)
+    bought = buy(Phone(name, serial), item, count, limit, folder)
   finally:
     # Through systemd (the race timers' units): a watchdog started from
     # this process tree could not open a Konsole (00:39, 02:38)
