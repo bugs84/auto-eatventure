@@ -1,4 +1,5 @@
-# Local to the machine that ran the event (paths, serials, screenshots)
+# Local to the machine that ran the event (paths, serials, screenshots,
+# its notes and the purchases)
 phones.json
 progress.sh
 progress.log
@@ -6,3 +7,5 @@ progress.log.tmp
 shots/
 x2_schedule.sh
 x2_schedule.log
+NOTES.md
+gems.log

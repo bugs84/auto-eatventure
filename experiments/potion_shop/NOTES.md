@@ -1,8 +1,8 @@
 # Potion Shop event
 
-Continuing the work? Read `HANDOFF.md` (state, tools, next steps) first.
-`HANDOFF.md` and `video_transcript/` (the guide video's transcript) are
-working files, kept only in the `potion-shop` branch, not in `master`.
+The working files named below (`HANDOFF.md`, `video_transcript/` with
+the guide video's transcript, `STATIONS_UPGRADES.md`, screenshots) are
+kept locally, not in the repository.
 
 Goal: play the Potion Shop event to the end (15/15 rewards), as fast as
 possible (the event leaderboard ranks by completion time). Device:

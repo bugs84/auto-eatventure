@@ -1,5 +1,8 @@
 # Cloud save (Google Play Games): notes for a possible automation
 
+The screenshots named below (`cs_*.png`) are kept locally, not in the
+repository.
+
 Seen 2026-10-31 on the Xiaomi (1080x2400,
 Eatventure 1.54.0, last updated 2026-09-22) after the user had played
 the same account on another phone.
