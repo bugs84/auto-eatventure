@@ -71,6 +71,7 @@ def _log_features():
   )
   for name, enabled in features:
     log.info('%s: %s', name, 'enabled' if enabled else 'disabled')
+  log.info('Gem limit per event: %d', config.GEM_LIMIT)
   if config.POTION_SHOP_ENABLED:
     log.info('Potion Shop bottles (%s): %s',
              potion_orders.ORDERS_FILE,

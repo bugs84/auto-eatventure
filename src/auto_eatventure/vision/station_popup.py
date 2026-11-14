@@ -117,8 +117,11 @@ def _popup_price(image, button, covered, coords, samples):
                    & ~covered, coords)
   if not groups:
     return None
-  return _uncovered_coins(max(groups, key=len), covered, coords,
-                          samples)
+  # The longest text; a one-digit price ties with the specks of the
+  # button's corners: the tallest then
+  return _uncovered_coins(
+    max(groups, key=lambda group: (len(group), _text_height(group))),
+    covered, coords, samples)
 
 
 def popup_top(image, coords):

@@ -25,6 +25,8 @@ FOOD_DELIVERY_ENABLED = _flag('FOOD_DELIVERY_ENABLED', '0')
 HELPER_INVITE_ENABLED = _flag('HELPER_INVITE_ENABLED', '1')
 COLLECT_ADVENTURES_ENABLED = _flag('COLLECT_ADVENTURES_ENABLED', '1')
 POTION_SHOP_ENABLED = _flag('POTION_SHOP_ENABLED', '0')
+# Gems that may be spent on boosts in one event; 0 = never any
+GEM_LIMIT = int(_text('GEM_LIMIT', '0'))
 
 # Troubleshooting of the template detection
 # A number replacing the resolution-based template scale; empty = off
