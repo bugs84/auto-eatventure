@@ -1,7 +1,8 @@
 """ScaledCoords: coords/reference.py scaled to the phone's resolution."""
 
 from auto_eatventure.coords import reference
-from auto_eatventure.coords.geometry import Bottom, Point, Region, Swipe, Top
+from auto_eatventure.coords.geometry import (
+  Bottom, Center, Offset, Point, Region, Swipe, Top)
 
 
 class ScaledCoords:
@@ -42,11 +43,13 @@ class ScaledCoords:
     return self._scale(name, value)
 
   def _scale(self, name, value, y=None):
-    """y: how a y position is scaled (Top / Bottom), None when not
-    wrapped in them: centered for Points, a size for numbers."""
-    if isinstance(value, (Top, Bottom)):
-      y = self._top_y if isinstance(value, Top) else self._bottom_y
-      return self._scale(name, value.value, y)
+    """y: how a y position is scaled (Top / Bottom / Center / Offset),
+    None when not wrapped in them: centered for Points, a size for
+    numbers."""
+    anchors = {Top: self._top_y, Bottom: self._bottom_y,
+               Center: self._center_y, Offset: self._size}
+    if type(value) in anchors:
+      return self._scale(name, value.value, anchors[type(value)])
     if isinstance(value, Point):
       y = y or self._center_y
       return Point(self._size(value.x), y(value.y))

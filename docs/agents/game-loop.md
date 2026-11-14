@@ -96,11 +96,14 @@ Nothing of this runs in the game loop.
 
 ```python
 self.loops += 1
-self.stale.check(game)                          # StaleWatch
+if self.stale.check(game):                      # StaleWatch
+  self._game_restarted(); return                # the game was stuck
 self._select_popular_dish()                     # when its Timer is due
 self._collect_adventures()                      # after start, every 5 h
 game.screen.capture()
 if self.late_dialogs.close_dialogs(game):       # first 60 s, every 15 s
+  return
+if self._play_potion_shop():                    # every 30 min, if running
   return
 if self._accept_food_delivery():                # truck available
   return
@@ -136,6 +139,7 @@ their `Timer` (`timer.py`) is due.
 | `HELPER_INVITE_ENABLED` and helper available | Invite the first helper | `helper_invite.is_available()`, `invite()` |
 | `COLLECT_ADVENTURES_ENABLED` and its timer due (first loop, then every 5 h) | Collect the free Adventures rewards | `adventures.collect()` |
 | `POPULAR_DISH_ENABLED` and its timer due | Select first dish as Popular Dish, Start + Stop at once | `popular_dish.select()` |
+| `POTION_SHOP_ENABLED` and its timer due (first loop, then every 30 min) | Enter the Potion Shop event and play it until it ends | `PotionShopWatch.play_if_due()` |
 
 ### Popular Dish (Masterchef quest farming, optional)
 
@@ -252,6 +256,104 @@ first loop after the start, then every `adventures.INTERVAL_S`
   a check with nothing to collect only to `autoplay.log`
 - Screenshots and measurements: `experiments/adventures/NOTES.md`
 
+### Potion Shop event (work in progress, off by default)
+
+Enable with `POTION_SHOP_ENABLED="1"` in `.env`. The weekly event
+(Saturday-Tuesday) is a restaurant-like map with its own green coins:
+ingredient stations, crates (more slots of a station), an Upgrades
+dialog (customers, alchemists, Potion Kettle) and a Cauldron where
+potions are brewed (each brew raises the potion's level; alchemists
+carry the ingredients). The game loop's only hook is
+`PotionShopWatch.play_if_due()` (`potion_shop_loop.py`): every
+`EVENT_CHECK_S` (30 min) it checks `potion_shop.is_inside()` /
+`is_available()`, enters it (`potion_shop.enter()`: event button,
+Enter, the teal loading screen (not inside yet), Open of "Welcome to
+the Potion Shop!" on a new event) and hands over to
+`PotionShopLoop.run()` until the bot is no longer inside (the event
+ended, or all rewards were done: then it is entered again only in the
+event's last hour, see 3); then `GameLoop` repositions the restaurant.
+The actions are split by screen: `actions/potion_shop.py` (event
+dialog, Upgrades dialog), `actions/potion_shop_cauldron.py` (Cauldron)
+and `actions/potion_shop_map.py` (map views, crates, stations). One
+loop of `PotionShopLoop`:
+
+1. Cauldron dialog open (also opens by itself with "Brew Complete!")
+   -> `potion_shop_cauldron.brew()`: Claim the finished potion, read
+   the Brew list (both pages; levels by `vision/level_label.py`) and
+   brew the first potion of `BREW_PLAN` below its level (only a row
+   with a Brew button; the order of the 21 min run of a guide video,
+   see `experiments/potion_shop/NOTES.md`, levels a bit higher). Once Divine is in the list `LATE_PLAN` (Divine, Golden) is
+   used; a planned potion with "Slots Full!" makes it bottle Sizzle,
+   then Perfect (Active Potions tab, 1 cork). Past the plan the plan's
+   active potions (level > 1) are raised further: with a lower max
+   level (6 on the LG account) the slots fill up before Golden. When
+   all of `LATE_PLAN` is brewed, `brew()` returns 'done'.
+2. Dimmed screen -> close the dialog.
+3. Right after entering and every 15 min:
+   `potion_shop.is_completed()` (rewards list scrolled to the bottom,
+   green check at the last reward). When done, `PotionBottlesLoop`
+   (`potion_bottles_loop.py`) brews the speed potions (Swift, Instant,
+   Double) to their max level ("MAX" in the Brew row) and keeps them,
+   then brews and bottles the potions ordered in `potion_orders.txt`
+   (`golden: 2` lines, see `potion_orders-sample.txt`; read before each
+   order, the count lowered after each bottle; speed potion bottles
+   last, each brewed back to the max level;
+   `potion_shop_cauldron.bottle_or_brew()`, Cauldron every 30 s), then
+   `potion_shop.leave()` (Exit). In the event's last hour (it ends on
+   Wednesday 00:00 local time, `seconds_to_final_bottles()`) it bottles
+   all active potions instead (`potion_shop_cauldron.bottle_all()`;
+   they are lost with the event).
+4. Red "!" on the Cauldron button -> `brew()` (retried after 15 s,
+   only every 5 min after 3 checks without a brew: the badge also
+   shows when the plan is done); also every 5 min without a look, as
+   the badge may be gone while the Cauldron idles (`CauldronWatch`).
+5. Upgrades badge -> `potion_shop.buy_upgrades()`: the first affordable
+   of the dialog's 4 visible rows, again and again; "+N Customer(s)"
+   rows (template `potion_shop_upgrade_customer`) only the first two,
+   the rest once brewing is done (the video's order: more customers
+   keep the alchemists from carrying the ingredients). A bought
+   "<station> profit xN" row (`potion_shop_upgrade_<station>`, the
+   icon with a price tag; an exact match tells it from the "made
+   faster" clock) has the station's popup read again
+   (`StationFocus.profit_changed()`).
+6. Every 2nd loop `potion_shop_map.open_crates()` (crates in a shadow by
+   `potion_shop_crate_shadow` when no lit one is found).
+7. End game (`EndGame`), once Beetle Juice is MAX
+   (`potion_shop_map.is_station_max()`, its popup; looked at every
+   5 min): only the first of `FOCUS_STATIONS` (Spider Silk, Mystic
+   Mushrooms, Frog) that isn't MAX is upgraded, in the cellar; for one
+   of `LAST_UPGRADES` only after its last upgrade has
+   left the Upgrades dialog (`has_last_upgrade()`), coins are saved
+   meanwhile. When all are MAX the loop goes on as below.
+8. Every minute the cellar below the shop:
+   `potion_shop_map.show_cellar()`, then its crates and stations for up
+   to 3 loops, back by `show_shop()`.
+9. The map is taller than the screen. `show_shop()` / `show_cellar()`
+   scroll it until a landmark (counter decoration, barrel, skull above
+   the counter, cellar entrance; each with its place on the shop view)
+   is at the view's offset, measuring after every swipe; the shop view
+   is restored when it was out of place in 2 loops in a row.
+10. `StationFocus.survey()` on the shop and cellar views: every 10 min
+    (and after a profit upgrade or its own upgrade) each station's
+    popup is opened (`potion_shop_map.read_station()`) and read by
+    `vision/station_popup.py` (profit of an item, time, price of the
+    next level; characters compared with the samples in
+    `matching_screenshots/station_popup_chars/`). The focus is the
+    station with the most profit per coin of its next level.
+    `StationFocus.upgrade()` then taps only the focused station's arrow
+    (`potion_shop_map.station_arrow()`, coords
+    `potion_shop_<station>_station` moved by the map's scroll), the
+    coins are saved for it until
+    it had no arrow for 3 min (MAX, expensive levels); without a focus
+    or after that all arrows (`stations.upgrade()`, also unlocks new
+    stations). On the shop view `potion_shop_map.shop_icons()` adds
+    Beetle Juice's arrow, below `station_icon_max_y` on the LG G6.
+
+- Never tapped: Boost (ad), Activate / Pass (real money)
+- Not done yet: speed boosts
+- Screenshots, flow and the strategy found on the web:
+  `experiments/potion_shop/NOTES.md`
+
 ## Stale State Recovery
 
 Handled by `StaleWatch` in `actions/stale.py`. The loop counts loops
@@ -267,14 +369,49 @@ without a station icon (`found_nothing()`, reset by `found_work()`),
   to `RECOVERY_POPUP_CLOSE_TRIES` (3) dialogs by their red X (a dialog
   may block the game) and tap the null spot, then reset
   `idle_loops` to 0, so this repeats once per ~50 empty
-  loops (~2-3 min), not on every loop. The
-  game is **not** restarted: `start_app()` only brings a running game
-  to the foreground (a real restart would need `close_app()` first).
+  loops (~4 min), not on every loop. `start_app()` only brings a
+  running game to the foreground.
+- **Restart of a stuck game** (`_restart()`), when the recovery didn't
+  help:
+  - `FRONT_CHECK_DELAY_S` (4 s) after the recovery, the window in front
+    (`device.focused_window()`, `dumpsys window`) is another window of
+    the game than its `GAME_ACTIVITY`, e.g. its ad: the game shows an
+    ad nobody closed again whenever it is brought to the foreground
+    (2026-11-03: the helper's "+4m" ad, shown again 3 s after each
+    recovery); restarted at once
+  - or `RESTART_RECOVERIES` (6) recoveries in a row without a station
+    upgrade between them (~25 min; counted by `_recoveries`, reset by
+    `found_work()` and `reset()`). Waiting for coins took at most 7-8
+    recoveries in 3 weeks of logs, a stuck game 16 to 280 (the Xiaomi
+    stood the whole night of 2026-10-24).
+
+  The last screenshot is saved to `logs/stuck_<date_time>.png` (the
+  newest `STUCK_SCREENSHOTS_KEPT` (10) kept), the restart is logged as
+  FATAL (`autoplay.log` and `key_events.log`, it should not happen),
+  then the game is force-stopped (`close_app()`), started again and
+  `wait_until_ready()` waits for it (closing the offline earnings
+  dialog). `check()` returns True and `GameLoop._game_restarted()`
+  starts a new `LateDialogWatch` and moves the restaurant into place
+  again (`needs_reposition`). Another restart comes after 6 more
+  recoveries at the earliest, so a game that stays stuck isn't
+  restarted over and over.
 
 Swipe pattern cycles through 7 down-swipes then 7 up-swipes
 (`SWIPES_PER_DIRECTION = 7`), each 650px at reference resolution —
 chosen so the total distance per direction still spans a tall level
 before reversing.
+
+## Error Recovery
+
+`GameLoop.run()` catches an unexpected exception of `play_once()`
+(e.g. the game crashed, the bot tapped the home screen and another
+app came up in landscape: an empty screenshot crop). `_recover()`
+logs it with its traceback (autoplay.log, one line in key_events.log),
+brings the game back (`device.start_app()`, which starts it again after
+a crash) and waits for it (`start_dialogs.wait_until_ready()`). Up to
+`RECOVERY_TRIES` (2) errors in a row are recovered from; a loop played
+without an error resets the count, the next error ends the bot ("Bot
+crashed", as before). Ctrl+C and SIGTERM are not caught.
 
 ## Level Transition Flow
 

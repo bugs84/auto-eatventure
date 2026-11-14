@@ -132,9 +132,9 @@ target_height = max(1, round(height * scale))
 - Uses `INTER_AREA` when shrinking, `INTER_LINEAR` when enlarging
 - Can be overridden with `TEMPLATE_SCALE_OVERRIDE` env var (`_template_scale()` in `main.py`)
 
-## Debug Mode
+## Debug Log
 
-Set `DEBUG_TEMPLATE_MATCHING="1"` in `.env` to log the score of every `find()` / `find_exact()` check (`Template <name>: score <value>`, DEBUG level, so in `autoplay.log`; on the console only with `LOG_LEVEL="DEBUG"`). Very noisy -- only use when tuning thresholds.
+Every search of `Screen` is logged at DEBUG level (so in `autoplay.log`; on the console only with `LOG_LEVEL="DEBUG"`) with the bot code calling it: the template, the region, the score and where it matched, e.g. `popups.close_popup:21: Find popup_close_cross in (0, 0, 1220, 2712): score 0.934 (min 0.80) at (1218, 845)` (` - not found` below the threshold). `find_all()` logs all the centers, the readings (`read_level()`, `color_ratio()`, ...) their results. Useful to tune a threshold and to analyze what the bot saw (see [Logging](logging.md)).
 
 ## Adding a New Template
 

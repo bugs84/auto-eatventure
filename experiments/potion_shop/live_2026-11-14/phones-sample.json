@@ -1,0 +1,10 @@
+{
+  "xiaomi": {"serial": "<adb serial>",
+             "folder": "<path to the bot's checkout for this phone>",
+             "watchdog": "<watchdog process name>",
+             "start": "start-xiaomi"},
+  "lg": {"serial": "<adb serial>",
+         "folder": "<path to the bot's checkout for this phone>",
+         "watchdog": "<watchdog process name>",
+         "start": "start-lg"}
+}

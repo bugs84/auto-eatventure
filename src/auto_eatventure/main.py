@@ -5,7 +5,7 @@ import logging
 from auto_eatventure.actions import null_spot, start_dialogs
 from auto_eatventure.actions.game import Game
 from auto_eatventure.android.device import Device
-from auto_eatventure import config
+from auto_eatventure import config, potion_orders
 from auto_eatventure.game_loop import GameLoop
 from auto_eatventure.logger import key_log, setup_logging
 from auto_eatventure.coords import reference
@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 def run():
   """Run the bot until it is stopped."""
   setup_logging(config.LOG_LEVEL, config.LOG_FILE_LEVEL,
-                config.LOG_MAX_DAYS)
+                config.LOG_MAX_MB, config.KEY_LOG_MAX_DAYS)
   log.info('START - Bot started')
   game = _connect()
   game.device.start_app()
@@ -39,7 +39,7 @@ def _connect():
            reference.REFERENCE_WIDTH, reference.REFERENCE_HEIGHT)
   coords = ScaledCoords(width, height)
   templates = load_templates(_template_scale(coords))
-  screen = Screen(device, templates, config.DEBUG_TEMPLATE_MATCHING)
+  screen = Screen(device, templates)
   return Game(device, screen, coords)
 
 
@@ -67,6 +67,12 @@ def _log_features():
     ('Food Delivery', config.FOOD_DELIVERY_ENABLED),
     ('Helper invite', config.HELPER_INVITE_ENABLED),
     ('Collect Adventures', config.COLLECT_ADVENTURES_ENABLED),
+    ('Potion Shop event', config.POTION_SHOP_ENABLED),
   )
   for name, enabled in features:
     log.info('%s: %s', name, 'enabled' if enabled else 'disabled')
+  log.info('Gem limit per event: %d', config.GEM_LIMIT)
+  if config.POTION_SHOP_ENABLED:
+    log.info('Potion Shop bottles (%s): %s',
+             potion_orders.ORDERS_FILE,
+             potion_orders.read_orders() or 'none')

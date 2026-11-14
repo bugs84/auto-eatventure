@@ -1,0 +1,8 @@
+# Local to the machine that ran the event (paths, serials, screenshots)
+phones.json
+progress.sh
+progress.log
+progress.log.tmp
+shots/
+x2_schedule.sh
+x2_schedule.log

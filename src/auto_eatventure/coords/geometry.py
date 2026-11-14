@@ -60,3 +60,15 @@ class Bottom(NamedTuple):
   """A position in coords/reference.py that stays at the bottom of the
   screen (bottom button bar)."""
   value: object
+
+
+class Center(NamedTuple):
+  """A y position given as a number in coords/reference.py that stays
+  in the middle of the screen like a plain Point (the map, dialogs)."""
+  value: object
+
+
+class Offset(NamedTuple):
+  """A Point or Region in coords/reference.py relative to another
+  position (e.g. an icon found on the screen): scaled like a size."""
+  value: object

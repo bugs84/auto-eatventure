@@ -5,3 +5,6 @@
 .venv
 /.idea/
 logs/
+potion_orders.txt
+potion_orders.txt.tmp
+potion_shop_next_visit.txt

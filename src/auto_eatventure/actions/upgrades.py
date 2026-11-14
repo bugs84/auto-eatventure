@@ -41,7 +41,7 @@ def buy_if_available(game):
   Checked on every loop screenshot, so upgrades are bought soon after
   they become affordable.
   """
-  if not _has_badge(game):
+  if not has_badge(game):
     return
   log.info('Upgrades available — attempting to upgrade')
   _buy_upgrades(game)
@@ -51,21 +51,7 @@ def buy_if_available(game):
 def _buy_upgrades(game):
   """Open the dialog and buy the first row's upgrade while it is
   affordable, in rounds of TAPS_PER_CHECK taps."""
-  device = game.device
-  coords = game.coords
-  # A station popup may still be open after stations.upgrade(); a tap
-  # on the upgrade button would only close it
-  device.tap(game.null_spot)
-  time.sleep(STATION_POPUP_CLOSE_DELAY_S)
-  device.tap(coords.upgrade_button)
-  time.sleep(DIALOG_OPEN_DELAY_S)
-  game.screen.capture()
-  if not _is_dialog_open(game):
-    # The close tap would land on the restaurant and could open a
-    # station popup hiding the station icons, so tap the null spot
-    log.info('Upgrades dialog did not open')
-    device.tap(game.null_spot)
-    time.sleep(DIALOG_CLOSE_DELAY_S)
+  if not open_dialog(game):
     return
   taps = 0
   while taps < MAX_TAPS:
@@ -74,15 +60,42 @@ def _buy_upgrades(game):
     if not _is_first_affordable(game):
       break
     for _ in range(TAPS_PER_CHECK):
-      device.tap(coords.first_upgrade_buy)
+      game.device.tap(game.coords.first_upgrade_buy)
       time.sleep(0.2)
     taps += TAPS_PER_CHECK
   log.info('Upgrade taps: %d', taps)
-  device.tap(coords.close_upgrades)
+  close_dialog(game)
+
+
+def open_dialog(game):
+  """Open the Upgrades dialog (screenshot taken). Returns False when it
+  did not open."""
+  device = game.device
+  # A station popup may still be open after stations.upgrade(); a tap
+  # on the upgrade button would only close it
+  device.tap(game.null_spot)
+  time.sleep(STATION_POPUP_CLOSE_DELAY_S)
+  device.tap(game.coords.upgrade_button)
+  time.sleep(DIALOG_OPEN_DELAY_S)
+  game.screen.capture()
+  if _is_dialog_open(game):
+    return True
+  # The close tap would land on the restaurant and could open a
+  # station popup hiding the station icons, so tap the null spot
+  log.info('Upgrades dialog did not open')
+  device.tap(game.null_spot)
+  time.sleep(DIALOG_CLOSE_DELAY_S)
+  return False
+
+
+def close_dialog(game):
+  """Close the open Upgrades dialog."""
+  game.device.tap(game.coords.close_upgrades)
   time.sleep(DIALOG_CLOSE_DELAY_S)
 
 
-def _has_badge(game):
+def has_badge(game):
+  """The red badge on the upgrade button."""
   return (game.screen.color_ratio(game.coords.upgrade_badge_roi, RED)
           >= BADGE_MIN_RATIO)
 
@@ -95,6 +108,9 @@ def _is_dialog_open(game):
 
 def _is_first_affordable(game):
   """Blue buy button of the first row."""
-  return (game.screen.color_ratio(
-            game.coords.first_upgrade_buy_roi, BUY_BLUE)
-          >= BUY_MIN_RATIO)
+  return is_affordable(game, game.coords.first_upgrade_buy_roi)
+
+
+def is_affordable(game, button):
+  """Blue buy button in the region of a row's button."""
+  return game.screen.color_ratio(button, BUY_BLUE) >= BUY_MIN_RATIO

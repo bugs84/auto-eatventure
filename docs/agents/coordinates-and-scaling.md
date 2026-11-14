@@ -46,6 +46,8 @@ bottom bar matches counted from the bottom.
 - `Region(left, top, right, bottom)` -- a rectangle (search area; right and bottom excluded). `Region.around(point, half_width, half_height)` builds one around a point; `center`, `crop(image)`, `moved(dx, dy)`.
 - `Swipe(start, end)` -- a swipe gesture between two `Point`s
 - `Top(value)` / `Bottom(value)` -- anchors used only in `reference.py`: the wrapped position stays at the top / bottom of the screen
+- `Center(value)` -- a y position given as a number that stays centered like a plain `Point` (the Potion Shop map's landmarks)
+- `Offset(value)` -- a `Point` / `Region` relative to another position (e.g. a level label below a found icon): scaled like a size
 
 ## coords/reference.py
 
@@ -76,7 +78,8 @@ side_button_zone_width_x = 180
 position also moves with the status bar, a `Bottom` one is counted
 from the bottom, a plain `Point` / `Region` / `Swipe` stays centered.
 A plain number ending in `_x` or `_y` is a size; a y position given as
-a number must be wrapped in `Top` or `Bottom`. Other values pass
+a number must be wrapped in `Top`, `Bottom` or `Center`; a `Point` /
+`Region` relative to another position in `Offset`. Other values pass
 through unscaled; non-pixel values (counts, ratios, thresholds) live in
 the module that uses them, not here.
 

@@ -15,13 +15,16 @@ changes. So each position says where it stays:
   restaurant)
 
 A plain number ending in _y is a size (a height, an offset); a y
-position given as a number is wrapped in Top or Bottom.
+position given as a number is wrapped in Top, Bottom or Center. A
+Point or Region relative to another position (e.g. an icon found on
+the screen) is wrapped in Offset: scaled like a size.
 """
 
 # Lowercase names: they are positions, read through ScaledCoords
 # pylint: disable=invalid-name
 
-from auto_eatventure.coords.geometry import Bottom, Point, Region, Swipe, Top
+from auto_eatventure.coords.geometry import (
+  Bottom, Center, Offset, Point, Region, Swipe, Top)
 
 REFERENCE_WIDTH = 1220
 REFERENCE_HEIGHT = 2712
@@ -219,3 +222,140 @@ adventure_complete_last = Point(412, 1949)
 adventure_reward_bg_roi = Top(Region(0, 395, 181, 621))
 adventure_reveal_tap = Point(610, 1356)
 adventure_summary_close_roi = Top(Region.around(Point(1118, 186), 56, 56))
+
+# ── Potion Shop event ─────────────────────────────────────────────────
+# The event's cauldron button in the right column (main screen: 3rd
+# white button, inside the event: 2nd); its place depends on the
+# buttons above it, so it is searched in the column
+potion_shop_button_roi = Top(Region(1080, 280, 1220, 1250))
+# Enter (main screen) and Exit (inside the event) of the "Potion Shop"
+# dialog, at the same place
+potion_shop_enter_exit = Point(610, 2054)
+potion_shop_enter_exit_roi = Region.around(potion_shop_enter_exit, 180, 80)
+# Red X of the "Potion Shop" dialog
+potion_shop_dialog_close = Point(1057, 660)
+# Its list of rewards, scrolled to the bottom by a few swipes: the last
+# reward (all stations level 1000) gets a green check when done
+potion_shop_rewards_swipe = Swipe(Point(452, 1808), Point(452, 1017))
+potion_shop_last_reward_roi = Region.around(Point(810, 1836), 90, 79)
+# Green event coin left of the coin counter: shown only inside
+potion_shop_coin_roi = Top(Region(100, 60, 300, 260))
+# Bottom of the screen: plain teal on the event's loading screen ("Get
+# ready to stir up some trouble!"), the bottom bar inside
+potion_shop_loading_roi = Bottom(Region(60, 2450, 1160, 2650))
+
+# Cauldron button (2nd from the right in the bottom bar, after a
+# Potion Kettle was bought) and its red "!" badge (a potion can be
+# brewed); the badge area mirrors upgrade_badge_roi
+potion_shop_cauldron_button = Bottom(Point(915, 2556))
+potion_shop_cauldron_badge_roi = Bottom(Region(793, 2439, 929, 2574))
+# Cauldron dialog (full screen, so at the top): Brew tab, the list of
+# potions (icons on the left, Brew / Claim buttons on the right, level
+# with the icon) and the red X
+potion_shop_brew_tab = Top(Point(184, 625))
+potion_shop_brew_list_roi = Top(Region(900, 900, 1190, 2712))
+potion_shop_potion_icons_roi = Top(Region(30, 900, 260, 2712))
+# A potion's level label ("Lvl 3") relative to its icon's center; in
+# the Brew list it shows the level the next brew makes
+potion_shop_level_label = Offset(Region(-82, 76, 87, 132))
+# The Brew list is longer than the screen (Divine, Golden, ... below)
+potion_shop_brew_list_swipe = Top(Swipe(Point(610, 2260), Point(610, 1017)))
+# Active Potions tab: the active potions, each with a Bottle button
+# (relative to its icon's center like the level label)
+potion_shop_active_tab = Top(Point(429, 633))
+potion_shop_bottle_row = Offset(Region(731, -20, 1013, 115))
+potion_shop_cauldron_close = Top(Point(1130, 249))
+potion_shop_cauldron_close_roi = Top(Region.around(
+  potion_shop_cauldron_close.value, 40, 40))
+
+# The event's map is taller than the screen. The shop with all its
+# stations fits on it when its landmarks are at their _y: the ink, quill
+# and books on the counter's right part (hidden by the customers' prices
+# when the counter is full), the barrel in the bottom left corner and
+# the skull on the wall above the counter (shown only when the map is
+# scrolled too far up). Each is searched in its column and moved there
+# by swipes on the floor right of the kettle (no station there).
+potion_shop_landmark_roi = Region(780, 230, 1050, 2450)
+potion_shop_landmark_y = Center(548)
+potion_shop_barrel_roi = Region(80, 230, 400, 2450)
+potion_shop_barrel_y = Center(2133)
+potion_shop_skull_roi = Region(400, 230, 820, 2450)
+potion_shop_skull_y = Center(6)
+# Below the shop the cellar ("Dig a Cellar" upgrade) has more stations:
+# its landmark is the barrel with a candle at its entrance (_y on the
+# shop view like the others); the cellar view is the map scrolled to
+# potion_shop_cellar_view_y (offset from the shop view).
+potion_shop_cellar_roi = Region(150, 230, 700, 2450)
+potion_shop_cellar_y = Center(2754)
+potion_shop_cellar_view_y = -1970
+# Stations by their upgrade arrow: the shop's on the shop view, the
+# cellar's on the cellar view. Tapped like an arrow, a station shows a
+# popup above it (up to _popup_y), "MAX" at level 1000.
+potion_shop_bat_station = Point(72, 757)
+potion_shop_dragon_station = Point(1070, 1142)
+potion_shop_unicorn_station = Point(72, 1334)
+potion_shop_djinn_station = Point(1070, 1334)
+potion_shop_mermaid_station = Point(627, 1718)
+potion_shop_beetle_station = Point(959, 2122)
+potion_shop_water_station = Point(183, 1040)
+potion_shop_spider_station = Point(848, 852)
+potion_shop_frog_station = Point(738, 1716)
+potion_shop_mushrooms_station = Point(1071, 1236)
+potion_shop_station_arrow_x = 113
+# A locked station (or slot) is a dashed tile below its arrow: its top
+# left corner (templates potion_shop_locked, _cellar) is looked for
+# this far left, right and below of the arrow
+potion_shop_locked_left_x = 70
+potion_shop_locked_right_x = 90
+potion_shop_locked_below_y = 130
+# Empty floor of the cellar view left of the frogs, outside the popups
+# of Spider Silk (top, over the null spot), Mushrooms (right) and Frog
+# (middle): a tap there closes them
+potion_shop_cellar_floor = Point(339, 1638)
+# Floor right of the Cauldron: tapped to close a station popup
+potion_shop_floor = Point(881, 1329)
+# Icons of the Upgrades dialog's rows (potion_shop_upgrade_* templates)
+potion_shop_upgrades_roi = Region(60, 980, 420, 2000)
+# Icon of the first row ("+N Customer(s)" rows show a customer) and the
+# distance between the rows (their buy buttons: first_upgrade_buy_roi)
+potion_shop_upgrade_icon_roi = Region(60, 1015, 420, 1215)
+potion_shop_upgrade_row_y = 203
+potion_shop_station_popup_y = 508
+# Shortest swipe that moves the map (a shorter one may tap a station)
+potion_shop_min_swipe_y = 60
+# A popup with its level under the top bar is shown this far below it:
+# its profit then clear of the chest icon below the top bar
+potion_shop_popup_margin_y = 60
+# The kettle's top on the shop view (always shown; its part on the
+# cellar view is the cellar's floor): found again after a swipe it
+# tells how far the map moved
+potion_shop_map_band = Region(400, 900, 820, 1150)
+# A popup with its price under the event's buttons at the screen's edge
+# (the chest, its timer) is scrolled this far down, below them
+potion_shop_cover_scroll_y = 220
+potion_shop_aligned_y = 25
+potion_shop_max_swipe_y = 1000
+potion_shop_swipe_x = 830
+potion_shop_swipe_from_y = Center(1469)
+
+# Station popups (vision/station_popup.py): the Upgrade button's least
+# width and its height range, the profit row above it and the widest
+# gap inside a number
+station_popup_button_min_x = 350
+station_popup_button_min_y = 90
+station_popup_button_max_y = 220
+station_popup_row_above_y = 150
+station_popup_row_gap_y = 10
+station_popup_gap_x = 25
+station_popup_cover_margin_x = 10
+# "Level N" of a station popup: this far above its button
+station_popup_level_top_y = 355
+station_popup_level_bottom_y = 270
+# Buttons of the Upgrades dialog's rows are narrower than a popup's;
+# the dialog's buttons and its scroll
+upgrade_row_button_min_x = 200
+potion_shop_upgrade_buttons_roi = Region(780, 750, 1130, 1900)
+potion_shop_upgrades_swipe = Swipe(Point(610, 1590), Point(610, 1100))
+# The event's coin counter (light, right of the coin) and its border
+potion_shop_coins_roi = Top(Region(220, 0, 640, 260))
+coin_counter_margin_y = 7

@@ -27,9 +27,13 @@ src/auto_eatventure/         # The only package (src layout)
   __main__.py                # Entry point: python -m auto_eatventure
   main.py                    # run(): connect, wait for the game, play
   game_loop.py               # GameLoop: the endless loop (play_once)
+  potion_shop_loop.py        # Potion Shop event: PotionShopWatch (the
+                             # GameLoop hook), PotionShopLoop, EndGame
+  potion_bottles_loop.py     # PotionBottlesLoop: bottles potions after it
+  potion_orders.py           # potion_orders.txt: the bottles wanted
   config.py                  # Settings from .env (feature switches, logs)
   timer.py                   # Timer: when an occasional action is due
-  logger.py                  # setup_logging(), key_log (daily rotation)
+  logger.py                  # setup_logging(), key_log (rotated logs)
   sandbox.py                 # Interactive testing tool
   actions/                   # Game actions, one module per feature
     game.py                  # Game: device + screen + coords + null_spot
@@ -44,6 +48,9 @@ src/auto_eatventure/         # The only package (src layout)
     stale.py                 # StaleWatch: recovery + search swipes
     popular_dish.py, food_delivery.py, helper_invite.py, adventures.py
                              # Optional features (see .env-sample)
+    potion_shop.py           # Potion Shop: enter, leave, rewards, upgrades
+    potion_shop_cauldron.py  # Potion Shop Cauldron: brewing, bottling
+    potion_shop_map.py       # Potion Shop map: views, crates, stations
   android/device.py          # Device: ADB taps, swipes, screenshots, app
   vision/                    # Detection on screenshots
     screen.py                # Screen: last screenshot + find/has/...
@@ -51,6 +58,8 @@ src/auto_eatventure/         # The only package (src layout)
     matching.py              # OpenCV template matching + DBSCAN
     colors.py                # HSV color ranges, color_ratio()
     upgrade_icons.py         # Station upgrade icons by shape + color
+    level_label.py           # "Lvl N" labels: digits read by samples
+    station_popup.py         # Station popups: profit, price read
     top_bar.py               # Black line at the bottom of the top bar
   coords/                    # Screen positions
     reference.py             # Positions at the reference 1220x2712
@@ -61,6 +70,7 @@ captured_screenshots_on_the_fly/  # Screenshots saved by the sandbox
 logs/                        # Runtime log files (gitignored, daily rotation)
 experiments/                 # Notes and scripts of feature investigations
 .env-sample                  # Environment variable template
+potion_orders-sample.txt     # Template of potion_orders.txt (bottles)
 .pylintrc                    # Pylint configuration
 start.bat / start.sh         # Launch scripts
 requirements.txt             # Python dependencies
@@ -86,7 +96,7 @@ requirements.txt             # Python dependencies
 - All screen positions are defined in `coords/reference.py` at reference resolution 1220x2712.
 - Tap targets are `Point`, search areas `Region`, swipes `Swipe` (`coords/geometry.py`).
 - Plain numbers must use the `_x` suffix for horizontal and `_y` for vertical pixel values.
-- The game scales its UI by the screen width; positions at the top (top bar, side button columns) are wrapped in `Top(...)`, at the bottom (bottom button bar) in `Bottom(...)`, plain ones (dialogs, restaurant) stay centered. A plain `_y` number is a size; a y position as a number is wrapped in `Top` / `Bottom`.
+- The game scales its UI by the screen width; positions at the top (top bar, side button columns) are wrapped in `Top(...)`, at the bottom (bottom button bar) in `Bottom(...)`, plain ones (dialogs, restaurant) stay centered. A plain `_y` number is a size; a y position as a number is wrapped in `Top` / `Bottom` / `Center`; a Point/Region relative to a found position in `Offset`.
 - `ScaledCoords` auto-scales them (read as `game.coords.<name>`); no manual scaling elsewhere.
 - Non-pixel values (counts, ratios, thresholds) belong in the module that uses them, not in `coords/`.
 
