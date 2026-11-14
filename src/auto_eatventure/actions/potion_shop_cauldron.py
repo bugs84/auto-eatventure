@@ -24,8 +24,8 @@ CLOSE_MIN_RATIO = 0.4
 CAULDRON_DELAY_S = 1.5
 # Potions (template potion_shop_<name>) and the level each is brewed
 # to: the first one of the plan below its level that can be brewed;
-# each brew raises the level by one. The order of the 21 min run
-# (experiments/potion_shop/video_transcript/GUIDE.md): Swift, Sizzle
+# each brew raises the level by one. The order of the 21 min run of a
+# guide video (experiments/potion_shop/NOTES.md): Swift, Sizzle
 # (Unicorn), Double (Mermaid, before the Djinn), Swift, Double, Instant
 # (Djinn); no Perfect. The bot's stations are slower (no boosts): the
 # levels are a bit higher and the last three keep the Cauldron busy

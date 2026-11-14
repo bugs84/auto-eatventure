@@ -1,6 +1,6 @@
 # Adventures daily rewards (Zeus' Feast, Hungry Pirates)
 
-Goal: collect Adventures rewards once a day. Device: Xiaomi <serial>
+Goal: collect Adventures rewards once a day. Device: Xiaomi
 (1080x2400). Coordinates below are device px unless noted.
 
 ## Flow so far (Zeus' Feast, verified by hand)

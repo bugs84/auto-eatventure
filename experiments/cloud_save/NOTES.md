@@ -1,6 +1,6 @@
 # Cloud save (Google Play Games): notes for a possible automation
 
-Seen 2026-10-31 on the Xiaomi (<serial>, 1080x2400,
+Seen 2026-10-31 on the Xiaomi (1080x2400,
 Eatventure 1.54.0, last updated 2026-09-22) after the user had played
 the same account on another phone.
 

@@ -4,8 +4,10 @@
 Usage: .venv/bin/python experiments/potion_shop/live_2026-11-14/buy_gems.py
        xiaomi|lg x2|cash COUNT
 
-Pauses the phone's watchdog and bot, buys up to COUNT, closes the shop
-and starts the watchdog again (race_schedule.sh). Every tap is checked
+The phones are in phones.json (local, see phones-sample.json). Pauses
+the phone's watchdog and bot, buys up to COUNT, closes the shop and
+starts the watchdog again (systemd unit race-<phone>.service of the
+race plan). Every tap is checked
 by a template first: only the item card's gem price, its dialog's gem
 button and the red X are ever tapped - never an offer for real money.
 Each purchase is written to gems.log (its total per phone may not go
@@ -14,6 +16,7 @@ to the phone's logs/autoplay.log; only a reached limit goes to its
 logs/key_events.log (key milestones, nothing frequent).
 """
 import datetime
+import json
 import os
 import re
 import subprocess
@@ -27,17 +30,14 @@ from dotenv import dotenv_values
 HERE = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES = os.path.join(HERE, 'gem_templates')
 GEMS_LOG = os.path.join(HERE, 'gems.log')
-BASE = '~/programs/auto-eatventure'
 TEMPLATE_WIDTH = 1440  # the templates are cut on the LG
 THRESHOLD = 0.85
 # The cards' gem prices look alike (30 / 45: 0.92)
 THRESHOLDS = {'card_price': 0.97, 'x2_card_price': 0.97}
-PHONES = {
-  'xiaomi': ('<serial>', os.path.join(BASE, 'auto-eatventure'),
-             'xiaomi_watchdog', 'start-xiaomi'),
-  'lg': ('<serial>', os.path.join(BASE, 'auto-eatventurelg'),
-         'lg_watchdog.sh', 'start-lg'),
-}
+# name -> {serial, folder (the bot's checkout), watchdog (its process
+# name), start (race_schedule.sh start-<name>)}; local, not in git: see
+# phones-sample.json
+PHONES_FILE = os.path.join(HERE, 'phones.json')
 # item -> (gems, card price, dialog title, dialog buttons, text)
 ITEMS = {
   'cash': (30, 'card_price', 'confirm_title', ('confirm_button',),
@@ -220,7 +220,10 @@ def _cwd(pid):
 
 def main():
   name, item, count = sys.argv[1], sys.argv[2], int(sys.argv[3])
-  serial, folder, watchdog, start = PHONES[name]
+  with open(PHONES_FILE, encoding='utf-8') as file:
+    phone = json.load(file)[name]
+  serial, folder, watchdog, start = (
+    phone['serial'], phone['folder'], phone['watchdog'], phone['start'])
   if in_race_pause():
     log('race pause, nothing done')
     return

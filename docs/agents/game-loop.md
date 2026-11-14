@@ -281,9 +281,8 @@ loop of `PotionShopLoop`:
    -> `potion_shop_cauldron.brew()`: Claim the finished potion, read
    the Brew list (both pages; levels by `vision/level_label.py`) and
    brew the first potion of `BREW_PLAN` below its level (only a row
-   with a Brew button; the order of the 21 min run in
-   `experiments/potion_shop/video_transcript/GUIDE.md`, levels a bit
-   higher). Once Divine is in the list `LATE_PLAN` (Divine, Golden) is
+   with a Brew button; the order of the 21 min run of a guide video,
+   see `experiments/potion_shop/NOTES.md`, levels a bit higher). Once Divine is in the list `LATE_PLAN` (Divine, Golden) is
    used; a planned potion with "Slots Full!" makes it bottle Sizzle,
    then Perfect (Active Potions tab, 1 cork). Past the plan the plan's
    active potions (level > 1) are raised further: with a lower max
