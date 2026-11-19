@@ -42,6 +42,16 @@ def long_press(self, point, duration_ms):
                   f'{point.x} {point.y} {duration_ms}')
 ```
 
+### Fast input
+
+With `FAST_INPUT_ENABLED="1"` (`.env`), `tap()` and `long_press()` go
+through `FastInput` (`android/fast_input.py`) instead of `input`. On
+Android 9 every `input` command starts a Java VM (~1.3 s per tap);
+`FastInput` starts `monkey --port` once on the phone and sends it
+`touch down` / `touch up` lines over a socket (~0.05 s per tap). It
+connects again (and starts the server again) when the connection is
+lost. Swipes and the app start still use the usual commands.
+
 ### Swipe
 
 ```python

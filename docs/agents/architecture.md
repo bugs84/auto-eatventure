@@ -74,6 +74,7 @@ __main__.py --- entry point (python -m auto_eatventure), calls main.run()
 | `potion_bottles_loop.py` | `PotionBottlesLoop`, `next_task()`, `seconds_to_final_bottles()` | After the event's rewards: brews the speed potions to their max level and bottles the potions ordered in `potion_orders.txt`; in the event's last hour bottles all active potions. |
 | `potion_orders.py` | `parse_orders()`, `read_orders()`, `lower_order()` | `potion_orders.txt`: the bottles still wanted (the bot lowers the counts). |
 | `android/device.py` | `Device` | ADB: `tap()`, `long_press()`, `swipe()`, `screenshot()` (BGR), `screen_size()`, `start_app()`, `close_app()`. |
+| `android/fast_input.py` | `FastInput` | Taps and long presses through a `monkey --port` server on the phone (`FAST_INPUT_ENABLED`), for phones with a slow `input` command. |
 | `vision/screen.py` | `Screen` | Last screenshot in BGR / gray / HSV; `capture()`, `find()`, `has()`, `find_exact()`, `find_all()`, `color_ratio()`, `read_level()`. |
 | `vision/templates.py` | `TEMPLATE_NAMES`, `load_templates()` | Template catalog, loading and resizing to the phone. |
 | `vision/matching.py` | `best_match()`, `closest_match()`, `all_matches()` | OpenCV template matching, DBSCAN clustering. |

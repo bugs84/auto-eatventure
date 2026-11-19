@@ -32,7 +32,7 @@ def run():
 
 def _connect():
   """Connect to the phone and prepare everything for its resolution."""
-  device = Device(config.DEVICE_SERIAL)
+  device = Device(config.DEVICE_SERIAL, config.FAST_INPUT_ENABLED)
   width, height = device.screen_size()
   log.info('Detected resolution: %dx%d (reference: %dx%d)',
            width, height,
@@ -63,6 +63,7 @@ def _template_scale(coords):
 
 def _log_features():
   features = (
+    ('Fast input (monkey server)', config.FAST_INPUT_ENABLED),
     ('Popular Dish selection', config.POPULAR_DISH_ENABLED),
     ('Food Delivery', config.FOOD_DELIVERY_ENABLED),
     ('Helper invite', config.HELPER_INVITE_ENABLED),
