@@ -465,7 +465,7 @@ hand), its position is tapped anyway, a WARNING goes to both
 3. The menu is opened (`DIALOG_OPEN_DELAY_S`, 0.5 s) and,
    before every round, a screenshot checks the first row's buy button
    (`_is_first_affordable()`): blue = tap it
-   `TAPS_PER_CHECK` (5) times, grey = too expensive, close
+   `TAPS_PER_CHECK` (10) times, grey = too expensive, close
    the menu. A bought upgrade leaves the list and the next one moves
    to the first row. A dialog that did not open gets no taps. At most
    `MAX_TAPS` (50) taps (a new level has many cheap
@@ -486,7 +486,7 @@ stations, as each station takes ~4 s) and tapped blindly 10x
 For up to `STATIONS_PER_LOOP` (3) station icons per loop, picked at
 random:
 1. Tap the station icon (with Y offset)
-2. Long press above it (`BETTER_FOOD_HOLD_MS`, 3000 ms) to trigger
+2. Long press above it (`BETTER_FOOD_HOLD_MS`, 6000 ms) to trigger
    the "buy better food" menu
 3. Dismiss (null spot, or a tap left of the icon above
    `station_icon_tooltip_y`)
