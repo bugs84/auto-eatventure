@@ -24,19 +24,25 @@ GAME_ACTIVITY = 'com.singular.unitybridge.SingularUnityActivity'
 # crashes
 SCREENSHOT_TRIES = 5
 SCREENSHOT_RETRY_DELAY_S = 5
+# An `input` command slower than this starts a Java VM each time (1.3-
+# 1.6 s on Android 9; ~0.1 s where it is run by the system server):
+# the taps then go through FastInput
+SLOW_INPUT_S = 0.5
 
 
 class Device:
   """The Android phone the game runs on."""
 
-  def __init__(self, serial='', fast_input=False):
+  def __init__(self, serial='', fast_input='0'):
     """Connect to the phone with this serial, else the first one.
 
-    fast_input: taps and long presses go through FastInput instead of
-    the `input` command.
+    fast_input: "1" = taps and long presses go through FastInput
+    instead of the `input` command, "0" = never, "auto" = when `input`
+    is slow on this phone.
     """
     self._adb = self._connect(serial)
-    self._fast_input = FastInput(self._adb) if fast_input else None
+    self._fast_input = (
+      FastInput(self._adb) if self._wants_fast_input(fast_input) else None)
 
   @staticmethod
   def _connect(serial):
@@ -50,6 +56,18 @@ class Device:
     log.warning('No device_serial in .env — '
                 'using first connected device: %s', devices[0].serial)
     return devices[0]
+
+  def _wants_fast_input(self, setting):
+    if setting == 'auto':
+      start = time.monotonic()
+      # Without arguments it only prints its usage
+      self._adb.shell('input')
+      input_s = time.monotonic() - start
+      setting = '1' if input_s > SLOW_INPUT_S else '0'
+      log.info('The `input` command takes %.2f s', input_s)
+    log.info('Fast input (monkey server): %s',
+             'enabled' if setting == '1' else 'disabled')
+    return setting == '1'
 
   @property
   def serial(self):
