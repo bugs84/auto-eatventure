@@ -11,6 +11,8 @@ import numpy as np
 from adbutils import adb
 from PIL import Image
 
+from auto_eatventure.android.fast_input import FastInput
+
 log = logging.getLogger(__name__)
 
 GAME_PACKAGE = 'com.hwqgrhhjfd.idlefastfood'
@@ -22,24 +24,50 @@ GAME_ACTIVITY = 'com.singular.unitybridge.SingularUnityActivity'
 # crashes
 SCREENSHOT_TRIES = 5
 SCREENSHOT_RETRY_DELAY_S = 5
+# An `input` command slower than this starts a Java VM each time (1.3-
+# 1.6 s on Android 9; ~0.1 s where it is run by the system server):
+# the taps then go through FastInput
+SLOW_INPUT_S = 0.5
 
 
 class Device:
   """The Android phone the game runs on."""
 
-  def __init__(self, serial=''):
-    """Connect to the phone with this serial, else the first one."""
+  def __init__(self, serial='', fast_input='0'):
+    """Connect to the phone with this serial, else the first one.
+
+    fast_input: "1" = taps and long presses go through FastInput
+    instead of the `input` command, "0" = never, "auto" = when `input`
+    is slow on this phone.
+    """
+    self._adb = self._connect(serial)
+    self._fast_input = (
+      FastInput(self._adb) if self._wants_fast_input(fast_input) else None)
+
+  @staticmethod
+  def _connect(serial):
     if serial:
-      self._adb = adb.device(serial=serial)
-      return
+      return adb.device(serial=serial)
     devices = adb.device_list()
     if not devices:
       raise RuntimeError(
         'No ADB devices connected. '
         'Connect your phone and enable USB Debugging.')
-    self._adb = devices[0]
     log.warning('No device_serial in .env — '
-                'using first connected device: %s', self._adb.serial)
+                'using first connected device: %s', devices[0].serial)
+    return devices[0]
+
+  def _wants_fast_input(self, setting):
+    if setting == 'auto':
+      start = time.monotonic()
+      # Without arguments it only prints its usage
+      self._adb.shell('input')
+      input_s = time.monotonic() - start
+      setting = '1' if input_s > SLOW_INPUT_S else '0'
+      log.info('The `input` command takes %.2f s', input_s)
+    log.info('Fast input (monkey server): %s',
+             'enabled' if setting == '1' else 'disabled')
+    return setting == '1'
 
   @property
   def serial(self):
@@ -83,15 +111,22 @@ class Device:
   # calling them (stacklevel=2), to analyze what the bot did
 
   def tap(self, point):
+    """Tap the point."""
     log.debug('Tap (%d, %d)', *point, stacklevel=2)
-    self._adb.shell(f'input tap {point.x} {point.y}')
+    if self._fast_input:
+      self._fast_input.tap(point)
+    else:
+      self._adb.shell(f'input tap {point.x} {point.y}')
 
   def long_press(self, point, duration_ms):
     """Hold a finger on the point (a swipe that doesn't move)."""
     log.debug('Long press (%d, %d) for %d ms', *point, duration_ms,
               stacklevel=2)
-    self._adb.shell(f'input swipe {point.x} {point.y} '
-                    f'{point.x} {point.y} {duration_ms}')
+    if self._fast_input:
+      self._fast_input.long_press(point, duration_ms)
+    else:
+      self._adb.shell(f'input swipe {point.x} {point.y} '
+                      f'{point.x} {point.y} {duration_ms}')
 
   def swipe(self, swipe):
     """Swipe along a coords.geometry.Swipe."""

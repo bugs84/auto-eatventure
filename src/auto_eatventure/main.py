@@ -32,7 +32,7 @@ def run():
 
 def _connect():
   """Connect to the phone and prepare everything for its resolution."""
-  device = Device(config.DEVICE_SERIAL)
+  device = Device(config.DEVICE_SERIAL, config.FAST_INPUT_ENABLED)
   width, height = device.screen_size()
   log.info('Detected resolution: %dx%d (reference: %dx%d)',
            width, height,

@@ -23,7 +23,7 @@ BUY_MIN_RATIO = 0.3
 DIALOG_MIN_RATIO = 0.4
 # Upgrades are bought in rounds of this many taps, each preceded by a
 # check of the first row, up to MAX_TAPS (a new level)
-TAPS_PER_CHECK = 5
+TAPS_PER_CHECK = 10
 MAX_TAPS = 50
 # Time for a station popup to close after a tap on the null spot
 STATION_POPUP_CLOSE_DELAY_S = 0.3

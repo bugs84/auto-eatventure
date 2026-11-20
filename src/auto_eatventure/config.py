@@ -19,6 +19,10 @@ def _flag(name, default):
 # ADB serial of the phone; empty = the first connected one
 DEVICE_SERIAL = _text('device_serial')
 
+# Taps through a monkey server instead of `input`: "1", "0" or "auto"
+# (when `input` is slow on the phone), see .env-sample
+FAST_INPUT_ENABLED = _text('FAST_INPUT_ENABLED', 'auto')
+
 # Optional features, see .env-sample
 POPULAR_DISH_ENABLED = _flag('POPULAR_DISH_ENABLED', '0')
 FOOD_DELIVERY_ENABLED = _flag('FOOD_DELIVERY_ENABLED', '0')

@@ -12,7 +12,9 @@ log = logging.getLogger(__name__)
 
 # Stations upgraded in one loop, at most
 STATIONS_PER_LOOP = 3
-BETTER_FOOD_HOLD_MS = 3000
+# One hold buys levels faster and faster; 3 s left 3 of 4 stations
+# affordable again in the next loop
+BETTER_FOOD_HOLD_MS = 6000
 
 
 def find_icons(game):

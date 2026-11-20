@@ -52,6 +52,7 @@ src/auto_eatventure/         # The only package (src layout)
     potion_shop_cauldron.py  # Potion Shop Cauldron: brewing, bottling
     potion_shop_map.py       # Potion Shop map: views, crates, stations
   android/device.py          # Device: ADB taps, swipes, screenshots, app
+  android/fast_input.py      # FastInput: taps through a monkey server
   vision/                    # Detection on screenshots
     screen.py                # Screen: last screenshot + find/has/...
     templates.py             # TEMPLATE_NAMES catalog, loading, resizing
